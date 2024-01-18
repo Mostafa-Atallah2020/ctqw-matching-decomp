@@ -6,7 +6,6 @@ class StaticGraph:
     def __init__(self, nodes, edges) -> None:
         self.nodes = nodes
         self.edges = edges
-        #self.adj_mat = self.__get_adj_mat()
         # Create a graph
         self.graph = nx.Graph()
         self.graph.add_nodes_from(self.nodes)
@@ -16,15 +15,7 @@ class StaticGraph:
         return StaticGraph(self.nodes | other.nodes, self.edges | other.edges)
 
     def get_adj_mat(self):
-        n = len(self.nodes)
-        adj_mat = np.zeros((n, n))
-        for i in self.nodes:
-            for j in self.nodes:
-                if (i,j) in self.edges:
-                    adj_mat[i,j] = 1
-                    adj_mat[j,i] = 1
-
-        return adj_mat
+        return nx.adjacency_matrix(self.graph).todense()
 
     def draw(self):
         # Draw the graph
