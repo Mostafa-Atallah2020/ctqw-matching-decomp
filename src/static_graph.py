@@ -1,6 +1,5 @@
 import networkx as nx
 import matplotlib.pyplot as plt
-import numpy as np
 
 class StaticGraph:
     def __init__(self, nodes, edges) -> None:
