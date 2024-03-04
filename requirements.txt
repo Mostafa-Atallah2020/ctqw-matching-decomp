@@ -2,4 +2,7 @@ matplotlib
 networkx
 scipy
 qiskit
+qiskit_aer
 pylatexenc
+black[jupyter]
+pyzx
