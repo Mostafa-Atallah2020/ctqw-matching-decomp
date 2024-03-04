@@ -1,5 +1,10 @@
 import networkx as nx
 import matplotlib.pyplot as plt
+import numpy as np
+from qiskit.circuit.library import UnitaryGate
+from scipy.linalg import expm
+from sympy import symbols
+
 
 class StaticGraph:
     def __init__(self, nodes, edges) -> None:
@@ -15,6 +20,17 @@ class StaticGraph:
 
     def get_adj_mat(self):
         return nx.adjacency_matrix(self.graph).todense()
+
+    def get_statevector(self):
+        vec = [0 for i in range(len(self.nodes))]
+        for edge in self.edges:
+            a, b = edge
+            if vec[a] == 0:
+                vec[a] = symbols(f"alpha{a}")
+            if vec[b] == 0:
+                vec[b] = symbols(f"alpha{b}")
+
+        return np.array(vec)
 
     def draw(self):
         # Draw the graph
