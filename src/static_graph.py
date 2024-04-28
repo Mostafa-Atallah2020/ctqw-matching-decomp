@@ -1,5 +1,5 @@
-import networkx as nx
 import matplotlib.pyplot as plt
+import networkx as nx
 import numpy as np
 from qiskit.circuit.library import UnitaryGate
 from scipy.linalg import expm
