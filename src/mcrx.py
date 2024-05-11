@@ -3,46 +3,78 @@ import re
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.circuit.parametervector import ParameterVector
-from sympy import Not, Or, simplify
+from sympy import And, Not, Or, Symbol, simplify
 
 from src.misc import multi_crx
 
 
 class MCRX:
-    def __init__(self, expr: Or, n_qubits, target) -> None:
+    def __init__(self, n_qubits, expr, target, rot_angle) -> None:
         self.expr = expr
         self.n_qubits = n_qubits
         self.target = target
-        self.t = ParameterVector("t")
-        self.ctrls = []
-        self.__get_ctrls()
+        self.angle = rot_angle
+        self.qc = QuantumCircuit(self.n_qubits)
+        self.ctrls = self.__extract_controls()
         self.__get_qc()
 
-    def __get_ctrls(self):
-        for term in self.expr.args:
+    def __extract_controls(self):
+        ctrls = []
+
+        def process_term(term):
             ctrl_state = ""
             oper = []
-            for subterm in term.args:
-                if isinstance(subterm, Not):
-                    ctrl_state += "0"  # append 0 for negation
-                    name = subterm.args[0].name
-                else:
-                    ctrl_state += "1"  # append 1 for non-negated variable
-                    name = subterm.name
 
-                number = re.search(r"\d+", name).group()
-                oper.append(int(number))
+            if isinstance(term, And):
+                for subterm in term.args:
+                    ctrl_state += process_subterm(subterm)
+                    oper.append(get_number(subterm))
 
-            self.ctrls.append((ctrl_state, oper))
+            else:
+                ctrl_state = process_subterm(term)
+                oper.append(get_number(term))
+
+            ctrls.append((ctrl_state, oper))
+
+        def process_subterm(subterm):
+            if isinstance(subterm, Not):
+                return "0"
+            else:
+                return "1"
+
+        def get_number(term):
+            name = term.name if isinstance(term, Symbol) else term.args[0].name
+            return int(re.search(r"\d+", name).group())
+
+        if isinstance(self.expr, Or):
+            for term in self.expr.args:
+                process_term(term)
+
+        elif isinstance(self.expr, And):
+            process_term(self.expr)
+
+        elif isinstance(self.expr, Not):
+            process_term(self.expr)
+
+        elif isinstance(self.expr, Symbol):
+            process_term(self.expr)
+
+        else:
+            pass
+
+        return ctrls
 
     def __get_qc(self):
-        angle = np.pi / 2  # TODO: make it for a general angle.
-        self.qc = QuantumCircuit(self.n_qubits)
-        for tuple in self.ctrls:
-            ctrl_state = tuple[0]
-            oper = tuple[1]
-            gate = multi_crx(angle, ctrl_state)
-            self.qc.append(gate, oper + [self.target])
+        if self.expr == True:
+            self.qc.rx(self.angle, self.target)
+        elif self.expr == False:
+            pass
+        else:
+            for tuple in self.ctrls:
+                ctrl_state = tuple[0]
+                oper = tuple[1]
+                gate = multi_crx(self.angle, ctrl_state)
+                self.qc.append(gate, oper + [self.target])
 
     def simplify(self):
         if len(self.expr.args) % 2 == 0:
@@ -53,4 +85,4 @@ class MCRX:
             simplified_terms = simplify(all_except_first)
             self.expr = simplified_terms | first
 
-        return MCRX(self.expr, self.n_qubits, self.target)
+        return MCRX(self.n_qubits, self.expr, self.target, self.angle)
