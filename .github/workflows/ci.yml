@@ -20,8 +20,6 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-enchant
         python -m pip install --upgrade pip
         pip install isort black flake8 mypy pylint
 
@@ -39,9 +37,8 @@ jobs:
 
   #   - name: Install dependencies
   #     run: |
-  #       sudo apt-get update
-  #       sudo apt-get install -y python3-enchant
   #       python -m pip install --upgrade pip
+  #       pip install isort
 
   #   - name: Run isort
   #     run: isort . --check
@@ -60,10 +57,9 @@ jobs:
 
   #   - name: Install dependencies
   #     run: |
-  #       sudo apt-get update
-  #       sudo apt-get install -y python3-enchant
   #       python -m pip install --upgrade pip
   #       pip install -e .[lint,test]
+  #       pip install black
 
   #   - name: Run black
   #     run: black . --check
@@ -82,10 +78,9 @@ jobs:
 
   #   - name: Install dependencies
   #     run: |
-  #       sudo apt-get update
-  #       sudo apt-get install -y python3-enchant
   #       python -m pip install --upgrade pip
   #       pip install -e .[lint,test]
+  #       pip install flake8
 
   #   - name: Run flake8
   #     run: flake8
@@ -104,10 +99,9 @@ jobs:
 
   #   - name: Install dependencies
   #     run: |
-  #       sudo apt-get update
-  #       sudo apt-get install -y python3-enchant
   #       python -m pip install --upgrade pip
   #       pip install -e .[lint,test]
+  #       pip install mypy
 
   #   - name: Run mypy
   #     run: python -m mypy .
@@ -126,10 +120,9 @@ jobs:
 
   #   - name: Install dependencies
   #     run: |
-  #       sudo apt-get update
-  #       sudo apt-get install -y python3-enchant
   #       python -m pip install --upgrade pip
   #       pip install -e .[lint,test]
+  #       pip install pylint pyenchant
 
   #   - name: Run pylint
   #     run: pylint ./**/*.py
@@ -148,10 +141,9 @@ jobs:
 
     - name: Install dependencies
       run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-enchant
         python -m pip install --upgrade pip
         pip install -e .[lint,test]
+        pip install pytest pytest-cov
 
     - name: Run PyTest
       run: pytest -v --cov
