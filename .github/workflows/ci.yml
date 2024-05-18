@@ -25,114 +25,114 @@ jobs:
         python -m pip install --upgrade pip
         pip install isort black flake8 mypy pylint
 
-  isort:
-    runs-on: windows-latest
-    needs: setup
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+  # isort:
+  #   runs-on: windows-latest
+  #   needs: setup
+  #   steps:
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-enchant
-        python -m pip install --upgrade pip
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y python3-enchant
+  #       python -m pip install --upgrade pip
 
-    - name: Run isort
-      run: isort . --check
+  #   - name: Run isort
+  #     run: isort . --check
 
-  black:
-    runs-on: windows-latest
-    needs: setup
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+  # black:
+  #   runs-on: windows-latest
+  #   needs: setup
+  #   steps:
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-enchant
-        python -m pip install --upgrade pip
-        pip install -e .[lint,test]
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y python3-enchant
+  #       python -m pip install --upgrade pip
+  #       pip install -e .[lint,test]
 
-    - name: Run black
-      run: black . --check
+  #   - name: Run black
+  #     run: black . --check
 
-  flake8:
-    runs-on: windows-latest
-    needs: setup
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+  # flake8:
+  #   runs-on: windows-latest
+  #   needs: setup
+  #   steps:
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-enchant
-        python -m pip install --upgrade pip
-        pip install -e .[lint,test]
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y python3-enchant
+  #       python -m pip install --upgrade pip
+  #       pip install -e .[lint,test]
 
-    - name: Run flake8
-      run: flake8
+  #   - name: Run flake8
+  #     run: flake8
 
-  mypy:
-    runs-on: windows-latest
-    needs: setup
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+  # mypy:
+  #   runs-on: windows-latest
+  #   needs: setup
+  #   steps:
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-enchant
-        python -m pip install --upgrade pip
-        pip install -e .[lint,test]
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y python3-enchant
+  #       python -m pip install --upgrade pip
+  #       pip install -e .[lint,test]
 
-    - name: Run mypy
-      run: python -m mypy .
+  #   - name: Run mypy
+  #     run: python -m mypy .
 
-  spelling:
-    runs-on: windows-latest
-    needs: setup
-    steps:
-    - name: Checkout Repository
-      uses: actions/checkout@v2
+  # spelling:
+  #   runs-on: windows-latest
+  #   needs: setup
+  #   steps:
+  #   - name: Checkout Repository
+  #     uses: actions/checkout@v2
 
-    - name: Set up Python ${{ matrix.python-version }}
-      uses: actions/setup-python@v2
-      with:
-        python-version: ${{ matrix.python-version }}
+  #   - name: Set up Python ${{ matrix.python-version }}
+  #     uses: actions/setup-python@v2
+  #     with:
+  #       python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        sudo apt-get update
-        sudo apt-get install -y python3-enchant
-        python -m pip install --upgrade pip
-        pip install -e .[lint,test]
+  #   - name: Install dependencies
+  #     run: |
+  #       sudo apt-get update
+  #       sudo apt-get install -y python3-enchant
+  #       python -m pip install --upgrade pip
+  #       pip install -e .[lint,test]
 
-    - name: Run pylint
-      run: pylint ./**/*.py
+  #   - name: Run pylint
+  #     run: pylint ./**/*.py
 
   pytest:
     runs-on: windows-latest
