@@ -6,3 +6,4 @@ qiskit_aer
 pylatexenc
 black[jupyter]
 pyzx
+pytest

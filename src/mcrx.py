@@ -2,7 +2,6 @@ import re
 
 import numpy as np
 from qiskit import QuantumCircuit
-from qiskit.circuit.parametervector import ParameterVector
 from sympy import And, Not, Or, Symbol, simplify
 
 from src.misc import multi_crx
@@ -14,8 +13,9 @@ class MCRX:
         self.n_qubits = n_qubits
         self.target = target
         self.angle = rot_angle
+
+        self.__ctrls = self.__extract_controls()
         self.qc = QuantumCircuit(self.n_qubits)
-        self.ctrls = self.__extract_controls()
         self.__get_qc()
 
     def __extract_controls(self):
@@ -23,18 +23,18 @@ class MCRX:
 
         def process_term(term):
             ctrl_state = ""
-            oper = []
+            ctrl_qubits = []
 
             if isinstance(term, And):
                 for subterm in term.args:
                     ctrl_state += process_subterm(subterm)
-                    oper.append(get_number(subterm))
+                    ctrl_qubits.append(get_number(subterm))
 
             else:
                 ctrl_state = process_subterm(term)
-                oper.append(get_number(term))
+                ctrl_qubits.append(get_number(term))
 
-            ctrls.append((ctrl_state, oper))
+            ctrls.append((ctrl_state, ctrl_qubits))
 
         def process_subterm(subterm):
             if isinstance(subterm, Not):
@@ -50,13 +50,7 @@ class MCRX:
             for term in self.expr.args:
                 process_term(term)
 
-        elif isinstance(self.expr, And):
-            process_term(self.expr)
-
-        elif isinstance(self.expr, Not):
-            process_term(self.expr)
-
-        elif isinstance(self.expr, Symbol):
+        elif isinstance(self.expr, (And, Not, Symbol)):
             process_term(self.expr)
 
         else:
@@ -70,11 +64,9 @@ class MCRX:
         elif self.expr == False:
             pass
         else:
-            for tuple in self.ctrls:
-                ctrl_state = tuple[0]
-                oper = tuple[1]
+            for ctrl_state, ctrl_qubits in self.__ctrls:
                 gate = multi_crx(self.angle, ctrl_state)
-                self.qc.append(gate, oper + [self.target])
+                self.qc.append(gate, ctrl_qubits + [self.target])
 
     def simplify(self):
         if len(self.expr.args) % 2 == 0:
