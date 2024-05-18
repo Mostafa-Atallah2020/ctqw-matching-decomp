@@ -146,4 +146,4 @@ jobs:
         pip install pytest pytest-cov
 
     - name: Run PyTest
-      run: pytest -v --cov
+      run: pytest -v #--cov
