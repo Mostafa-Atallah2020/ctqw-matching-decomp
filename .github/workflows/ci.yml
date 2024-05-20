@@ -24,6 +24,10 @@ jobs:
         pip install isort black flake8 mypy pylint
         pip install -r requirements.txt
 
+    - name: Set PYTHONPATH
+      run: echo "PYTHONPATH=$PYTHONPATH:$(pwd)/test" >> $GITHUB_ENV
+
+
   # isort:
   #   runs-on: windows-latest
   #   needs: setup
@@ -140,12 +144,12 @@ jobs:
       with:
         python-version: ${{ matrix.python-version }}
 
-    - name: Install dependencies
-      run: |
-        python -m pip install --upgrade pip
-        pip install -e .[lint,test]
-        pip install pytest pytest-cov
-        pip install -r requirements.txt
+    # - name: Install dependencies
+    #   run: |
+    #     python -m pip install --upgrade pip
+    #     pip install -e .[lint,test]
+    #     pip install pytest pytest-cov
+    #     pip install -r requirements.txt
 
     - name: Run PyTest
       run: pytest -v #--cov
