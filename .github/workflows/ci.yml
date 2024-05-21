@@ -7,7 +7,7 @@ jobs:
     runs-on: windows-latest
     strategy:
       matrix:
-        python-version: [3.x]
+        python-version: [3.9, 3.10, 3.11]
 
     steps:
     - name: Checkout Repository
@@ -21,16 +21,19 @@ jobs:
     - name: Install dependencies
       run: |
         python -m pip install --upgrade pip
-        pip install isort black flake8 mypy pylint pytest
+        pip install isort black flake8 mypy pylint pytest pytest-cov
         pip install -r requirements.txt
 
     - name: Set PYTHONPATH
-      run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
+      run: |
+        echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
 
-
-  # isort:
+  # lint:
   #   runs-on: windows-latest
   #   needs: setup
+  #   strategy:
+  #     matrix:
+  #       tool: [isort, black, flake8, mypy, pylint]
   #   steps:
   #   - name: Checkout Repository
   #     uses: actions/checkout@v2
@@ -43,94 +46,22 @@ jobs:
   #   - name: Install dependencies
   #     run: |
   #       python -m pip install --upgrade pip
-  #       pip install isort
+  #       pip install ${{ matrix.tool }}
+  #       pip install -r requirements.txt
 
-  #   - name: Run isort
-  #     run: isort . --check
-
-  # black:
-  #   runs-on: windows-latest
-  #   needs: setup
-  #   steps:
-  #   - name: Checkout Repository
-  #     uses: actions/checkout@v2
-
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-
-  #   - name: Install dependencies
+  #   - name: Run ${{ matrix.tool }}
   #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -e .[lint,test]
-  #       pip install black
-
-  #   - name: Run black
-  #     run: black . --check
-
-  # flake8:
-  #   runs-on: windows-latest
-  #   needs: setup
-  #   steps:
-  #   - name: Checkout Repository
-  #     uses: actions/checkout@v2
-
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -e .[lint,test]
-  #       pip install flake8
-
-  #   - name: Run flake8
-  #     run: flake8
-
-  # mypy:
-  #   runs-on: windows-latest
-  #   needs: setup
-  #   steps:
-  #   - name: Checkout Repository
-  #     uses: actions/checkout@v2
-
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -e .[lint,test]
-  #       pip install mypy
-
-  #   - name: Run mypy
-  #     run: python -m mypy .
-
-  # spelling:
-  #   runs-on: windows-latest
-  #   needs: setup
-  #   steps:
-  #   - name: Checkout Repository
-  #     uses: actions/checkout@v2
-
-  #   - name: Set up Python ${{ matrix.python-version }}
-  #     uses: actions/setup-python@v2
-  #     with:
-  #       python-version: ${{ matrix.python-version }}
-
-  #   - name: Install dependencies
-  #     run: |
-  #       python -m pip install --upgrade pip
-  #       pip install -e .[lint,test]
-  #       pip install pylint pyenchant
-
-  #   - name: Run pylint
-  #     run: pylint ./**/*.py
+  #       if [ "${{ matrix.tool }}" = "isort" ]; then
+  #         isort . --check-only
+  #       elif [ "${{ matrix.tool }}" = "black" ]; then
+  #         black . --check
+  #       elif [ "${{ matrix.tool }}" = "flake8" ]; then
+  #         flake8
+  #       elif [ "${{ matrix.tool }}" = "mypy" ]; then
+  #         mypy .
+  #       elif [ "${{ matrix.tool }}" = "pylint" ]; then
+  #         pylint $(find . -name "*.py")
+  #       fi
 
   pytest:
     runs-on: windows-latest
@@ -152,7 +83,8 @@ jobs:
         pip install -r requirements.txt
 
     - name: Set PYTHONPATH
-      run: echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
+      run: |
+        echo "PYTHONPATH=$(pwd)/src" >> $GITHUB_ENV
 
     - name: Run PyTest
       run: pytest -v #--cov
