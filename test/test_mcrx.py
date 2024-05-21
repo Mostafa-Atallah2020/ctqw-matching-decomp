@@ -1,6 +1,6 @@
 import sys
 
-# sys.path.append(f"./../")
+sys.path.append(f"./../")
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
