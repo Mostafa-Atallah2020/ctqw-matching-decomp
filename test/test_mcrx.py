@@ -1,12 +1,14 @@
 import sys
 
-
-#sys.path.append(f"./../")
+# sys.path.append(f"./../")
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
-from src import MCRX, multi_crx
 from sympy import symbols
+
+# from src import MCRX, multi_crx
+from src.mcrx import MCRX
+from src.misc import multi_crx
 
 
 def test_3_qubit_4_parallel_edges_expr():
