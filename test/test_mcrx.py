@@ -3,7 +3,6 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from sympy import symbols
 
-# from src import MCRX, multi_crx
 from src import MCRX, multi_crx
 
 
