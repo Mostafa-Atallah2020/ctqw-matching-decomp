@@ -73,9 +73,6 @@ class MCRX:
         terms = self.expr.args
         n_terms = len(terms)
 
-        if n_terms <= 1:
-            return MCRX(self.n_qubits, self.expr, self.target, self.angle)
-
         simplified_terms = []
 
         # Simplify the first and last terms
@@ -87,7 +84,12 @@ class MCRX:
         for i in range(1, n_terms // 2):
             term1 = terms[i]
             term2 = terms[n_terms - 1 - i]
-            simplified_terms.append(simplify(term1 | term2))
+            res = simplify(term1 | term2)
+            # Check if res.args has an Or element inside
+            has_or = any(isinstance(arg, Or) for arg in res.args)
+            if has_or:
+                res = term1 | term2
+            simplified_terms.append(res)
 
         # If there is an odd number of terms, include the middle term
         if n_terms % 2 != 0:
@@ -97,4 +99,7 @@ class MCRX:
         # Combine the simplified terms using Or
         simplified_expr = Or(*simplified_terms)
 
-        return MCRX(self.n_qubits, simplified_expr, self.target, self.angle)
+        if simplified_expr == self.expr:
+            return self
+        else:
+            return MCRX(self.n_qubits, simplified_expr, self.target, self.angle)
