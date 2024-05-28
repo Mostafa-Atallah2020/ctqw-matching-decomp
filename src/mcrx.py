@@ -14,7 +14,7 @@ class MCRX:
         self.target = target
         self.angle = rot_angle
 
-        self.__ctrls = self.__extract_controls()
+        self.ctrls = self.__extract_controls()
         self.qc = QuantumCircuit(self.n_qubits)
         self.__get_qc()
 
@@ -43,7 +43,8 @@ class MCRX:
                 return "1"
 
         def get_number(term):
-            name = term.name if isinstance(term, Symbol) else term.args[0].name
+            name = str(term) if isinstance(term, Symbol) else str(term.args[0])
+
             return int(re.search(r"\d+", name).group())
 
         if isinstance(self.expr, Or):
@@ -64,17 +65,36 @@ class MCRX:
         elif self.expr == False:
             pass
         else:
-            for ctrl_state, ctrl_qubits in self.__ctrls:
+            for ctrl_state, ctrl_qubits in self.ctrls:
                 gate = multi_crx(self.angle, ctrl_state)
                 self.qc.append(gate, ctrl_qubits + [self.target])
 
     def simplify(self):
-        if len(self.expr.args) % 2 == 0:
-            self.expr = simplify(self.expr)
-        else:
-            first = self.expr.args[0]
-            all_except_first = Or(*self.expr.args[1:])
-            simplified_terms = simplify(all_except_first)
-            self.expr = simplified_terms | first
+        terms = self.expr.args
+        n_terms = len(terms)
 
-        return MCRX(self.n_qubits, self.expr, self.target, self.angle)
+        if n_terms <= 1:
+            return MCRX(self.n_qubits, self.expr, self.target, self.angle)
+
+        simplified_terms = []
+
+        # Simplify the first and last terms
+        first_term = terms[0]
+        last_term = terms[-1]
+        simplified_terms.append(simplify(first_term | last_term))
+
+        # Simplify the remaining pairs of terms
+        for i in range(1, n_terms // 2):
+            term1 = terms[i]
+            term2 = terms[n_terms - 1 - i]
+            simplified_terms.append(simplify(term1 | term2))
+
+        # If there is an odd number of terms, include the middle term
+        if n_terms % 2 != 0:
+            middle_term = terms[n_terms // 2]
+            simplified_terms.append(middle_term)
+
+        # Combine the simplified terms using Or
+        simplified_expr = Or(*simplified_terms)
+
+        return MCRX(self.n_qubits, simplified_expr, self.target, self.angle)

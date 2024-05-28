@@ -34,7 +34,7 @@ class StaticGraph:
         return np.array(vec)
 
     def draw(self):
-
+        # TODO: It's better to make it a text drawer for now
         positions = self._get_fixed_positions()
         labels = {node: format(node, f"0{self.n_qubits}b") for node in self.nodes}
 
