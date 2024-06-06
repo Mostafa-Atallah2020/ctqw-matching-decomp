@@ -7,3 +7,4 @@ pylatexenc
 black[jupyter]
 pyzx
 pytest
+isort

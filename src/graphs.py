@@ -23,6 +23,7 @@ class StaticGraph:
         return nx.adjacency_matrix(self.graph).todense()
 
     def get_statevector(self):
+        # TODO: Find alternative implementation
         vec = [0 for i in range(len(self.nodes))]
         for edge in self.edges:
             a, b = edge
@@ -35,17 +36,16 @@ class StaticGraph:
 
     def draw(self):
         # TODO: It's better to make it a text drawer for now
-        positions = self._get_fixed_positions()
+        # positions = self._get_fixed_positions()
         labels = {node: format(node, f"0{self.n_qubits}b") for node in self.nodes}
 
         nx.draw(
             self.graph,
-            pos=positions,
             labels=labels,
             with_labels=True,
-            node_size=250 * self.n_qubits,
+            node_size=100 * self.n_qubits,
             node_color="skyblue",
-            font_size=10,
+            font_size=5,
             font_color="black",
             font_weight="bold",
             edge_color="gray",
@@ -63,3 +63,35 @@ class StaticGraph:
             positions[node] = (col, row)
 
         return positions
+
+
+class ParallelEdgeGraph(StaticGraph):
+    def __init__(self, n_qubits, edges):
+        super().__init__(n_qubits, edges)
+        self.target = None
+        self.edges = edges
+        self.vars = self.__get_vars()
+        self.expr = self.__get_expr()
+
+    def __get_vars(self):
+        sym_vars = []
+        for i in range(self.n_qubits):
+            sym_name = f"x_{i}"
+            sym_vars.append(symbols(sym_name, latex=True))
+
+        return sym_vars
+
+    def __get_expr(self):
+        expr = False
+        for i, j in self.edges:
+            subexpr = True
+            for k in range(self.n_qubits):
+                if (i[k] == j[k]) and (j[k] == "0"):
+                    subexpr = subexpr & ~self.vars[k]
+                elif (i[k] == j[k]) and (j[k] == "1"):
+                    subexpr = subexpr & self.vars[k]
+                else:
+                    self.target = k
+            expr = expr | subexpr
+
+        return expr
