@@ -1,0 +1,41 @@
+name: Pre-Commit Checks
+
+on: [push, pull_request]
+
+jobs:
+  pre-commit:
+    runs-on: windows-latest
+
+    strategy:
+      matrix:
+        python-version: [3.x]
+
+    steps:
+      - name: Checkout Repository
+        uses: actions/checkout@v2
+
+      - name: Set up Python ${{ matrix.python-version }}
+        uses: actions/setup-python@v2
+        with:
+          python-version: ${{ matrix.python-version }}
+
+      # - name: Install pre-commit
+      #   run: pip install pre-commit
+
+      # - name: Install dependencies
+      #   run: pip install pyenchant
+
+      # - name: Run isort
+      #   run: pre-commit run isort --all-files --hook-stage push
+
+      # - name: Run black
+      #   run: pre-commit run black --all-files --hook-stage push
+
+      # - name: Run flake8
+      #   run: pre-commit run flake8 --all-files --hook-stage push
+
+      # - name: Run mypy
+      #   run: pre-commit run mypy --all-files --hook-stage push
+
+      # - name: Run pylint
+      #   run: pre-commit run pylint --all-files --hook-stage push
