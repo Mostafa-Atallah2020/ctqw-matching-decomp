@@ -20,13 +20,14 @@ class GraphDrawer:
 
     def _generate_positions(self):
         """
-        Generate positions for 2^n nodes in a (2^n - 1) x 2 grid.
+        Generate positions for 2^n nodes in a (2^n - 1) x 2 grid, counting from top to bottom.
 
         :return: A dictionary with node positions.
         """
         positions = {}
+        max_row = (2**self.n - 1) // 2
         for i in range(2**self.n):
-            row = i // 2
+            row = max_row - (i // 2)
             col = i % 2
             positions[i] = (col, row)
         return positions

@@ -4,6 +4,7 @@ import numpy as np
 from sympy import symbols
 
 from src.misc import binary_tuple_to_int_tuple
+from src import GraphDrawer
 
 
 class StaticGraph:
@@ -35,34 +36,7 @@ class StaticGraph:
         return np.array(vec)
 
     def draw(self):
-        # TODO: It's better to make it a text drawer for now
-        # positions = self._get_fixed_positions()
-        labels = {node: format(node, f"0{self.n_qubits}b") for node in self.nodes}
-
-        nx.draw(
-            self.graph,
-            labels=labels,
-            with_labels=True,
-            node_size=100 * self.n_qubits,
-            node_color="skyblue",
-            font_size=5,
-            font_color="black",
-            font_weight="bold",
-            edge_color="gray",
-            linewidths=10,
-            alpha=0.7,
-        )
-
-        plt.show()
-
-    def _get_fixed_positions(self):
-        positions = {}
-        for i, node in enumerate(sorted(self.nodes)):
-            row = i // 2
-            col = i % 2
-            positions[node] = (col, row)
-
-        return positions
+        GraphDrawer(self.n_qubits, self.edges).show()
 
 
 class ParallelEdgeGraph(StaticGraph):
