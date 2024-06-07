@@ -11,7 +11,7 @@ class StaticGraph:
     def __init__(self, n_qubits, edges) -> None:
         self.n_qubits = n_qubits
         self.nodes = set(range(2**n_qubits))
-        self.edges = set([binary_tuple_to_int_tuple(t) for t in edges])
+        self.edges = edges
 
         self.graph = nx.Graph()
         self.graph.add_nodes_from(self.nodes)
@@ -24,9 +24,9 @@ class StaticGraph:
         return nx.adjacency_matrix(self.graph).todense()
 
     def get_statevector(self):
-        # TODO: Find alternative implementation
+        edges = set([binary_tuple_to_int_tuple(t) for t in self.edges])
         vec = [0 for i in range(len(self.nodes))]
-        for edge in self.edges:
+        for edge in edges:
             a, b = edge
             if vec[a] == 0:
                 vec[a] = symbols(f"alpha{a}")
@@ -36,14 +36,14 @@ class StaticGraph:
         return np.array(vec)
 
     def draw(self):
-        GraphDrawer(self.n_qubits, self.edges).show()
+        edges = set([binary_tuple_to_int_tuple(t) for t in self.edges])
+        GraphDrawer(self.n_qubits, edges).show()
 
 
 class ParallelEdgeGraph(StaticGraph):
     def __init__(self, n_qubits, edges):
         super().__init__(n_qubits, edges)
         self.target = None
-        self.edges = edges
         self.vars = self.__get_vars()
         self.expr = self.__get_expr()
 
