@@ -3,8 +3,8 @@ import networkx as nx
 import numpy as np
 from sympy import symbols
 
+from src import MCRX, GraphDrawer
 from src.misc import binary_tuple_to_int_tuple
-from src import GraphDrawer
 
 
 class StaticGraph:
@@ -12,6 +12,8 @@ class StaticGraph:
         self.n_qubits = n_qubits
         self.nodes = set(range(2**n_qubits))
         self.edges = edges
+        self.rot_angle = self.__get_rot_angle()
+        self.__int_edges = set([binary_tuple_to_int_tuple(t) for t in self.edges])
 
         self.graph = nx.Graph()
         self.graph.add_nodes_from(self.nodes)
@@ -20,13 +22,17 @@ class StaticGraph:
     def __add__(self, other):
         return StaticGraph(self.nodes | other.nodes, self.edges | other.edges)
 
+    def __get_rot_angle(self):
+        # TODO: this one should not be fixed it should depend on the amplitudes of the edges
+        # we will assume it is constant for simplicity.
+        return np.pi / 2
+
     def get_adj_mat(self):
         return nx.adjacency_matrix(self.graph).todense()
 
     def get_statevector(self):
-        edges = set([binary_tuple_to_int_tuple(t) for t in self.edges])
         vec = [0 for i in range(len(self.nodes))]
-        for edge in edges:
+        for edge in self.__int_edges:
             a, b = edge
             if vec[a] == 0:
                 vec[a] = symbols(f"alpha{a}")
@@ -36,8 +42,7 @@ class StaticGraph:
         return np.array(vec)
 
     def draw(self):
-        edges = set([binary_tuple_to_int_tuple(t) for t in self.edges])
-        GraphDrawer(self.n_qubits, edges).show()
+        GraphDrawer(self.n_qubits, self.__int_edges).show()
 
 
 class ParallelEdgeGraph(StaticGraph):
@@ -47,6 +52,13 @@ class ParallelEdgeGraph(StaticGraph):
         self.vars = self.__get_vars()
         self.expr = self.__get_expr()
 
+    def get_qc(self, simplified=False):
+        mcrx = MCRX(self.n_qubits, self.expr, self.target, self.rot_angle)
+        if simplified:
+            return mcrx.simplify().qc
+        else:
+            return mcrx.qc
+    
     def __get_vars(self):
         sym_vars = []
         for i in range(self.n_qubits):
