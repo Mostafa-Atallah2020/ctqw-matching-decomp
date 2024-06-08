@@ -1,4 +1,3 @@
-import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from sympy import symbols
@@ -22,20 +21,20 @@ class StaticGraph:
 
     def _validate_edges(self, edges):
         if not isinstance(edges, set):
-            raise ValueError("Edges must be a set")
+            raise ValueError("Edges must be a set.")
         edge_length = None
         for edge in edges:
             if not isinstance(edge, tuple) or len(edge) != 2:
-                raise ValueError("Each edge must be a tuple of length 2")
+                raise ValueError("Each edge must be a tuple of length 2.")
             for node in edge:
                 if not isinstance(node, str) or not all(bit in "01" for bit in node):
                     raise ValueError(
-                        "Each node in an edge must be a string consisting of 0s and 1s"
+                        "Each node in an edge must be a string consisting of 0s and 1s."
                     )
                 if edge_length is None:
                     edge_length = len(node)
                 elif len(node) != edge_length:
-                    raise ValueError("All nodes in edges must have the same length")
+                    raise ValueError("All nodes in edges must have the same length.")
 
     def __add__(self, other):
         return StaticGraph(self.nodes | other.nodes, self.edges | other.edges)
@@ -76,7 +75,7 @@ class ParallelEdgeGraph(StaticGraph):
             i, j = edge
             diff_count = sum(1 for x, y in zip(i, j) if x != y)
             if diff_count != 1:
-                raise ValueError("Nodes in each edge must differ by exactly one bit.")
+                raise ValueError("The Graph is not a Parallel Edge Graph.")
 
     def get_qc(self, simplified=False):
         mcrx = MCRX(self.n_qubits, self.expr, self.target, self.rot_angle)
