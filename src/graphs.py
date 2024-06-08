@@ -28,8 +28,10 @@ class StaticGraph:
             if not isinstance(edge, tuple) or len(edge) != 2:
                 raise ValueError("Each edge must be a tuple of length 2")
             for node in edge:
-                if not isinstance(node, str) or not all(bit in '01' for bit in node):
-                    raise ValueError("Each node in an edge must be a string consisting of 0s and 1s")
+                if not isinstance(node, str) or not all(bit in "01" for bit in node):
+                    raise ValueError(
+                        "Each node in an edge must be a string consisting of 0s and 1s"
+                    )
                 if edge_length is None:
                     edge_length = len(node)
                 elif len(node) != edge_length:
@@ -63,19 +65,27 @@ class StaticGraph:
 
 class ParallelEdgeGraph(StaticGraph):
     def __init__(self, edges):
+        self._validate_parallel_edges(edges)
         super().__init__(edges)
         self.target = None
         self.vars = self.__get_vars()
         self.expr = self.__get_expr()
 
+    def _validate_parallel_edges(self, edges):
+        for edge in edges:
+            i, j = edge
+            diff_count = sum(1 for x, y in zip(i, j) if x != y)
+            if diff_count != 1:
+                raise ValueError("Nodes in each edge must differ by exactly one bit.")
+
     def get_qc(self, simplified=False):
         mcrx = MCRX(self.n_qubits, self.expr, self.target, self.rot_angle)
-        
+
         if simplified:
             return mcrx.simplify().qc
         else:
             return mcrx.qc
-    
+
     def __get_vars(self):
         sym_vars = []
         for i in range(self.n_qubits):
