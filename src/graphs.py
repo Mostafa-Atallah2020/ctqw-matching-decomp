@@ -4,7 +4,7 @@ from qiskit import QuantumCircuit
 from sympy import symbols
 
 from src import MCRX, GraphDrawer
-from src.misc import binary_tuple_to_int_tuple
+from src.misc import binary_tuple_to_int_tuple, hamming_distance
 
 
 class StaticGraph:
@@ -74,8 +74,7 @@ class ParallelEdgeGraph(StaticGraph):
     def _validate_parallel_edges(self, edges):
         for edge in edges:
             i, j = edge
-            diff_count = sum(1 for x, y in zip(i, j) if x != y)
-            if diff_count != 1:
+            if hamming_distance(i, j) != 1:
                 raise ValueError("The Graph is not a Parallel Edge Graph.")
 
     def get_qc(self, simplified=False):
@@ -154,3 +153,23 @@ class NonDiagonalEdgeGraph(StaticGraph):
             qc_dict[idx] = qc
 
         return qc_dict
+
+
+class DiagonalEdgeGraph(StaticGraph):
+    def __init__(self, edges, simplified=False):
+        super().__init__(edges)
+        self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
+
+    def __split_by_hamming_distance(self):
+        """Split edges into sets based on Hamming distance."""
+        set_hamming_1 = set()
+        set_hamming_greater_1 = set()
+
+        for edge in self.edges:
+            dist = hamming_distance(edge[0], edge[1])
+            if dist == 1:
+                set_hamming_1.add(edge)
+            else:
+                set_hamming_greater_1.add(edge)
+
+        return set_hamming_1, set_hamming_greater_1
