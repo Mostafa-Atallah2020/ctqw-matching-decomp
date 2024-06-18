@@ -1,12 +1,12 @@
 class Edge:
     def __init__(self, edge):
+        self.edge = edge
         self.start, self.end = edge
         self.__validate()
         self.type = self.__edge_type()
         self.hamming_distance = self.__hamming_distance()
-        # Create CNOT tuples from the differing positions
         self.differing_positions = self.__get_differing_positions()
-        self.cnots = [
+        self.connections = [
             (self.differing_positions[k], self.differing_positions[k + 1])
             for k in range(len(self.differing_positions) - 1)
         ]
@@ -42,7 +42,7 @@ class Edge:
         return differing_positions
 
     def to_possible_edges(self):
-        """Convert a diagonal edge into a set of parallel edges."""
+        """generate a possible set of edge candidates."""
         # Find possible parallel edges
         possible_edges = []
 
@@ -60,12 +60,8 @@ class Edge:
             new_j[pos] = "1"
             generate_edges(new_i, new_j, positions[1:])
 
-        # Initialize lists for the left and right strings
-        i_list = list(self.start)
-        j_list = list(self.start)
-
         # Generate edges based on differing positions
-        generate_edges(i_list, j_list, self.differing_positions)
+        generate_edges(list(self.start), list(self.start), self.differing_positions)
 
         return possible_edges
 
@@ -76,7 +72,7 @@ class Edge:
 
         # Calculate known_bits from CNOTs
         known_bits = ""
-        for e in self.cnots:
+        for e in self.connections:
             k, l = e
             xor = int(self.end[k]) ^ int(self.end[l])
             known_bits += str(xor)
