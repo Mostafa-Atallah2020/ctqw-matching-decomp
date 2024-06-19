@@ -1,3 +1,5 @@
+import itertools
+
 from qiskit.circuit.library import RXGate
 
 
@@ -61,3 +63,13 @@ def get_cyclic_connections(connections, target):
         result.extend(connections[len(result) :])
 
     return result
+
+
+def lists_to_sets(*lists):
+    # Use itertools.product to get all combinations of picking one element from each list
+    combinations = list(itertools.product(*lists))
+
+    # Convert each combination (which is a tuple) to a set
+    sets = [set(comb) for comb in combinations]
+
+    return sets
