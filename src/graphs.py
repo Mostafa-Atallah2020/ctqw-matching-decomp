@@ -114,16 +114,22 @@ class ParallelEdgeGraph(StaticGraph):
 
 
 class NonDiagonalEdgeGraph(StaticGraph):
-    def __init__(self, edges, simplified=False):
+    def __init__(self, edges):
         super().__init__(edges)
         self.edge_sets = self.__split_tuples_by_changing_bit()
-        self.__qc_dict = self.__get_qc_dict(simplified=simplified)
 
-    def get_qc(self):
+    def get_qc(self, simplified=False):
+        qc_dict = {}
+
+        for idx, edges in self.edge_sets.items():
+            G = ParallelEdgeGraph(edges)
+            qc = G.get_qc(simplified=simplified)
+            qc_dict[idx] = qc
+
         circ = QuantumCircuit(self.n_qubits)
-        keys = sorted(self.__qc_dict.keys())
+        keys = sorted(qc_dict.keys())
         for idx in keys:
-            qc = self.__qc_dict[idx]
+            qc = qc_dict[idx]
             circ = circ.compose(qc, range(self.n_qubits))
 
         return circ
@@ -147,16 +153,6 @@ class NonDiagonalEdgeGraph(StaticGraph):
             subsets[changing_bit_position].add(t)
 
         return subsets
-
-    def __get_qc_dict(self, simplified=False):
-        qc_dict = {}
-
-        for idx, edges in self.edge_sets.items():
-            G = ParallelEdgeGraph(edges)
-            qc = G.get_qc(simplified=simplified)
-            qc_dict[idx] = qc
-
-        return qc_dict
 
 
 class DiagonalEdgeGraph(StaticGraph):
