@@ -168,10 +168,24 @@ class NonDiagonalEdgeGraph(StaticGraph):
 
 
 class DiagonalEdgeGraph(StaticGraph):
-    def __init__(self, edges, simplified=False):
+    def __init__(self, edges):
         super().__init__(edges)
         self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
         self.candidates = self.__get_candidates()
+        self.connections = self.__get_connections()
+
+    def get_qc(simplified=False):
+        pass
+
+    def __get_connections(self):
+        total_connections = []
+        for e in self.set_hamming_greater_1:
+            edge = Edge(e)
+            for c in edge.connections:
+                if c not in total_connections:
+                    total_connections.append(c)
+
+        return total_connections
 
     def __split_by_hamming_distance(self):
         """Split edges into sets based on Hamming distance."""
