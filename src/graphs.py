@@ -4,7 +4,7 @@ from qiskit import QuantumCircuit
 from sympy import symbols
 
 from src import MCRX, Edge, GraphDrawer
-from src.misc import binary_tuple_to_int_tuple, hamming_distance
+from src.misc import binary_tuple_to_int_tuple, hamming_distance, lists_to_sets
 
 
 class StaticGraph:
@@ -163,6 +163,7 @@ class DiagonalEdgeGraph(StaticGraph):
     def __init__(self, edges, simplified=False):
         super().__init__(edges)
         self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
+        self.candidates = self.__get_candidates()
 
     def __split_by_hamming_distance(self):
         """Split edges into sets based on Hamming distance."""
@@ -177,3 +178,27 @@ class DiagonalEdgeGraph(StaticGraph):
                 set_hamming_greater_1.add(edge)
 
         return set_hamming_1, set_hamming_greater_1
+
+    def __get_candidates(self):
+        parallel_candidates = []
+        for e in self.set_hamming_greater_1:
+            edge = Edge(e)
+            parallel_candidates.append(edge.get_parallel_candidates())
+
+        parallel_candidates = lists_to_sets(*parallel_candidates)
+
+        non_diagonal_candidates = []
+        for c in parallel_candidates:
+            non_diagonal_candidates.append(c | {Edge(e) for e in self.set_hamming_1})
+
+        valid_candidates = []
+        for g in non_diagonal_candidates:
+            try:
+                diagonalG = NonDiagonalEdgeGraph(g)
+                valid_candidates.append(diagonalG)
+
+            except:
+                # Skip the item that caused an error
+                continue
+
+        return valid_candidates
