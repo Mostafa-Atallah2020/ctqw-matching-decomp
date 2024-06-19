@@ -117,6 +117,7 @@ class NonDiagonalEdgeGraph(StaticGraph):
     def __init__(self, edges):
         super().__init__(edges)
         self.edge_sets = self.__split_tuples_by_changing_bit()
+        self.targets = self.__get_targets()
 
     def get_qc(self, simplified=False):
         qc_dict = {}
@@ -133,6 +134,17 @@ class NonDiagonalEdgeGraph(StaticGraph):
             circ = circ.compose(qc, range(self.n_qubits))
 
         return circ
+
+    def __get_targets(self):
+        targets = []
+        for idx, edges in self.edge_sets.items():
+            G = ParallelEdgeGraph(edges)
+            target = G.target
+
+            if target not in targets:
+                targets.append(target)
+
+        return targets
 
     def __split_tuples_by_changing_bit(self):
         # Initialize a dictionary to store subsets based on the changing bit position
