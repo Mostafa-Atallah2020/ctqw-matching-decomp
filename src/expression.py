@@ -4,6 +4,7 @@ from sympy import Or, simplify
 class Expression:
     def __init__(self, expr) -> None:
         self.expr = expr
+        self.vars = self.expr.free_symbols
 
     def simplify(self):
         terms = self.expr.args

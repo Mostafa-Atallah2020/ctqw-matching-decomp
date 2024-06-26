@@ -78,8 +78,4 @@ class MCRX:
 
     def simplify(self):
         simplified_expr = Expression(self.expr).simplify()
-
-        if simplified_expr.expr == self.expr:
-            return self
-        else:
-            return MCRX(self.n_qubits, simplified_expr, self.target, self.angle)
+        return MCRX(self.n_qubits, simplified_expr, self.target, self.angle)

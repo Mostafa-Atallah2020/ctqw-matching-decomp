@@ -3,8 +3,13 @@ import numpy as np
 from qiskit import QuantumCircuit
 from sympy import symbols
 
-from src import MCRX, Edge, GraphDrawer
-from src.misc import binary_tuple_to_int_tuple, hamming_distance, lists_to_sets
+from src import MCRX, Edge, Expression, GraphDrawer
+from src.misc import (
+    binary_tuple_to_int_tuple,
+    get_cyclic_connections,
+    hamming_distance,
+    lists_to_sets,
+)
 
 
 class StaticGraph:
@@ -73,7 +78,7 @@ class ParallelEdgeGraph(StaticGraph):
         super().__init__(edges)
         self.target = None
         self.vars = self.__get_vars()
-        self.expr = self.__get_expr()
+        self.expr = Expression(self.__get_expr())
 
     def _validate_parallel_edges(self, edges):
         for edge in edges:
@@ -117,7 +122,7 @@ class NonDiagonalEdgeGraph(StaticGraph):
     def __init__(self, edges):
         super().__init__(edges)
         self.edge_sets = self.__split_tuples_by_changing_bit()
-        self.targets = self.__get_targets()
+        self.targets, self.exprs = self.__get_targets_exprs()
 
     def get_qc(self, simplified=False):
         qc_dict = {}
@@ -135,16 +140,21 @@ class NonDiagonalEdgeGraph(StaticGraph):
 
         return circ
 
-    def __get_targets(self):
+    def __get_targets_exprs(self):
         targets = []
+        exprs = []
         for idx, edges in self.edge_sets.items():
             G = ParallelEdgeGraph(edges)
             target = G.target
+            expr = G.expr
 
             if target not in targets:
                 targets.append(target)
 
-        return targets
+            if expr not in exprs:
+                exprs.append(expr)
+
+        return targets, exprs
 
     def __split_tuples_by_changing_bit(self):
         # Initialize a dictionary to store subsets based on the changing bit position
@@ -173,9 +183,45 @@ class DiagonalEdgeGraph(StaticGraph):
         self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
         self.candidates = self.__get_candidates()
         self.connections = self.__get_connections()
+        self.best_candidate = self.__get_best_candidate()
 
-    def get_qc(simplified=False):
-        pass
+    def get_qc(self, simplified=False):
+        cnots_lists = []
+        for t in self.best_candidate.targets:
+            cnots = get_cyclic_connections(self.connections, t)
+            for cx in cnots:
+                if cx not in cnots_lists:
+                    cnots_lists.append(cx)
+
+        circ = QuantumCircuit(self.best_candidate.n_qubits)
+        for t in cnots_lists:
+            circ.cx(*t)
+        circ.append(
+            self.best_candidate.get_qc(simplified=simplified), range(self.best_candidate.n_qubits)
+        )
+        for t in reversed(cnots_lists):
+            circ.cx(*t)
+
+        return circ.decompose()
+
+    def __get_best_candidate(self):
+        min_total_variables = float("inf")
+        best_candidate = None
+
+        # Iterate through the candidates
+        for e in self.candidates:
+            # Use a set to collect all variables from the expressions of the current candidate
+            variables = set()
+            total_variables = variables.union(
+                *[expression.simplify().vars for expression in e.exprs]
+            )
+
+            # Check if the current candidate has fewer total variables than the minimum found so far
+            if len(total_variables) < min_total_variables:
+                min_total_variables = len(total_variables)
+                best_candidate = e
+
+        return best_candidate
 
     def __get_connections(self):
         total_connections = []
