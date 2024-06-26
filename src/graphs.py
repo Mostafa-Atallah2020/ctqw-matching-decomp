@@ -22,10 +22,25 @@ class StaticGraph:
         self.nodes = set(range(2**self.n_qubits))
         self.rot_angle = self.__get_rot_angle()
         self.__int_edges = set([binary_tuple_to_int_tuple(t) for t in self.edges])
+        self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
 
         self.graph = nx.Graph()
         self.graph.add_nodes_from(self.nodes)
         self.graph.add_edges_from(self.edges)
+
+    def __split_by_hamming_distance(self):
+        """Split edges into sets based on Hamming distance."""
+        set_hamming_1 = set()
+        set_hamming_greater_1 = set()
+
+        for edge in self.edges:
+            dist = hamming_distance(edge[0], edge[1])
+            if dist == 1:
+                set_hamming_1.add(edge)
+            else:
+                set_hamming_greater_1.add(edge)
+
+        return set_hamming_1, set_hamming_greater_1
 
     def _validate_edges(self, edges):
         if not isinstance(edges, set):
@@ -70,6 +85,17 @@ class StaticGraph:
 
     def draw(self):
         GraphDrawer(self.n_qubits, self.__int_edges).show()
+
+
+class MultiEdgeGraph(StaticGraph):
+    def __new__(cls, edges):
+        temp_instance = super().__new__(cls)
+        StaticGraph.__init__(temp_instance, edges)
+
+        if len(temp_instance.set_hamming_greater_1) == 0:
+            return NonDiagonalEdgeGraph(edges)
+        else:
+            return DiagonalEdgeGraph(edges)
 
 
 class ParallelEdgeGraph(StaticGraph):
@@ -180,7 +206,6 @@ class NonDiagonalEdgeGraph(StaticGraph):
 class DiagonalEdgeGraph(StaticGraph):
     def __init__(self, edges):
         super().__init__(edges)
-        self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
         self.candidates = self.__get_candidates()
         self.connections = self.__get_connections()
         self.best_candidate = self.__get_best_candidate()
@@ -232,20 +257,6 @@ class DiagonalEdgeGraph(StaticGraph):
                     total_connections.append(c)
 
         return total_connections
-
-    def __split_by_hamming_distance(self):
-        """Split edges into sets based on Hamming distance."""
-        set_hamming_1 = set()
-        set_hamming_greater_1 = set()
-
-        for edge in self.edges:
-            dist = hamming_distance(edge[0], edge[1])
-            if dist == 1:
-                set_hamming_1.add(edge)
-            else:
-                set_hamming_greater_1.add(edge)
-
-        return set_hamming_1, set_hamming_greater_1
 
     def __get_candidates(self):
         parallel_candidates = []
