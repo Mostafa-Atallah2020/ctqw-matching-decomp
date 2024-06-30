@@ -16,7 +16,6 @@ class StaticGraph:
     def __init__(self, edges) -> None:
         self.edges = set()
         self._validate_edges(edges)
-        self._validate_unique_vertices()
 
         self.n_qubits = len(next(iter(self.edges))[0])
         self.nodes = set(range(2**self.n_qubits))
@@ -53,13 +52,6 @@ class StaticGraph:
                 self.edges.add(e)
             else:
                 raise ValueError("Edge type should be a tuple or Edge")
-
-    def _validate_unique_vertices(self):
-        vertices = set()
-        for edge in self.edges:
-            if edge[0] in vertices or edge[1] in vertices:
-                raise ValueError("No two edges can share the same vertex.")
-            vertices.update(edge)
 
     def __add__(self, other):
         return StaticGraph(self.nodes | other.nodes, self.edges | other.edges)
@@ -147,6 +139,7 @@ class ParallelEdgeGraph(StaticGraph):
 class NonDiagonalEdgeGraph(StaticGraph):
     def __init__(self, edges):
         super().__init__(edges)
+        self._validate_unique_vertices()
         self.edge_sets = self.__split_tuples_by_changing_bit()
         self.targets, self.exprs = self.__get_targets_exprs()
 
@@ -165,6 +158,13 @@ class NonDiagonalEdgeGraph(StaticGraph):
             circ = circ.compose(qc, range(self.n_qubits))
 
         return circ
+
+    def _validate_unique_vertices(self):
+        vertices = set()
+        for edge in self.edges:
+            if edge[0] in vertices or edge[1] in vertices:
+                raise ValueError("No two edges can share the same vertex.")
+            vertices.update(edge)
 
     def __get_targets_exprs(self):
         targets = []
