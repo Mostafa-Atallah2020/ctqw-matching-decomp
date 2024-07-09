@@ -19,7 +19,7 @@ class StaticGraph:
 
         self.n_qubits = len(next(iter(self.edges))[0])
         self.nodes = set(range(2**self.n_qubits))
-        self.rot_angle = self.__get_rot_angle()
+        self.rot_angle = np.pi / 2
         self.__int_edges = set([binary_tuple_to_int_tuple(t) for t in self.edges])
         self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
 
@@ -56,13 +56,19 @@ class StaticGraph:
     def __add__(self, other):
         return StaticGraph(self.nodes | other.nodes, self.edges | other.edges)
 
-    def __get_rot_angle(self):
-        # TODO: this one should not be fixed it should depend on the amplitudes of the edges
-        # we will assume it is constant for simplicity.
-        return np.pi / 2
-
     def get_adj_mat(self):
-        return nx.adjacency_matrix(self.graph).todense()
+        vertex_to_index = {v: i for i, v in enumerate(self.nodes)}
+        num_vertices = len(self.nodes)
+        adj_matrix = np.zeros((num_vertices, num_vertices), dtype=int)
+
+        for edge in self.__int_edges:
+            v1, v2 = edge
+            if v1 in vertex_to_index and v2 in vertex_to_index:
+                i, j = vertex_to_index[v1], vertex_to_index[v2]
+                adj_matrix[i][j] = 1
+                adj_matrix[j][i] = 1  # For undirected graph
+
+        return adj_matrix
 
     def get_statevector(self):
         vec = [0 for i in range(len(self.nodes))]
