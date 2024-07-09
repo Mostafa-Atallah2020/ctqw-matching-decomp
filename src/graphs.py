@@ -1,6 +1,8 @@
 import networkx as nx
 import numpy as np
 from qiskit import QuantumCircuit
+from qiskit.quantum_info import Operator
+from scipy.linalg import expm
 from sympy import symbols
 
 from src import MCRX, Edge, Expression, GraphDrawer
@@ -10,6 +12,41 @@ from src.misc import (
     hamming_distance,
     lists_to_sets,
 )
+
+
+class DynamicGraph:
+    def __init__(self, graph_sequence) -> None:
+        """
+        Initialize the DynamicGraph with a sequence of (graph, time) tuples.
+        Ensures all graphs have the same number of qubits.
+
+        Parameters:
+        graph_sequence (list of tuples): Each tuple contains a graph object and a corresponding time.
+        """
+        self.graph_sequence = graph_sequence
+        self.n_qubits = self.graph_sequence[0][0].n_qubits  # Assume the first graph's qubits as the reference
+
+        # Validate that all graphs have the same number of qubits
+        for graph, _ in self.graph_sequence:
+            if graph.n_qubits != self.n_qubits:
+                raise ValueError("All graphs in the sequence must have the same number of qubits")
+
+    def time_evo_op(self):
+        """
+        Compute the time evolution operator for the sequence of graphs.
+
+        Returns:
+        Operator: The resulting time evolution operator.
+        """
+        time_evo_op = np.eye(2**self.n_qubits, dtype=complex)  # Start with the identity matrix
+        for graph, time in self.graph_sequence:
+            adj_matrix = graph.get_adj_mat()
+            unitary = expm(-1j * adj_matrix * time)  # Compute the unitary evolution for this segment
+            time_evo_op = np.dot(unitary, time_evo_op)  # Multiply with the current time evolution operator
+
+        time_evo_op = Operator(time_evo_op)  # Convert to a Qiskit Operator
+        return time_evo_op
+
 
 
 class StaticGraph:
