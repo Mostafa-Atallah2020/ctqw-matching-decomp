@@ -1,3 +1,4 @@
+import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from qiskit import QuantumCircuit
@@ -14,42 +15,6 @@ from src.misc import (
 )
 
 
-class DynamicGraph:
-    def __init__(self, graph_sequence) -> None:
-        """
-        Initialize the DynamicGraph with a sequence of (graph, time) tuples.
-        Ensures all graphs have the same number of qubits.
-
-        Parameters:
-        graph_sequence (list of tuples): Each tuple contains a graph object and a corresponding time.
-        """
-        self.graph_sequence = graph_sequence
-        self.n_qubits = self.graph_sequence[0][0].n_qubits
-
-        # Validate that all graphs have the same number of qubits
-        for graph, _ in self.graph_sequence:
-            if graph.n_qubits != self.n_qubits:
-                raise ValueError("All graphs in the sequence must have the same number of qubits")
-
-    def time_evo_op(self, t_steps=1):
-        """
-        Compute the time evolution operator for the sequence of graphs.
-
-        Returns:
-        Operator: The resulting time evolution operator.
-        """
-        time_evo_op = np.eye(2**self.n_qubits, dtype=complex) 
-
-        for _ in range(t_steps):
-            for graph, time in self.graph_sequence:
-                adj_matrix = graph.get_adj_mat()
-                unitary = expm(-1j * adj_matrix * time)
-                time_evo_op = np.dot(unitary, time_evo_op)
-
-        time_evo_op = Operator(time_evo_op)
-        return time_evo_op
-
-
 class StaticGraph:
     def __init__(self, edges) -> None:
         self.edges = set()
@@ -64,6 +29,9 @@ class StaticGraph:
         self.graph = nx.Graph()
         self.graph.add_nodes_from(self.nodes)
         self.graph.add_edges_from(self.edges)
+
+    def __repr__(self):
+        return "StaticGraph(%s)" % (self.edges)
 
     def __split_by_hamming_distance(self):
         """Split edges into sets based on Hamming distance."""
@@ -121,6 +89,53 @@ class StaticGraph:
 
     def draw(self):
         GraphDrawer(self.n_qubits, self.__int_edges).show()
+
+
+class DynamicGraph:
+    def __init__(self, graph_sequence) -> None:
+        """
+        Initialize the DynamicGraph with a sequence of (graph, time) tuples.
+        Ensures all graphs have the same number of qubits.
+
+        Parameters:
+        graph_sequence (list of tuples): Each tuple contains a graph object and a corresponding time.
+        """
+        self.graph_sequence = graph_sequence
+        self.n_qubits = self.graph_sequence[0][0].n_qubits
+
+        # Validate that all graphs have the same number of qubits
+        for graph, _ in self.graph_sequence:
+            if graph.n_qubits != self.n_qubits:
+                raise ValueError("All graphs in the sequence must have the same number of qubits")
+
+    def time_evo_op(self, t_steps=1):
+        """
+        Compute the time evolution operator for the sequence of graphs.
+
+        Returns:
+        Operator: The resulting time evolution operator.
+        """
+        time_evo_op = np.eye(2**self.n_qubits, dtype=complex)
+
+        for _ in range(t_steps):
+            for graph, time in self.graph_sequence:
+                adj_matrix = graph.get_adj_mat()
+                unitary = expm(-1j * adj_matrix * time)
+                time_evo_op = np.dot(unitary, time_evo_op)
+
+        time_evo_op = Operator(time_evo_op)
+        return time_evo_op
+
+    def draw(self):
+        for i, (graph, delta_t) in enumerate(self.graph_sequence):
+            print(f"{graph} | Time = {delta_t}")
+            graph.draw()
+            plt.show()
+
+
+class IntersectingEdgesGraph(StaticGraph):
+    def __init__(self, edges):
+        super().__init__(edges)
 
 
 class MultiEdgeGraph(StaticGraph):
