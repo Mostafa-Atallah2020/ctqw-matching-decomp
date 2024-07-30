@@ -5,6 +5,7 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from scipy.linalg import expm
 from sympy import symbols
+from collections import defaultdict
 
 from src import MCRX, Edge, Expression, GraphDrawer
 from src.misc import (
@@ -136,6 +137,24 @@ class DynamicGraph:
 class IntersectingEdgesGraph(StaticGraph):
     def __init__(self, edges):
         super().__init__(edges)
+        self.subgraphs = self.__decompose_into_subgraphs()
+
+    def __decompose_into_subgraphs(self):
+        target_to_edges = defaultdict(set)
+        decomposed_subgraphs = []
+
+        # Group edges by their target state
+        for edge in self.edges:
+            single_edge_graph = ParallelEdgeGraph({edge})
+            target_to_edges[single_edge_graph.target].add(edge)
+
+        # Create non-diagonal subgraphs for each target state
+        for target_state, edges in target_to_edges.items():
+            non_diagonal_subgraph = NonDiagonalEdgeGraph(edges)
+            decomposed_subgraphs.append(non_diagonal_subgraph)
+
+        return decomposed_subgraphs
+
 
 
 class MultiEdgeGraph(StaticGraph):
