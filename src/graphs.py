@@ -1,3 +1,6 @@
+import random
+from collections import defaultdict
+
 import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
@@ -5,7 +8,6 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from scipy.linalg import expm
 from sympy import symbols
-from collections import defaultdict
 
 from src import MCRX, Edge, Expression, GraphDrawer
 from src.misc import (
@@ -14,6 +16,96 @@ from src.misc import (
     hamming_distance,
     lists_to_sets,
 )
+
+
+class Graph:
+    def __init__(self, edges) -> None:
+        self.edges = set()
+        self._validate_edges(edges)
+
+        if self.edges:
+            first_edge = next(iter(self.edges))
+            if isinstance(first_edge[0], str):
+                self.n_qubits = len(first_edge[0])
+            else:
+                self.n_qubits = len(bin(max(max(self.edges)))) - 2
+        else:
+            raise ValueError("Empty edge set")
+
+        self.nodes = set(range(2**self.n_qubits))
+        self.rot_angle = np.pi / 2
+        self.__int_edges = set([self._edge_to_int_tuple(e) for e in self.edges])
+        self.set_hamming_1, self.set_hamming_greater_1 = self.__split_by_hamming_distance()
+
+        self.graph = nx.Graph()
+        self.graph.add_nodes_from(self.nodes)
+        self.graph.add_edges_from(self.__int_edges)
+
+    def _edge_to_int_tuple(self, edge):
+        if isinstance(edge[0], str):
+            return tuple(int(v, 2) for v in edge)
+        return edge
+
+    def _validate_edges(self, edges):
+        if isinstance(edges, set):
+            self.edges = edges
+        elif isinstance(edges, list):
+            self.edges = set(edges)
+        else:
+            raise ValueError("Edges must be a set or list.")
+
+        for e in self.edges:
+            if not (isinstance(e, tuple) and len(e) == 2):
+                raise ValueError("Each edge should be a tuple of length 2")
+
+    def __split_by_hamming_distance(self):
+        set_hamming_1 = set()
+        set_hamming_greater_1 = set()
+
+        for edge in self.__int_edges:
+            dist = bin(edge[0] ^ edge[1]).count("1")
+            if dist == 1:
+                set_hamming_1.add(edge)
+            else:
+                set_hamming_greater_1.add(edge)
+
+        return set_hamming_1, set_hamming_greater_1
+
+    def __repr__(self):
+        return f"StaticGraph(edges={self.edges})"
+
+
+class PowerOf2EdgeGraph(Graph):
+    def __init__(self, edges):
+        super().__init__(edges)
+        self.subgraphs = self.__decompose_into_subgraphs()
+
+    def __decompose_into_subgraphs(self):
+        edges = list(self.graph.edges)
+        subgraphs = []
+
+        while edges:
+            k = int(np.log2(len(edges)))
+            subgraph_size = 2**k
+
+            # Select a random edge as a starting point
+            start_edge = random.choice(edges)
+            subgraph_edges = [start_edge]
+            edges.remove(start_edge)
+
+            # Greedily add edges that don't share vertices with existing edges
+            for _ in range(subgraph_size - 1):
+                if not edges:
+                    break
+                for edge in edges:
+                    if all(len(set(edge) & set(e)) == 0 for e in subgraph_edges):
+                        subgraph_edges.append(edge)
+                        edges.remove(edge)
+                        break
+
+            subgraphs.append(nx.Graph(subgraph_edges))
+
+        return subgraphs
 
 
 class StaticGraph:
@@ -154,7 +246,6 @@ class IntersectingEdgesGraph(StaticGraph):
             decomposed_subgraphs.append(non_diagonal_subgraph)
 
         return decomposed_subgraphs
-
 
 
 class MultiEdgeGraph(StaticGraph):
