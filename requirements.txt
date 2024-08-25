@@ -1,10 +1,11 @@
 matplotlib
 networkx
 scipy
-qiskit
-qiskit_aer
+qiskit==1.2.0
+qiskit-aer==0.15
 pylatexenc
 black[jupyter]
 pyzx
 pytest
 isort
+pennylane
