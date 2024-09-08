@@ -77,5 +77,8 @@ class MCRX:
                 self.qc.append(gate, ctrl_qubits + [self.target])
 
     def simplify(self):
-        simplified_expr = Expression(self.expr).simplify()
+        if len(self.expr.free_symbols) == 1:
+            simplified_expr = Expression(self.expr)
+        else:
+            simplified_expr = Expression(self.expr).simplify()
         return MCRX(self.n_qubits, simplified_expr, self.target, self.angle)

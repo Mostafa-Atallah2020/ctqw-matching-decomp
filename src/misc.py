@@ -74,9 +74,10 @@ def lists_to_sets(*lists):
 
     return sets
 
+
 def graph_matchings(edges):
     subgraphs = []  # To hold the subgroups (sets)
-    
+
     for edge in edges:
         placed = False
         for subgraph in subgraphs:
@@ -88,5 +89,5 @@ def graph_matchings(edges):
         if not placed:
             # If the edge doesn't fit in any existing subgraph, create a new set
             subgraphs.append({edge})
-    
+
     return subgraphs

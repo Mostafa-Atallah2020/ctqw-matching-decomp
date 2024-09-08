@@ -13,9 +13,9 @@ from src import MCRX, Edge, Expression, GraphDrawer
 from src.misc import (
     binary_tuple_to_int_tuple,
     get_cyclic_connections,
+    graph_matchings,
     hamming_distance,
     lists_to_sets,
-    graph_matchings
 )
 
 
@@ -237,7 +237,7 @@ class IntersectingEdgesGraph(StaticGraph):
 
         subgraphs = graph_matchings(self.edges)
         for sg in subgraphs:
-            g =MultiEdgeGraph(sg)
+            g = MultiEdgeGraph(sg)
             decomposed_subgraphs.append(g)
         return decomposed_subgraphs
 
