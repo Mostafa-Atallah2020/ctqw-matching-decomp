@@ -73,3 +73,20 @@ def lists_to_sets(*lists):
     sets = [set(comb) for comb in combinations]
 
     return sets
+
+def graph_matchings(edges):
+    subgraphs = []  # To hold the subgroups (sets)
+    
+    for edge in edges:
+        placed = False
+        for subgraph in subgraphs:
+            # Check if the current edge shares any vertex with any edge in the subgraph
+            if not any(set(edge) & set(e) for e in subgraph):
+                subgraph.add(edge)
+                placed = True
+                break
+        if not placed:
+            # If the edge doesn't fit in any existing subgraph, create a new set
+            subgraphs.append({edge})
+    
+    return subgraphs

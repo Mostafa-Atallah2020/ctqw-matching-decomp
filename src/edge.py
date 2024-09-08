@@ -26,9 +26,9 @@ class Edge:
     def __edge_type(self):
         """Determine if the edge is parallel or diagonal."""
         if self.__hamming_distance() == 1:
-            return "parallel"
+            return "Axial"
         else:
-            return "diagonal"
+            return "Diagonal"
 
     def __get_differing_positions(self):
         # List to store positions where bits differ
