@@ -65,21 +65,43 @@ class Edge:
 
         return possible_edges
 
-    def get_parallel_candidates(self):
-        """Exclude edges from possible edges that do not satisfy the condition and return parallel candidates."""
+    def get_all_projections(self):
+        """Generate all possible projections of an edge onto a hypercube."""
+        projections = []
+        n = len(self.differing_positions)
 
-        parallel_candidates = []
+        # Add the original edge
+        projections.append(self)
 
-        # Calculate known_bits from CNOTs
-        known_bits = ""
-        for e in self.connections:
-            k, l = e
-            xor = int(self.end[k]) ^ int(self.end[l])
-            known_bits += str(xor)
+        # Generate all intermediate nodes
+        for i in range(1, n):
+            for combo in self.__combinations(self.differing_positions, i):
+                new_node = list(self.start)
+                for pos in combo:
+                    new_node[pos] = self.end[pos]
+                new_node_str = ''.join(new_node)
+                projections.append(Edge((self.start, new_node_str)))
+                projections.append(Edge((new_node_str, self.end)))
 
-        # Filter possible edges and add valid parallel candidates
-        for e in self.to_possible_edges():
-            if e.hamming_distance == 1 and known_bits in e.end:
-                parallel_candidates.append(e)
+        # Add the edge from start to start
+        projections.append(Edge((self.start, self.start)))
 
-        return parallel_candidates
+        return projections
+
+    def __combinations(self, iterable, r):
+        pool = tuple(iterable)
+        n = len(pool)
+        if r > n:
+            return
+        indices = list(range(r))
+        yield tuple(pool[i] for i in indices)
+        while True:
+            for i in reversed(range(r)):
+                if indices[i] != i + n - r:
+                    break
+            else:
+                return
+            indices[i] += 1
+            for j in range(i+1, r):
+                indices[j] = indices[j-1] + 1
+            yield tuple(pool[i] for i in indices)

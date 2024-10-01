@@ -425,7 +425,7 @@ class DiagonalEdgeGraph(StaticGraph):
         parallel_candidates = []
         for e in self.set_hamming_greater_1:
             edge = Edge(e)
-            parallel_candidates.append(edge.get_parallel_candidates())
+            parallel_candidates.append(edge.get_all_projections())
 
         parallel_candidates = lists_to_sets(*parallel_candidates)
 
