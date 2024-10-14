@@ -442,5 +442,19 @@ class DiagonalEdgeGraph(StaticGraph):
             except:
                 # Skip the item that caused an error
                 continue
+        
+        if len(valid_candidates) == 0:
+            single_candidates = []
+            single_connections =[]
+            for e in self.edges:
+                singleG = DiagonalEdgeGraph({e})
+                for c in singleG.candidates:
+                    single_candidates.append(c)
+                for cc in singleG.connections:
+                    single_connections.append(cc)
 
+            self.candidates = single_candidates
+            self.connections = single_connections
+            self.best_candidate = self.__get_best_candidate()
+            valid_candidates = self.candidates
         return valid_candidates
