@@ -79,7 +79,7 @@ class Edge:
                 new_node = list(self.start)
                 for pos in combo:
                     new_node[pos] = self.end[pos]
-                new_node_str = ''.join(new_node)
+                new_node_str = "".join(new_node)
                 projections.append(Edge((self.start, new_node_str)))
                 projections.append(Edge((new_node_str, self.end)))
 
@@ -102,6 +102,6 @@ class Edge:
             else:
                 return
             indices[i] += 1
-            for j in range(i+1, r):
-                indices[j] = indices[j-1] + 1
+            for j in range(i + 1, r):
+                indices[j] = indices[j - 1] + 1
             yield tuple(pool[i] for i in indices)

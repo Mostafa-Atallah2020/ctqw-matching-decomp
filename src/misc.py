@@ -76,7 +76,7 @@ def lists_to_sets(*lists):
 
 
 def graph_matchings(edges):
-    subgraphs = []  
+    subgraphs = []
     for edge in edges:
         placed = False
         for subgraph in subgraphs:
@@ -84,15 +84,16 @@ def graph_matchings(edges):
                 subgraph.add(edge)
                 placed = True
                 break
-        
+
         if not placed:
             subgraphs.append({edge})
 
     return subgraphs
 
+
 def graph_to_bitstring_edges(graph):
     num_nodes = len(graph.nodes)
     num_bits = len(bin(num_nodes - 1)) - 2  # bin(x) gives '0bxxx', so we subtract 2
-    node_to_bitstring = {node: format(node, f'0{num_bits}b') for node in graph.nodes}
+    node_to_bitstring = {node: format(node, f"0{num_bits}b") for node in graph.nodes}
     edges_bitstring = {(node_to_bitstring[u], node_to_bitstring[v]) for u, v in graph.edges}
     return edges_bitstring
