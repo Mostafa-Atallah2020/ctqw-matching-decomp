@@ -407,21 +407,15 @@ class DiagonalEdgeGraph(StaticGraph):
 
     def __get_connections(self):
         total_connections = []
-        # bit_tuple = tuple(*self.best_candidate.edges)
-        # changing_bit = Edge(bit_tuple).changing_bits[0]
         targets = self.best_candidate.targets
-        if len(targets) == 1:
-            changing_bit = targets[0]
-
-        else:
-            raise ValueError(
-                "Assumption of best candidate have edges of same direction is not true"
-            )
-
         for e in self.set_hamming_greater_1:
-            edge = Edge(e)
-            connections = edge.connections
-            total_connections += connections[changing_bit]
+            for t in targets:
+                try:
+                    edge = Edge(e)
+                    connections = edge.connections
+                    total_connections += connections[t]
+                except:
+                    continue
 
         return total_connections
 
