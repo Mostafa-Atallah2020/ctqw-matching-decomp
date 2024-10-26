@@ -370,17 +370,11 @@ class DiagonalEdgeGraph(StaticGraph):
     def __init__(self, edges):
         super().__init__(edges)
         self.candidates = self.__get_candidates()
-        self.connections = self.__get_connections()
         self.best_candidate = self.__get_best_candidate()
+        self.connections = self.__get_connections()
 
     def get_qc(self, simplified=False):
-        cnots_lists = []
-        for t in self.best_candidate.targets:
-            cnots = get_cyclic_connections(self.connections, t)
-            for cx in cnots:
-                if cx not in cnots_lists:
-                    cnots_lists.append(cx)
-
+        cnots_lists = self.connections
         circ = QuantumCircuit(self.best_candidate.n_qubits)
         for t in cnots_lists:
             circ.cx(*t)
@@ -413,11 +407,21 @@ class DiagonalEdgeGraph(StaticGraph):
 
     def __get_connections(self):
         total_connections = []
+        # bit_tuple = tuple(*self.best_candidate.edges)
+        # changing_bit = Edge(bit_tuple).changing_bits[0]
+        targets = self.best_candidate.targets
+        if len(targets) == 1:
+            changing_bit = targets[0]
+
+        else:
+            raise ValueError(
+                "Assumption of best candidate have edges of same direction is not true"
+            )
+
         for e in self.set_hamming_greater_1:
             edge = Edge(e)
-            for c in edge.connections:
-                if c not in total_connections:
-                    total_connections.append(c)
+            connections = edge.connections
+            total_connections += connections[changing_bit]
 
         return total_connections
 
