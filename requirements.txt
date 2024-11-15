@@ -8,4 +8,3 @@ black[jupyter]
 pyzx
 pytest
 isort
-pennylane
