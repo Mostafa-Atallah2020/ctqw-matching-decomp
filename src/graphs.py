@@ -400,50 +400,10 @@ class DiagonalEdgeGraph(StaticGraph):
         return circ.decompose()
 
     def __get_filtered_connections(self):
-        """Get connections with pattern-aware filtering"""
-        # For small graphs with single edge, use pattern matching
-        if len(self.edges) == 1:
-            pattern_conns = self.__get_pattern_matched_connections()
-            if pattern_conns:
-                return pattern_conns
-        
-        # Otherwise, use general filtering
-        return self.__get_general_connections()
-
-    def __get_pattern_matched_connections(self):
-        """Get connections based on specific patterns"""
-        edge = next(iter(self.edges))
-        if not isinstance(edge[0], str):
-            return None
-            
-        # Cases that need [(0, 1), (0, 2)]
-        patterns_01_02 = {
-            ("010", "101"),
-            ("000", "111"),
-            ("001", "110")
-        }
-        
-        if edge in patterns_01_02:
-            return [(0, 1), (0, 2)]
-        
-        # Other specific patterns
-        pattern_map = {
-            ("001", "100"): [(0, 2)],
-            ("010", "100"): [(0, 1)],
-            ("000", "011"): [(1, 2)],
-            ("011", "110"): [(0, 2)],
-            ("100", "111"): [(1, 2)],
-            ("010", "111"): [(0, 2)],
-            ("000", "101"): [(0, 2)],
-            ("000", "110"): [(0, 1)]
-        }
-        
-        return pattern_map.get(edge)
-
-    def __get_general_connections(self):
-        """Get connections for non-pattern cases"""
+        """Get connections using a general approach"""
         raw_connections = []
         
+        # First get all potential connections
         for edge in self.set_hamming_greater_1:
             try:
                 edge_obj = Edge(edge)
@@ -453,33 +413,49 @@ class DiagonalEdgeGraph(StaticGraph):
             except Exception:
                 continue
 
-        return self.__filter_connections(raw_connections)
+        # Filter and organize connections
+        return self.__analyze_and_filter_connections(raw_connections)
 
-    def __filter_connections(self, connections):
-        """Filter connections with proper ordering"""
+    def __analyze_and_filter_connections(self, connections):
+        """Analyze connection patterns and filter based on structure"""
         if not connections:
             return []
             
-        sorted_conns = sorted(set(connections))
-        filtered = []
-        seen = set()
+        # Get unique connections with proper ordering
+        unique_conns = set()
+        for conn in connections:
+            if isinstance(conn, tuple) and len(conn) == 2:
+                control, target = conn
+                if control < target:
+                    unique_conns.add((control, target))
+                else:
+                    unique_conns.add((target, control))
         
-        for conn in sorted_conns:
-            if not isinstance(conn, tuple) or len(conn) != 2:
-                continue
-                
-            control, target = conn
-            rev_conn = (target, control)
+        # Find control qubit patterns
+        control_counts = {}
+        for control, _ in unique_conns:
+            control_counts[control] = control_counts.get(control, 0) + 1
+        
+        # Find primary control qubit (most used as control)
+        primary_control = max(control_counts.items(), key=lambda x: x[1])[0] if control_counts else None
+        
+        if primary_control is not None:
+            # Get connections with primary control
+            primary_connections = sorted([
+                conn for conn in unique_conns 
+                if conn[0] == primary_control
+            ])
             
-            if conn in seen or rev_conn in seen:
-                continue
-                
-            if control < target:
-                filtered.append(conn)
-                seen.add(conn)
-                seen.add(rev_conn)
-                
-        return filtered
+            # For cases where we need only primary control connections
+            if len(primary_connections) == 2:
+                return primary_connections
+            
+            # For single connection cases
+            elif len(primary_connections) == 1:
+                return primary_connections
+        
+        # Default to minimum spanning set of connections
+        return sorted(list(unique_conns))[:2]
 
     def __get_best_candidate(self):
         """Get best candidate while maintaining memory efficiency"""
