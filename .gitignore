@@ -160,3 +160,5 @@ cython_debug/
 #.idea/
 
 .vscode
+pauli_strings.txt
+graphs and their circuits.ipynb
