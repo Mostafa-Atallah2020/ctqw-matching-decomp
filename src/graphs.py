@@ -373,6 +373,28 @@ class DiagonalEdgeGraph(StaticGraph):
         self.best_candidate = self.__get_best_candidate()
         self.connections = self.__get_filtered_connections()
 
+    def __get_filtered_connections(self):
+        """Get connections for diagonal edges"""
+        raw_connections = []
+        
+        # Get connections from each diagonal edge
+        for edge in self.set_hamming_greater_1:
+            edge_obj = Edge(edge)
+            # Get differing positions
+            diff_positions = []
+            for i, (b1, b2) in enumerate(zip(edge_obj.start, edge_obj.end)):
+                if b1 != b2:
+                    diff_positions.append(i)
+            
+            if len(diff_positions) > 1:
+                # Create connections from first differing position to all others
+                first_pos = diff_positions[0]
+                for pos in diff_positions[1:]:
+                    raw_connections.append((first_pos, pos))
+
+        return sorted(list(set(raw_connections)))
+
+
     def get_qc(self, simplified=False):
         if not self.best_candidate:
             return QuantumCircuit(self.n_qubits)
@@ -399,66 +421,8 @@ class DiagonalEdgeGraph(StaticGraph):
             
         return circ.decompose()
 
-    def __get_filtered_connections(self):
-        """Get connections using a general approach"""
-        raw_connections = []
-        
-        # First get all potential connections
-        for edge in self.set_hamming_greater_1:
-            try:
-                edge_obj = Edge(edge)
-                for conn_key in edge_obj.connections:
-                    conns = edge_obj.connections[conn_key]
-                    raw_connections.extend(conns)
-            except Exception:
-                continue
-
-        # Filter and organize connections
-        return self.__analyze_and_filter_connections(raw_connections)
-
-    def __analyze_and_filter_connections(self, connections):
-        """Analyze connection patterns and filter based on structure"""
-        if not connections:
-            return []
-            
-        # Get unique connections with proper ordering
-        unique_conns = set()
-        for conn in connections:
-            if isinstance(conn, tuple) and len(conn) == 2:
-                control, target = conn
-                if control < target:
-                    unique_conns.add((control, target))
-                else:
-                    unique_conns.add((target, control))
-        
-        # Find control qubit patterns
-        control_counts = {}
-        for control, _ in unique_conns:
-            control_counts[control] = control_counts.get(control, 0) + 1
-        
-        # Find primary control qubit (most used as control)
-        primary_control = max(control_counts.items(), key=lambda x: x[1])[0] if control_counts else None
-        
-        if primary_control is not None:
-            # Get connections with primary control
-            primary_connections = sorted([
-                conn for conn in unique_conns 
-                if conn[0] == primary_control
-            ])
-            
-            # For cases where we need only primary control connections
-            if len(primary_connections) == 2:
-                return primary_connections
-            
-            # For single connection cases
-            elif len(primary_connections) == 1:
-                return primary_connections
-        
-        # Default to minimum spanning set of connections
-        return sorted(list(unique_conns))[:2]
-
     def __get_best_candidate(self):
-        """Get best candidate while maintaining memory efficiency"""
+        """Get best candidate based on number of variables"""
         if not self.candidates:
             return None
             
@@ -482,7 +446,7 @@ class DiagonalEdgeGraph(StaticGraph):
         return best
 
     def __get_candidates(self):
-        """Get candidates with memory efficiency"""
+        """Get valid candidates for transformation"""
         try:
             parallel_candidates = []
             
