@@ -5,23 +5,11 @@ class Edge:
         self.__validate()
         self.type = self.__edge_type()
         self.hamming_distance = self.__hamming_distance()
-        self.changing_bits = [
-            i for i in range(len(self.edge[0])) if self.edge[0][i] != self.edge[1][i]
-        ]
         self.differing_positions = self.__get_differing_positions()
-        self.connections = self.__analyze_bit_rotations()
-
-    def __analyze_bit_rotations(self):
-        if len(self.changing_bits) < 2:
-            return {}
-
-        connections = {}
-        for direction in self.changing_bits:
-            connections[direction] = [
-                (direction, bit) for bit in self.changing_bits if bit != direction
-            ]
-
-        return connections
+        self.connections = [
+            (self.differing_positions[k], self.differing_positions[k + 1])
+            for k in range(len(self.differing_positions) - 1)
+        ]
 
     def __validate(self):
         if not isinstance((self.start, self.end), tuple) or len(self.start) != len(self.end):
