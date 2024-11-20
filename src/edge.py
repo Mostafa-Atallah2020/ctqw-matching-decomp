@@ -15,93 +15,58 @@ class Edge:
         if not isinstance((self.start, self.end), tuple) or len(self.start) != len(self.end):
             raise ValueError("Each edge must be a tuple of two binary strings of equal length.")
         if not all(bit in "01" for bit in self.start + self.end):
-            raise ValueError(
-                "Each node in an edge must be a binary string consisting of 0s and 1s."
-            )
+            raise ValueError("Each node must be a binary string of 0s and 1s.")
 
     def __hamming_distance(self):
-        """Calculate the Hamming distance between the two nodes of the edge."""
         return sum(c1 != c2 for c1, c2 in zip(self.start, self.end))
 
     def __edge_type(self):
-        """Determine if the edge is parallel or diagonal."""
-        if self.__hamming_distance() == 1:
-            return "Axial"
-        else:
-            return "Diagonal"
+        return "Axial" if self.__hamming_distance() == 1 else "Diagonal"
 
     def __get_differing_positions(self):
-        # List to store positions where bits differ
-        differing_positions = []
+        return [
+            idx for idx, (bit_i, bit_j) in enumerate(zip(self.start, self.end)) if bit_i != bit_j
+        ]
 
-        # Identify positions where bits differ
-        for idx, (bit_i, bit_j) in enumerate(zip(self.start, self.end)):
-            if bit_i != bit_j:
-                differing_positions.append(idx)
-
-        return differing_positions
-
-    def to_possible_edges(self):
-        """generate a possible set of edge candidates."""
-        # Find possible parallel edges
+    def get_parallel_candidates(self):
+        """Generate possible edges by transforming one bit at a time."""
         possible_edges = []
+        start_bits = list(self.start)
 
-        def generate_edges(i, j, positions):
-            if not positions:
-                e = Edge(("".join(i), "".join(j)))
-                possible_edges.append(e)
-                return
+        for i in range(len(self.differing_positions)):
+            # Create intermediate node by changing bits up to position i
+            intermediate = start_bits.copy()
+            for j in range(i + 1):
+                pos = self.differing_positions[j]
+                intermediate[pos] = self.end[pos]
 
-            pos = positions[0]
-            new_i = i[:]
-            new_j = j[:]
-            new_j[pos] = "0"
-            generate_edges(new_i, new_j, positions[1:])
-            new_j[pos] = "1"
-            generate_edges(new_i, new_j, positions[1:])
+            # Add edge from start to intermediate
+            possible_edges.append(Edge((self.start, "".join(intermediate))))
 
-        # Generate edges based on differing positions
-        generate_edges(list(self.start), list(self.start), self.differing_positions)
+            # Add edge from intermediate to end
+            possible_edges.append(Edge(("".join(intermediate), self.end)))
 
-        return possible_edges
+        return list(set(possible_edges))
 
     def get_all_projections(self):
-        """Generate all possible projections of an edge onto a hypercube."""
+        """Generate all possible projections between start and end nodes."""
         projections = []
         n = len(self.differing_positions)
 
-        # Add the original edge
+        # Add original edge
         projections.append(self)
 
-        # Generate all intermediate nodes
+        # Generate all possible intermediate nodes
         for i in range(1, n):
-            for combo in self.__combinations(self.differing_positions, i):
-                new_node = list(self.start)
-                for pos in combo:
-                    new_node[pos] = self.end[pos]
-                new_node_str = "".join(new_node)
-                projections.append(Edge((self.start, new_node_str)))
-                projections.append(Edge((new_node_str, self.end)))
+            # Get all combinations of i positions
+            current = list(self.start)
+            for j in range(i):
+                pos = self.differing_positions[j]
+                current[pos] = self.end[pos]
+                new_node = "".join(current)
 
-        # Add the edge from start to start
-        projections.append(Edge((self.start, self.start)))
+                # Add edges to and from intermediate node
+                projections.append(Edge((self.start, new_node)))
+                projections.append(Edge((new_node, self.end)))
 
-        return projections
-
-    def __combinations(self, iterable, r):
-        pool = tuple(iterable)
-        n = len(pool)
-        if r > n:
-            return
-        indices = list(range(r))
-        yield tuple(pool[i] for i in indices)
-        while True:
-            for i in reversed(range(r)):
-                if indices[i] != i + n - r:
-                    break
-            else:
-                return
-            indices[i] += 1
-            for j in range(i + 1, r):
-                indices[j] = indices[j - 1] + 1
-            yield tuple(pool[i] for i in indices)
+        return list(set(projections))

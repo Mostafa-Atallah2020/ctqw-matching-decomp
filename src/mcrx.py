@@ -101,35 +101,36 @@ class MCRX:
         while changed and len(mcrx_gates) > 1:
             changed = False
             i = 0
-            
+
             while i < len(mcrx_gates) - 1:
                 mcrx1 = mcrx_gates[i]
-                mcrx2 = mcrx_gates[i+1]
-                
+                mcrx2 = mcrx_gates[i + 1]
+
                 # Find controls with different states
                 states1 = {}
                 states2 = {}
-                
+
                 for state, qubits in mcrx1.ctrls:
                     for q, s in zip(qubits, state):
                         states1[q] = s
-                        
+
                 for state, qubits in mcrx2.ctrls:
                     for q, s in zip(qubits, state):
                         states2[q] = s
-                
+
                 # Identify cancelling controls
-                cancel_qubits = {q for q in states1.keys() & states2.keys() 
-                            if states1[q] != states2[q]}
-                
+                cancel_qubits = {
+                    q for q in states1.keys() & states2.keys() if states1[q] != states2[q]
+                }
+
                 if cancel_qubits:
                     changed = True
-                    
+
                     # Remove cancelled controls from both gates
                     new_gates = []
                     for mcrx in (mcrx1, mcrx2):
                         new_ctrls = []
-                        
+
                         for state, qubits in mcrx.ctrls:
                             new_state = ""
                             new_qubits = []
@@ -139,40 +140,49 @@ class MCRX:
                                     new_qubits.append(q)
                             if new_qubits:
                                 new_ctrls.append((new_state, new_qubits))
-                        
+
                         if new_ctrls:
                             # Create expression from remaining controls
-                            x = [Symbol(f'x_{q}') for q in range(self.n_qubits)]
+                            x = [Symbol(f"x_{q}") for q in range(self.n_qubits)]
                             term_factors = []
                             for state, qubits in new_ctrls:
                                 for q, s in zip(qubits, state):
-                                    term_factors.append(~x[q] if s == '0' else x[q])
-                            new_expr = And(*term_factors) if len(term_factors) > 1 else term_factors[0]
-                            
+                                    term_factors.append(~x[q] if s == "0" else x[q])
+                            new_expr = (
+                                And(*term_factors) if len(term_factors) > 1 else term_factors[0]
+                            )
+
                             # Create new MCRX with updated controls and expression
-                            new_mcrx = MCRX(self.n_qubits, Expression(new_expr), self.target, self.angle)
+                            new_mcrx = MCRX(
+                                self.n_qubits, Expression(new_expr), self.target, self.angle
+                            )
                             new_mcrx.ctrls = new_ctrls
                             new_gates.append(new_mcrx)
                         else:
                             # Create control-free MCRX
-                            new_mcrx = MCRX(self.n_qubits, Expression(Symbol(f'x_{self.target}')), self.target, self.angle)
+                            new_mcrx = MCRX(
+                                self.n_qubits,
+                                Expression(Symbol(f"x_{self.target}")),
+                                self.target,
+                                self.angle,
+                            )
                             new_mcrx.ctrls = []
                             new_gates.append(new_mcrx)
-                    
+
                     # Check if gates are now identical
                     if new_gates[0].ctrls == new_gates[1].ctrls:
-                        mcrx_gates[i:i+2] = [new_gates[0]]
+                        mcrx_gates[i : i + 2] = [new_gates[0]]
                     else:
-                        mcrx_gates[i:i+2] = new_gates
+                        mcrx_gates[i : i + 2] = new_gates
                         i += 1
                 else:
                     # Check if gates are already identical
                     if mcrx1.ctrls == mcrx2.ctrls:
-                        mcrx_gates.pop(i+1)
+                        mcrx_gates.pop(i + 1)
                         changed = True
                     else:
                         i += 1
-        
+
         # Return single gate or combine gates
         if len(mcrx_gates) == 1:
             return mcrx_gates[0]
@@ -183,11 +193,11 @@ class MCRX:
             final_mcrx.ctrls = []
             for mcrx in mcrx_gates:
                 final_mcrx.ctrls.extend(mcrx.ctrls)
-            
+
             # Build circuit
             final_mcrx.qc = QuantumCircuit(self.n_qubits)
             for ctrl_state, ctrl_qubits in final_mcrx.ctrls:
                 gate = multi_crx(self.angle, ctrl_state)
                 final_mcrx.qc.append(gate, ctrl_qubits + [self.target])
-            
+
             return final_mcrx
