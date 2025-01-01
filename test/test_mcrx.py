@@ -1,6 +1,6 @@
 import numpy as np
-from qiskit import QuantumCircuit
 from IPython.display import display
+from qiskit import QuantumCircuit
 from sympy import symbols
 
 from src import MCRX, multi_crx

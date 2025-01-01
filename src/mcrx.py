@@ -1,7 +1,9 @@
 import re
+
 import numpy as np
 from qiskit import QuantumCircuit
 from sympy import And, Not, Or, Symbol, simplify
+
 from src import Expression
 from src.misc import multi_crx
 
