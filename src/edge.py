@@ -1,14 +1,16 @@
 from itertools import combinations
 
+
 class Edge:
     """
     Represents an edge in a binary hypercube graph.
     Each edge connects two nodes represented as binary strings.
     """
+
     def __init__(self, edge):
         """
         Initialize an edge with two binary string nodes.
-        
+
         Args:
             edge (tuple): A tuple of two binary strings (start_node, end_node)
         """
@@ -41,8 +43,7 @@ class Edge:
     def __get_differing_positions(self):
         """Find positions where bits differ between start and end nodes."""
         return [
-            idx for idx, (bit_i, bit_j) in enumerate(zip(self.start, self.end)) 
-            if bit_i != bit_j
+            idx for idx, (bit_i, bit_j) in enumerate(zip(self.start, self.end)) if bit_i != bit_j
         ]
 
     def __hash__(self):
@@ -53,8 +54,9 @@ class Edge:
         """Define equality for Edge objects."""
         if not isinstance(other, Edge):
             return False
-        return (self.start == other.start and self.end == other.end) or \
-               (self.start == other.end and self.end == other.start)
+        return (self.start == other.start and self.end == other.end) or (
+            self.start == other.end and self.end == other.start
+        )
 
     def get_parallel_candidates(self):
         """
@@ -63,7 +65,7 @@ class Edge:
         """
         candidates = []
         n = len(self.differing_positions)
-        
+
         # Generate all possible orderings of bit flips
         for r in range(1, n):
             # Create intermediate node by changing bits up to position r
@@ -72,11 +74,11 @@ class Edge:
                 pos = self.differing_positions[i]
                 current[pos] = self.end[pos]
             intermediate = "".join(current)
-            
+
             # Add edges to and from intermediate node
             candidates.append(Edge((self.start, intermediate)))
             candidates.append(Edge((intermediate, self.end)))
-        
+
         return list(set(candidates))
 
     def get_all_projections(self):
@@ -86,10 +88,10 @@ class Edge:
         """
         projections = set()
         n = len(self.differing_positions)
-        
+
         # Add original edge
         projections.add(self)
-        
+
         # Generate all possible intermediate nodes
         for r in range(1, n):  # r is the number of bits to flip
             for pos_combo in combinations(self.differing_positions, r):
@@ -98,11 +100,11 @@ class Edge:
                 for pos in pos_combo:
                     current[pos] = self.end[pos]
                 intermediate = "".join(current)
-                
+
                 # Add edges to and from intermediate node
                 projections.add(Edge((self.start, intermediate)))
                 projections.add(Edge((intermediate, self.end)))
-        
+
         return list(projections)
 
     def get_path_distance(self):
@@ -115,5 +117,7 @@ class Edge:
 
     def __repr__(self):
         """Detailed representation of the edge."""
-        return f"Edge(start='{self.start}', end='{self.end}', type='{self.type}', " \
-               f"hamming_distance={self.hamming_distance})"
+        return (
+            f"Edge(start='{self.start}', end='{self.end}', type='{self.type}', "
+            f"hamming_distance={self.hamming_distance})"
+        )
