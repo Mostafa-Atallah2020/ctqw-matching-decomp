@@ -268,12 +268,16 @@ class ParallelEdgeGraph(StaticGraph):
                 raise ValueError("The Graph is not a Parallel Edge Graph.")
 
     def get_qc(self, simplified=False):
-        mcrx = MCRX(self.n_qubits, self.expr, self.target, self.rot_angle)
-
-        if simplified:
-            return mcrx.simplify().qc
+        if self.expr.expr.simplify() == True:
+            qc = QuantumCircuit(self.n_qubits)
+            qc.rx(self.rot_angle, self.target)
+            return qc
         else:
-            return mcrx.qc
+            mcrx = MCRX(self.n_qubits, self.expr, self.target, self.rot_angle)
+            if simplified:
+                return mcrx.simplify().qc
+            else:
+                return mcrx.qc
 
     def __get_vars(self):
         sym_vars = []
@@ -369,11 +373,11 @@ class NonDiagonalEdgeGraph(StaticGraph):
 class DiagonalEdgeGraph(StaticGraph):
     def __init__(self, edges):
         super().__init__(edges)
-        self.candidates = self.__get_candidates()
-        self.best_candidate = self.__get_best_candidate()
-        self.connections = self.__get_filtered_connections()
+        self.candidates = self._get_candidates()
+        self.best_candidate = self._get_best_candidate()
+        self.connections = self._get_filtered_connections()
 
-    def __get_filtered_connections(self):
+    def _get_filtered_connections(self):
         """Get connections for diagonal edges"""
         raw_connections = []
 
@@ -392,37 +396,61 @@ class DiagonalEdgeGraph(StaticGraph):
                 for pos in diff_positions[1:]:
                     raw_connections.append((first_pos, pos))
 
-            del diff_positions  # Clean up
-
         return sorted(list(set(raw_connections)))
 
-    def get_qc(self, simplified=False):
-        if not self.best_candidate:
-            return QuantumCircuit(self.n_qubits)
+    def _get_candidates(self):
+        """
+        Get valid candidates for transformation.
+        For each diagonal edge, generates projections for each qubit position that differs.
+        """
+        if not self.set_hamming_greater_1:
+            return []
 
-        cnots_lists = []
-        for t in self.best_candidate.targets:
-            cnots = get_cyclic_connections(self.connections, t)
-            for cx in cnots:
-                if cx not in cnots_lists:
-                    cnots_lists.append(cx)
+        try:
+            valid_candidates = []
+            hamming1_edges = self.set_hamming_1.copy()
 
-        circ = QuantumCircuit(self.best_candidate.n_qubits)
+            # For each diagonal edge
+            for diagonal_edge in self.set_hamming_greater_1:
+                edge_obj = Edge(diagonal_edge)
 
-        for t in cnots_lists:
-            circ.cx(*t)
+                # Find positions where bits differ
+                diff_positions = []
+                for i, (b1, b2) in enumerate(zip(edge_obj.start, edge_obj.end)):
+                    if b1 != b2:
+                        diff_positions.append(i)
 
-        circ.append(
-            self.best_candidate.get_qc(simplified=simplified), range(self.best_candidate.n_qubits)
-        )
+                # For each differing position, create a projection
+                for target_qubit in diff_positions:
+                    projections = set()
 
-        for t in reversed(cnots_lists):
-            circ.cx(*t)
+                    # Create projections for start node
+                    start_proj = list(edge_obj.start)
+                    start_proj[target_qubit] = edge_obj.end[target_qubit]
+                    start_intermediate = "".join(start_proj)
+                    projections.add(Edge((edge_obj.start, start_intermediate)))
 
-        return circ.decompose()
+                    # Create projections for end node
+                    end_proj = list(edge_obj.end)
+                    end_proj[target_qubit] = edge_obj.start[target_qubit]
+                    end_intermediate = "".join(end_proj)
+                    projections.add(Edge((end_intermediate, edge_obj.end)))
 
-    def __get_best_candidate(self):
-        """Get best candidate based on number of variables"""
+                    # Combine with Hamming-1 edges and create candidate
+                    try:
+                        combined_edges = {e.edge for e in projections} | hamming1_edges
+                        candidate_graph = NonDiagonalEdgeGraph(combined_edges)
+                        valid_candidates.append(candidate_graph)
+                    except ValueError:
+                        continue
+
+            return valid_candidates
+
+        except Exception:
+            return []
+
+    def _get_best_candidate(self):
+        """Select the best candidate based on the minimum number of variables."""
         if not self.candidates:
             return None
 
@@ -440,52 +468,41 @@ class DiagonalEdgeGraph(StaticGraph):
                     min_vars = var_count
                     best = candidate
 
-                del variables  # Clean up
-
             except Exception:
                 continue
 
         return best
 
-    def __get_candidates(self):
-        """Get valid candidates for transformation"""
-        try:
-            parallel_candidates = []
+    def get_qc(self, simplified=False):
+        """Generate quantum circuit for the graph."""
+        if not self.best_candidate:
+            return QuantumCircuit(self.n_qubits)
 
-            for edge in self.set_hamming_greater_1:
-                try:
-                    edge_obj = Edge(edge)
-                    projections = edge_obj.get_parallel_candidates()
-                    if projections:
-                        parallel_candidates.append(projections)
-                    del edge_obj  # Clean up
-                except Exception:
-                    continue
+        # Get CNOT connections from cyclic path
+        cnots_lists = []
+        for target in self.best_candidate.targets:
+            cnots = get_cyclic_connections(self.connections, target)
+            for cx in cnots:
+                if cx not in cnots_lists:
+                    cnots_lists.append(cx)
 
-            if not parallel_candidates:
-                return []
+        # Build the circuit
+        circ = QuantumCircuit(self.best_candidate.n_qubits)
 
-            parallel_sets = lists_to_sets(*parallel_candidates)
-            del parallel_candidates  # Clean up
+        # Add forward CNOTs
+        for t in cnots_lists:
+            circ.cx(*t)
 
-            valid_candidates = []
-            hamming1_edges = {Edge(e) for e in self.set_hamming_1}
+        # Add subcircuit from best candidate
+        circ.append(
+            self.best_candidate.get_qc(simplified=simplified), range(self.best_candidate.n_qubits)
+        )
 
-            for parallel_set in parallel_sets:
-                try:
-                    combined_set = parallel_set | hamming1_edges
-                    diagonal_g = NonDiagonalEdgeGraph(combined_set)
-                    valid_candidates.append(diagonal_g)
-                    del combined_set  # Clean up
-                except Exception:
-                    continue
+        # Add reverse CNOTs
+        for t in reversed(cnots_lists):
+            circ.cx(*t)
 
-            del parallel_sets  # Clean up
-
-            return valid_candidates
-
-        except Exception:
-            return []
+        return circ.decompose()
 
     def __del__(self):
         """Clean up any remaining resources"""

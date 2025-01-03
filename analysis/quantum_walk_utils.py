@@ -126,12 +126,12 @@ class GraphProcessor:
 
 
 class BaseAnalyzer:
-    def __init__(self, n_qubits: int, delta_t: float, seed: int = 1234):
+    def __init__(self, n_qubits: int, delta_t: float, seed: int = 0):
         self.n_qubits = n_qubits
         self.delta_t = delta_t
         self.seed = seed
 
-    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 50) -> CircuitMetrics:
+    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
         """Analyze circuit with fixed transpilation settings over multiple runs and return the lowest counts."""
         min_metrics = CircuitMetrics(
             cx_count=float("inf"), u3_count=float("inf"), depth=float("inf")
@@ -144,7 +144,7 @@ class BaseAnalyzer:
                     basis_gates=["cx", "u3"],
                     optimization_level=3,
                     seed_transpiler=self.seed,
-                    routing_method="sabre",
+                    # routing_method="sabre",
                 )
 
                 counts = transpiled_qc.count_ops()
@@ -164,6 +164,45 @@ class BaseAnalyzer:
 
         # Return the minimum metrics found
         return min_metrics if min_metrics.cx_count != float("inf") else None
+
+    # def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
+    #     """Analyze circuit with fixed transpilation settings over multiple runs and return the average counts."""
+    #     total_metrics = CircuitMetrics(cx_count=0, u3_count=0, depth=0)
+
+    #     for _ in range(runs):
+    #         try:
+    #             transpiled_qc = transpile(
+    #                 qc,
+    #                 basis_gates=['cx', 'u3'],
+    #                 seed_transpiler=self.seed,
+    #                 optimization_level=3
+    #                 #routing_method='sabre'
+
+    #             )
+
+    #             counts = transpiled_qc.count_ops()
+    #             current_metrics = CircuitMetrics(
+    #                 cx_count=counts.get('cx', 0),
+    #                 u3_count=counts.get('u3', 0),
+    #                 depth=transpiled_qc.depth()
+    #             )
+
+    #             # Accumulate metrics
+    #             total_metrics.cx_count += current_metrics.cx_count
+    #             total_metrics.u3_count += current_metrics.u3_count
+    #             total_metrics.depth += current_metrics.depth
+
+    #         except Exception as e:
+    #             print(f"Transpilation error: {str(e)}")
+
+    #     # Calculate averages
+    #     average_metrics = CircuitMetrics(
+    #         cx_count=total_metrics.cx_count / runs,
+    #         u3_count=total_metrics.u3_count / runs,
+    #         depth=total_metrics.depth / runs
+    #     )
+
+    #     return average_metrics
 
     def analyze_matching(
         self, edges: Set[Tuple[str, str]], n_steps: int = 1
