@@ -1,0 +1,10 @@
+win_both: 1772
+lose_both: 7467
+draw_both: 14
+win_exact_lose_pauli: 224
+win_pauli_lose_exact: 1042
+draw_exact_win_pauli: 201
+draw_exact_lose_pauli: 75
+win_exact_draw_pauli: 74
+lose_exact_draw_pauli: 248
+undefined: 0
