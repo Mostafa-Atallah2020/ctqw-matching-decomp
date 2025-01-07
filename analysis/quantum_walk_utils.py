@@ -5,18 +5,20 @@ import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import numpy as np
-import networkx as nx
-from dataclasses import dataclass
-from typing import List, Dict, Set, Tuple, Optional
-from datetime import datetime
 import itertools
-from qiskit import QuantumCircuit, transpile
-from qiskit.quantum_info import Operator, SparsePauliOp, Pauli
-from qiskit.circuit.library import PauliEvolutionGate
-from scipy.linalg import expm
+from dataclasses import dataclass
+from datetime import datetime
+from typing import Dict, List, Optional, Set, Tuple
+
 import matplotlib.pyplot as plt
-from src.graphs import StaticGraph, IntersectingEdgesGraph, MultiEdgeGraph
+import networkx as nx
+import numpy as np
+from qiskit import QuantumCircuit, transpile
+from qiskit.circuit.library import PauliEvolutionGate
+from qiskit.quantum_info import Operator, Pauli, SparsePauliOp
+from scipy.linalg import expm
+
+from src.graphs import IntersectingEdgesGraph, MultiEdgeGraph, StaticGraph
 
 
 @dataclass

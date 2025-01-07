@@ -1,5 +1,4 @@
 import itertools
-from collections import defaultdict
 
 import networkx as nx
 from qiskit.circuit.library import RXGate
@@ -102,125 +101,40 @@ def graph_to_bitstring_edges(graph):
 
 
 def count_edges(G):
-    return sum(len(neighbors) for neighbors in G.adj.values()) // 2
+    return nx.number_of_edges(G)
 
 
-def calculate_edge_density(edge_count, vertex_count):
-    """Calculate edge density of a graph."""
-    max_possible_edges = (vertex_count * (vertex_count - 1)) / 2
-    return edge_count / max_possible_edges
+def calculate_edge_density(G):
+    # Can use nx.density(G) directly instead of this function
+    return nx.density(G)
 
 
 def is_bipartite(G):
-    color = {}
-    for start_node in G.nodes():
-        if start_node not in color:
-            stack = [(start_node, 0)]
-            while stack:
-                node, c = stack.pop()
-                if node in color:
-                    if color[node] != c:
-                        return False
-                else:
-                    color[node] = c
-                    stack.extend((neighbor, 1 - c) for neighbor in G.adj[node])
-    return True
+    return nx.is_bipartite(G)
 
 
 def find_diameter(G):
     if not nx.is_connected(G):
         return float("inf")
-
-    def bfs(start):
-        distances = {start: 0}
-        queue = [start]
-        while queue:
-            node = queue.pop(0)
-            for neighbor in G.adj[node]:
-                if neighbor not in distances:
-                    distances[neighbor] = distances[node] + 1
-                    queue.append(neighbor)
-        return max(distances.values())
-
-    return max(bfs(node) for node in G.nodes())
+    return nx.diameter(G)
 
 
 def find_max_clique(G):
-    def is_clique(nodes):
-        return all(v in G.adj[u] for u in nodes for v in nodes if u != v)
-
-    def backtrack(candidates, clique):
-        if not candidates:
-            return clique
-        v = max(candidates, key=lambda x: len(G.adj[x]))
-        candidates.remove(v)
-        new_clique = clique | {v}
-        for u in list(candidates):
-            if not all(u in G.adj[w] for w in new_clique):
-                candidates.remove(u)
-        return max((backtrack(candidates.copy(), new_clique), clique), key=len)
-
-    return len(backtrack(set(G.nodes()), set()))
+    return len(max(nx.find_cliques(G), key=len, default=[]))
 
 
 def average_clustering(G):
-    def local_clustering(node):
-        neighbors = list(G.adj[node])
-        if len(neighbors) < 2:
-            return 0
-        links = sum(1 for u in neighbors for v in neighbors if u < v and v in G.adj[u])
-        possible_links = len(neighbors) * (len(neighbors) - 1) / 2
-        return links / possible_links if possible_links > 0 else 0
-
-    if len(G.nodes()) == 0:
-        return 0
-    return sum(local_clustering(node) for node in G.nodes()) / len(G.nodes())
+    return nx.average_clustering(G)
 
 
 def estimate_group_size(G):
-    degree_counts = defaultdict(int)
-    for node in G.nodes():
-        degree_counts[len(G.adj[node])] += 1
-    return max(degree_counts.values()) if degree_counts else 0
+    # This is a custom metric - NetworkX doesn't have direct equivalent
+    # Could use automorphism groups but would be much slower
+    degree_sequence = [d for _, d in G.degree()]
+    return max(degree_sequence.count(x) for x in set(degree_sequence))
 
 
 def estimate_orbit_count(G):
-    return len(set(len(G.adj[node]) for node in G.nodes()))
-
-
-def collect_graph_properties(filename, n_vertices):
-    properties = {
-        "edge_counts": [],
-        "edge_densities": [],
-        "bipartite_counts": defaultdict(int),
-        "diameters": [],
-        "clique_numbers": [],
-        "max_degrees": [],
-        "clustering_coefficients": [],
-        "group_sizes": [],
-        "orbit_counts": [],
-    }
-
-    with open(filename, "r") as file:
-        for line in file:
-            try:
-                G = nx.from_graph6_bytes(line.strip().encode("utf-8"))
-                edge_count = count_edges(G)
-
-                properties["edge_counts"].append(edge_count)
-                properties["edge_densities"].append(calculate_edge_density(edge_count, n_vertices))
-                properties["bipartite_counts"][is_bipartite(G)] += 1
-
-                if nx.is_connected(G):
-                    properties["diameters"].append(find_diameter(G))
-
-                properties["clique_numbers"].append(find_max_clique(G))
-                properties["max_degrees"].append(max(G.degree(node) for node in G.nodes()))
-                properties["clustering_coefficients"].append(average_clustering(G))
-                properties["group_sizes"].append(estimate_group_size(G))
-                properties["orbit_counts"].append(estimate_orbit_count(G))
-
-            except nx.NetworkXError as e:
-                print(f"Error processing graph: {e}")
-
-    return properties
+    # Similar to above, NetworkX doesn't have direct equivalent
+    # Could use nx.vf2pp_isomorphism but would be much slower
+    return len(set(d for _, d in G.degree()))
