@@ -1,0 +1,1822 @@
+[2025-01-11 18:14:37] Starting analysis with:
+[2025-01-11 18:14:37] Number of qubits: 4
+[2025-01-11 18:14:37] Number of vertices: 16
+[2025-01-11 18:14:37] Delta t: 0.1
+[2025-01-11 18:14:37] Input file: ../data/graphs/200graph_losing_16c.g6
+[2025-01-11 18:14:37] Parsed graph info: {'num_graphs': 200, 'size': 'losing', 'vertices': '16', 'type': 'c'}
+[2025-01-11 18:14:37] Found 200 graphs in file
+[2025-01-11 18:14:37] 
+Processing graph 0/200
+[2025-01-11 18:14:37] Graph 0 has 16 nodes and 92 edges
+[2025-01-11 18:14:37] Converted to 92 bitstring edges
+[2025-01-11 18:14:37] Computing Matchings Dynamic walk
+[2025-01-11 18:14:40] Matchings - CX: 497, U3: 385, Depth: 658
+[2025-01-11 18:14:40] Computing Exact walk
+[2025-01-11 18:14:41] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:14:41] Successfully processed graph 0 - Category: lose
+[2025-01-11 18:14:41] 
+Processing graph 1/200
+[2025-01-11 18:14:41] Graph 1 has 16 nodes and 98 edges
+[2025-01-11 18:14:41] Converted to 98 bitstring edges
+[2025-01-11 18:14:41] Computing Matchings Dynamic walk
+[2025-01-11 18:14:43] Matchings - CX: 500, U3: 360, Depth: 649
+[2025-01-11 18:14:43] Computing Exact walk
+[2025-01-11 18:14:44] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:14:44] Successfully processed graph 1 - Category: lose
+[2025-01-11 18:14:44] 
+Processing graph 2/200
+[2025-01-11 18:14:44] Graph 2 has 16 nodes and 94 edges
+[2025-01-11 18:14:44] Converted to 94 bitstring edges
+[2025-01-11 18:14:44] Computing Matchings Dynamic walk
+[2025-01-11 18:14:46] Matchings - CX: 478, U3: 355, Depth: 627
+[2025-01-11 18:14:46] Computing Exact walk
+[2025-01-11 18:14:47] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:14:47] Successfully processed graph 2 - Category: lose
+[2025-01-11 18:14:47] 
+Processing graph 3/200
+[2025-01-11 18:14:47] Graph 3 has 16 nodes and 97 edges
+[2025-01-11 18:14:47] Converted to 97 bitstring edges
+[2025-01-11 18:14:47] Computing Matchings Dynamic walk
+[2025-01-11 18:14:49] Matchings - CX: 446, U3: 339, Depth: 589
+[2025-01-11 18:14:49] Computing Exact walk
+[2025-01-11 18:14:50] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:14:50] Successfully processed graph 3 - Category: lose
+[2025-01-11 18:14:50] 
+Processing graph 4/200
+[2025-01-11 18:14:50] Graph 4 has 16 nodes and 108 edges
+[2025-01-11 18:14:50] Converted to 108 bitstring edges
+[2025-01-11 18:14:50] Computing Matchings Dynamic walk
+[2025-01-11 18:14:53] Matchings - CX: 518, U3: 390, Depth: 693
+[2025-01-11 18:14:53] Computing Exact walk
+[2025-01-11 18:14:53] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:14:53] Successfully processed graph 4 - Category: lose
+[2025-01-11 18:14:53] 
+Processing graph 5/200
+[2025-01-11 18:14:53] Graph 5 has 16 nodes and 93 edges
+[2025-01-11 18:14:53] Converted to 93 bitstring edges
+[2025-01-11 18:14:53] Computing Matchings Dynamic walk
+[2025-01-11 18:14:56] Matchings - CX: 497, U3: 361, Depth: 660
+[2025-01-11 18:14:56] Computing Exact walk
+[2025-01-11 18:14:57] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:14:57] Successfully processed graph 5 - Category: lose
+[2025-01-11 18:14:57] 
+Processing graph 6/200
+[2025-01-11 18:14:57] Graph 6 has 16 nodes and 96 edges
+[2025-01-11 18:14:57] Converted to 96 bitstring edges
+[2025-01-11 18:14:57] Computing Matchings Dynamic walk
+[2025-01-11 18:15:00] Matchings - CX: 549, U3: 422, Depth: 742
+[2025-01-11 18:15:00] Computing Exact walk
+[2025-01-11 18:15:01] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:01] Successfully processed graph 6 - Category: lose
+[2025-01-11 18:15:01] 
+Processing graph 7/200
+[2025-01-11 18:15:01] Graph 7 has 16 nodes and 104 edges
+[2025-01-11 18:15:01] Converted to 104 bitstring edges
+[2025-01-11 18:15:01] Computing Matchings Dynamic walk
+[2025-01-11 18:15:03] Matchings - CX: 393, U3: 303, Depth: 523
+[2025-01-11 18:15:03] Computing Exact walk
+[2025-01-11 18:15:04] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:04] Successfully processed graph 7 - Category: lose
+[2025-01-11 18:15:04] 
+Processing graph 8/200
+[2025-01-11 18:15:04] Graph 8 has 16 nodes and 97 edges
+[2025-01-11 18:15:04] Converted to 97 bitstring edges
+[2025-01-11 18:15:04] Computing Matchings Dynamic walk
+[2025-01-11 18:15:06] Matchings - CX: 361, U3: 251, Depth: 483
+[2025-01-11 18:15:06] Computing Exact walk
+[2025-01-11 18:15:07] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:07] Successfully processed graph 8 - Category: lose
+[2025-01-11 18:15:07] 
+Processing graph 9/200
+[2025-01-11 18:15:07] Graph 9 has 16 nodes and 93 edges
+[2025-01-11 18:15:07] Converted to 93 bitstring edges
+[2025-01-11 18:15:07] Computing Matchings Dynamic walk
+[2025-01-11 18:15:09] Matchings - CX: 387, U3: 287, Depth: 516
+[2025-01-11 18:15:09] Computing Exact walk
+[2025-01-11 18:15:10] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:10] Successfully processed graph 9 - Category: lose
+[2025-01-11 18:15:10] 
+Processing graph 10/200
+[2025-01-11 18:15:10] Graph 10 has 16 nodes and 107 edges
+[2025-01-11 18:15:10] Converted to 107 bitstring edges
+[2025-01-11 18:15:10] Computing Matchings Dynamic walk
+[2025-01-11 18:15:13] Matchings - CX: 471, U3: 376, Depth: 633
+[2025-01-11 18:15:13] Computing Exact walk
+[2025-01-11 18:15:14] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:14] Successfully processed graph 10 - Category: lose
+[2025-01-11 18:15:14] 
+Processing graph 11/200
+[2025-01-11 18:15:14] Graph 11 has 16 nodes and 95 edges
+[2025-01-11 18:15:14] Converted to 95 bitstring edges
+[2025-01-11 18:15:14] Computing Matchings Dynamic walk
+[2025-01-11 18:15:17] Matchings - CX: 512, U3: 403, Depth: 681
+[2025-01-11 18:15:17] Computing Exact walk
+[2025-01-11 18:15:18] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:18] Successfully processed graph 11 - Category: lose
+[2025-01-11 18:15:18] 
+Processing graph 12/200
+[2025-01-11 18:15:18] Graph 12 has 16 nodes and 108 edges
+[2025-01-11 18:15:18] Converted to 108 bitstring edges
+[2025-01-11 18:15:18] Computing Matchings Dynamic walk
+[2025-01-11 18:15:21] Matchings - CX: 575, U3: 445, Depth: 764
+[2025-01-11 18:15:21] Computing Exact walk
+[2025-01-11 18:15:22] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:22] Successfully processed graph 12 - Category: lose
+[2025-01-11 18:15:22] 
+Processing graph 13/200
+[2025-01-11 18:15:22] Graph 13 has 16 nodes and 93 edges
+[2025-01-11 18:15:22] Converted to 93 bitstring edges
+[2025-01-11 18:15:22] Computing Matchings Dynamic walk
+[2025-01-11 18:15:24] Matchings - CX: 413, U3: 318, Depth: 549
+[2025-01-11 18:15:24] Computing Exact walk
+[2025-01-11 18:15:25] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:25] Successfully processed graph 13 - Category: lose
+[2025-01-11 18:15:25] 
+Processing graph 14/200
+[2025-01-11 18:15:25] Graph 14 has 16 nodes and 92 edges
+[2025-01-11 18:15:25] Converted to 92 bitstring edges
+[2025-01-11 18:15:25] Computing Matchings Dynamic walk
+[2025-01-11 18:15:27] Matchings - CX: 460, U3: 351, Depth: 615
+[2025-01-11 18:15:27] Computing Exact walk
+[2025-01-11 18:15:28] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:28] Successfully processed graph 14 - Category: lose
+[2025-01-11 18:15:28] 
+Processing graph 15/200
+[2025-01-11 18:15:28] Graph 15 has 16 nodes and 98 edges
+[2025-01-11 18:15:28] Converted to 98 bitstring edges
+[2025-01-11 18:15:28] Computing Matchings Dynamic walk
+[2025-01-11 18:15:31] Matchings - CX: 520, U3: 389, Depth: 687
+[2025-01-11 18:15:31] Computing Exact walk
+[2025-01-11 18:15:32] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:32] Successfully processed graph 15 - Category: lose
+[2025-01-11 18:15:32] 
+Processing graph 16/200
+[2025-01-11 18:15:32] Graph 16 has 16 nodes and 85 edges
+[2025-01-11 18:15:32] Converted to 85 bitstring edges
+[2025-01-11 18:15:32] Computing Matchings Dynamic walk
+[2025-01-11 18:15:34] Matchings - CX: 508, U3: 373, Depth: 671
+[2025-01-11 18:15:34] Computing Exact walk
+[2025-01-11 18:15:35] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:35] Successfully processed graph 16 - Category: lose
+[2025-01-11 18:15:35] 
+Processing graph 17/200
+[2025-01-11 18:15:35] Graph 17 has 16 nodes and 96 edges
+[2025-01-11 18:15:35] Converted to 96 bitstring edges
+[2025-01-11 18:15:35] Computing Matchings Dynamic walk
+[2025-01-11 18:15:38] Matchings - CX: 468, U3: 347, Depth: 612
+[2025-01-11 18:15:38] Computing Exact walk
+[2025-01-11 18:15:39] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:39] Successfully processed graph 17 - Category: lose
+[2025-01-11 18:15:39] 
+Processing graph 18/200
+[2025-01-11 18:15:39] Graph 18 has 16 nodes and 86 edges
+[2025-01-11 18:15:39] Converted to 86 bitstring edges
+[2025-01-11 18:15:39] Computing Matchings Dynamic walk
+[2025-01-11 18:15:41] Matchings - CX: 409, U3: 306, Depth: 537
+[2025-01-11 18:15:41] Computing Exact walk
+[2025-01-11 18:15:42] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:42] Successfully processed graph 18 - Category: lose
+[2025-01-11 18:15:42] 
+Processing graph 19/200
+[2025-01-11 18:15:42] Graph 19 has 16 nodes and 94 edges
+[2025-01-11 18:15:42] Converted to 94 bitstring edges
+[2025-01-11 18:15:42] Computing Matchings Dynamic walk
+[2025-01-11 18:15:44] Matchings - CX: 366, U3: 271, Depth: 475
+[2025-01-11 18:15:44] Computing Exact walk
+[2025-01-11 18:15:46] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:46] Successfully processed graph 19 - Category: lose
+[2025-01-11 18:15:46] 
+Processing graph 20/200
+[2025-01-11 18:15:46] Graph 20 has 16 nodes and 102 edges
+[2025-01-11 18:15:46] Converted to 102 bitstring edges
+[2025-01-11 18:15:46] Computing Matchings Dynamic walk
+[2025-01-11 18:15:48] Matchings - CX: 496, U3: 382, Depth: 663
+[2025-01-11 18:15:48] Computing Exact walk
+[2025-01-11 18:15:49] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:49] Successfully processed graph 20 - Category: lose
+[2025-01-11 18:15:49] 
+Processing graph 21/200
+[2025-01-11 18:15:49] Graph 21 has 16 nodes and 94 edges
+[2025-01-11 18:15:49] Converted to 94 bitstring edges
+[2025-01-11 18:15:49] Computing Matchings Dynamic walk
+[2025-01-11 18:15:53] Matchings - CX: 485, U3: 369, Depth: 651
+[2025-01-11 18:15:53] Computing Exact walk
+[2025-01-11 18:15:55] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:15:55] Successfully processed graph 21 - Category: lose
+[2025-01-11 18:15:55] 
+Processing graph 22/200
+[2025-01-11 18:15:55] Graph 22 has 16 nodes and 90 edges
+[2025-01-11 18:15:55] Converted to 90 bitstring edges
+[2025-01-11 18:15:55] Computing Matchings Dynamic walk
+[2025-01-11 18:15:58] Matchings - CX: 443, U3: 354, Depth: 602
+[2025-01-11 18:15:58] Computing Exact walk
+[2025-01-11 18:16:00] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:00] Successfully processed graph 22 - Category: lose
+[2025-01-11 18:16:00] 
+Processing graph 23/200
+[2025-01-11 18:16:00] Graph 23 has 16 nodes and 90 edges
+[2025-01-11 18:16:00] Converted to 90 bitstring edges
+[2025-01-11 18:16:00] Computing Matchings Dynamic walk
+[2025-01-11 18:16:03] Matchings - CX: 502, U3: 390, Depth: 664
+[2025-01-11 18:16:03] Computing Exact walk
+[2025-01-11 18:16:05] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:05] Successfully processed graph 23 - Category: lose
+[2025-01-11 18:16:05] 
+Processing graph 24/200
+[2025-01-11 18:16:05] Graph 24 has 16 nodes and 102 edges
+[2025-01-11 18:16:05] Converted to 102 bitstring edges
+[2025-01-11 18:16:05] Computing Matchings Dynamic walk
+[2025-01-11 18:16:09] Matchings - CX: 525, U3: 392, Depth: 700
+[2025-01-11 18:16:09] Computing Exact walk
+[2025-01-11 18:16:10] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:10] Successfully processed graph 24 - Category: lose
+[2025-01-11 18:16:10] 
+Processing graph 25/200
+[2025-01-11 18:16:10] Graph 25 has 16 nodes and 84 edges
+[2025-01-11 18:16:10] Converted to 84 bitstring edges
+[2025-01-11 18:16:10] Computing Matchings Dynamic walk
+[2025-01-11 18:16:13] Matchings - CX: 409, U3: 303, Depth: 538
+[2025-01-11 18:16:13] Computing Exact walk
+[2025-01-11 18:16:14] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:14] Successfully processed graph 25 - Category: lose
+[2025-01-11 18:16:14] 
+Processing graph 26/200
+[2025-01-11 18:16:14] Graph 26 has 16 nodes and 101 edges
+[2025-01-11 18:16:14] Converted to 101 bitstring edges
+[2025-01-11 18:16:14] Computing Matchings Dynamic walk
+[2025-01-11 18:16:19] Matchings - CX: 568, U3: 418, Depth: 750
+[2025-01-11 18:16:19] Computing Exact walk
+[2025-01-11 18:16:20] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:20] Successfully processed graph 26 - Category: lose
+[2025-01-11 18:16:20] 
+Processing graph 27/200
+[2025-01-11 18:16:20] Graph 27 has 16 nodes and 104 edges
+[2025-01-11 18:16:20] Converted to 104 bitstring edges
+[2025-01-11 18:16:20] Computing Matchings Dynamic walk
+[2025-01-11 18:16:24] Matchings - CX: 435, U3: 321, Depth: 589
+[2025-01-11 18:16:24] Computing Exact walk
+[2025-01-11 18:16:25] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:25] Successfully processed graph 27 - Category: lose
+[2025-01-11 18:16:25] 
+Processing graph 28/200
+[2025-01-11 18:16:25] Graph 28 has 16 nodes and 80 edges
+[2025-01-11 18:16:25] Converted to 80 bitstring edges
+[2025-01-11 18:16:25] Computing Matchings Dynamic walk
+[2025-01-11 18:16:28] Matchings - CX: 373, U3: 274, Depth: 481
+[2025-01-11 18:16:28] Computing Exact walk
+[2025-01-11 18:16:30] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:30] Successfully processed graph 28 - Category: lose
+[2025-01-11 18:16:30] 
+Processing graph 29/200
+[2025-01-11 18:16:30] Graph 29 has 16 nodes and 98 edges
+[2025-01-11 18:16:30] Converted to 98 bitstring edges
+[2025-01-11 18:16:30] Computing Matchings Dynamic walk
+[2025-01-11 18:16:32] Matchings - CX: 324, U3: 233, Depth: 429
+[2025-01-11 18:16:32] Computing Exact walk
+[2025-01-11 18:16:34] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:34] Successfully processed graph 29 - Category: lose
+[2025-01-11 18:16:34] 
+Processing graph 30/200
+[2025-01-11 18:16:34] Graph 30 has 16 nodes and 102 edges
+[2025-01-11 18:16:34] Converted to 102 bitstring edges
+[2025-01-11 18:16:34] Computing Matchings Dynamic walk
+[2025-01-11 18:16:38] Matchings - CX: 502, U3: 388, Depth: 666
+[2025-01-11 18:16:38] Computing Exact walk
+[2025-01-11 18:16:39] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:39] Successfully processed graph 30 - Category: lose
+[2025-01-11 18:16:39] 
+Processing graph 31/200
+[2025-01-11 18:16:39] Graph 31 has 16 nodes and 94 edges
+[2025-01-11 18:16:39] Converted to 94 bitstring edges
+[2025-01-11 18:16:39] Computing Matchings Dynamic walk
+[2025-01-11 18:16:42] Matchings - CX: 403, U3: 301, Depth: 531
+[2025-01-11 18:16:42] Computing Exact walk
+[2025-01-11 18:16:44] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:44] Successfully processed graph 31 - Category: lose
+[2025-01-11 18:16:44] 
+Processing graph 32/200
+[2025-01-11 18:16:44] Graph 32 has 16 nodes and 100 edges
+[2025-01-11 18:16:44] Converted to 100 bitstring edges
+[2025-01-11 18:16:44] Computing Matchings Dynamic walk
+[2025-01-11 18:16:47] Matchings - CX: 430, U3: 345, Depth: 582
+[2025-01-11 18:16:47] Computing Exact walk
+[2025-01-11 18:16:48] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:48] Successfully processed graph 32 - Category: lose
+[2025-01-11 18:16:48] 
+Processing graph 33/200
+[2025-01-11 18:16:48] Graph 33 has 16 nodes and 100 edges
+[2025-01-11 18:16:48] Converted to 100 bitstring edges
+[2025-01-11 18:16:48] Computing Matchings Dynamic walk
+[2025-01-11 18:16:52] Matchings - CX: 456, U3: 344, Depth: 613
+[2025-01-11 18:16:52] Computing Exact walk
+[2025-01-11 18:16:53] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:53] Successfully processed graph 33 - Category: lose
+[2025-01-11 18:16:53] 
+Processing graph 34/200
+[2025-01-11 18:16:53] Graph 34 has 16 nodes and 83 edges
+[2025-01-11 18:16:53] Converted to 83 bitstring edges
+[2025-01-11 18:16:53] Computing Matchings Dynamic walk
+[2025-01-11 18:16:56] Matchings - CX: 335, U3: 259, Depth: 445
+[2025-01-11 18:16:56] Computing Exact walk
+[2025-01-11 18:16:57] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:16:57] Successfully processed graph 34 - Category: lose
+[2025-01-11 18:16:57] 
+Processing graph 35/200
+[2025-01-11 18:16:57] Graph 35 has 16 nodes and 102 edges
+[2025-01-11 18:16:57] Converted to 102 bitstring edges
+[2025-01-11 18:16:57] Computing Matchings Dynamic walk
+[2025-01-11 18:17:01] Matchings - CX: 507, U3: 398, Depth: 683
+[2025-01-11 18:17:01] Computing Exact walk
+[2025-01-11 18:17:02] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:02] Successfully processed graph 35 - Category: lose
+[2025-01-11 18:17:02] 
+Processing graph 36/200
+[2025-01-11 18:17:02] Graph 36 has 16 nodes and 103 edges
+[2025-01-11 18:17:02] Converted to 103 bitstring edges
+[2025-01-11 18:17:02] Computing Matchings Dynamic walk
+[2025-01-11 18:17:06] Matchings - CX: 456, U3: 338, Depth: 605
+[2025-01-11 18:17:06] Computing Exact walk
+[2025-01-11 18:17:07] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:07] Successfully processed graph 36 - Category: lose
+[2025-01-11 18:17:07] 
+Processing graph 37/200
+[2025-01-11 18:17:07] Graph 37 has 16 nodes and 105 edges
+[2025-01-11 18:17:07] Converted to 105 bitstring edges
+[2025-01-11 18:17:07] Computing Matchings Dynamic walk
+[2025-01-11 18:17:10] Matchings - CX: 469, U3: 346, Depth: 611
+[2025-01-11 18:17:10] Computing Exact walk
+[2025-01-11 18:17:12] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:12] Successfully processed graph 37 - Category: lose
+[2025-01-11 18:17:12] 
+Processing graph 38/200
+[2025-01-11 18:17:12] Graph 38 has 16 nodes and 101 edges
+[2025-01-11 18:17:12] Converted to 101 bitstring edges
+[2025-01-11 18:17:12] Computing Matchings Dynamic walk
+[2025-01-11 18:17:16] Matchings - CX: 547, U3: 401, Depth: 719
+[2025-01-11 18:17:16] Computing Exact walk
+[2025-01-11 18:17:17] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:17] Successfully processed graph 38 - Category: lose
+[2025-01-11 18:17:17] 
+Processing graph 39/200
+[2025-01-11 18:17:17] Graph 39 has 16 nodes and 94 edges
+[2025-01-11 18:17:17] Converted to 94 bitstring edges
+[2025-01-11 18:17:17] Computing Matchings Dynamic walk
+[2025-01-11 18:17:20] Matchings - CX: 399, U3: 310, Depth: 536
+[2025-01-11 18:17:20] Computing Exact walk
+[2025-01-11 18:17:21] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:21] Successfully processed graph 39 - Category: lose
+[2025-01-11 18:17:21] 
+Processing graph 40/200
+[2025-01-11 18:17:21] Graph 40 has 16 nodes and 106 edges
+[2025-01-11 18:17:21] Converted to 106 bitstring edges
+[2025-01-11 18:17:21] Computing Matchings Dynamic walk
+[2025-01-11 18:17:25] Matchings - CX: 528, U3: 392, Depth: 704
+[2025-01-11 18:17:25] Computing Exact walk
+[2025-01-11 18:17:26] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:26] Successfully processed graph 40 - Category: lose
+[2025-01-11 18:17:26] 
+Processing graph 41/200
+[2025-01-11 18:17:26] Graph 41 has 16 nodes and 93 edges
+[2025-01-11 18:17:26] Converted to 93 bitstring edges
+[2025-01-11 18:17:26] Computing Matchings Dynamic walk
+[2025-01-11 18:17:30] Matchings - CX: 467, U3: 354, Depth: 624
+[2025-01-11 18:17:30] Computing Exact walk
+[2025-01-11 18:17:31] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:31] Successfully processed graph 41 - Category: lose
+[2025-01-11 18:17:31] 
+Processing graph 42/200
+[2025-01-11 18:17:31] Graph 42 has 16 nodes and 98 edges
+[2025-01-11 18:17:31] Converted to 98 bitstring edges
+[2025-01-11 18:17:31] Computing Matchings Dynamic walk
+[2025-01-11 18:17:35] Matchings - CX: 367, U3: 270, Depth: 483
+[2025-01-11 18:17:35] Computing Exact walk
+[2025-01-11 18:17:36] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:36] Successfully processed graph 42 - Category: lose
+[2025-01-11 18:17:36] 
+Processing graph 43/200
+[2025-01-11 18:17:36] Graph 43 has 16 nodes and 87 edges
+[2025-01-11 18:17:36] Converted to 87 bitstring edges
+[2025-01-11 18:17:36] Computing Matchings Dynamic walk
+[2025-01-11 18:17:39] Matchings - CX: 354, U3: 269, Depth: 465
+[2025-01-11 18:17:39] Computing Exact walk
+[2025-01-11 18:17:40] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:40] Successfully processed graph 43 - Category: lose
+[2025-01-11 18:17:40] 
+Processing graph 44/200
+[2025-01-11 18:17:40] Graph 44 has 16 nodes and 98 edges
+[2025-01-11 18:17:40] Converted to 98 bitstring edges
+[2025-01-11 18:17:40] Computing Matchings Dynamic walk
+[2025-01-11 18:17:44] Matchings - CX: 585, U3: 446, Depth: 765
+[2025-01-11 18:17:44] Computing Exact walk
+[2025-01-11 18:17:46] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:46] Successfully processed graph 44 - Category: lose
+[2025-01-11 18:17:46] 
+Processing graph 45/200
+[2025-01-11 18:17:46] Graph 45 has 16 nodes and 101 edges
+[2025-01-11 18:17:46] Converted to 101 bitstring edges
+[2025-01-11 18:17:46] Computing Matchings Dynamic walk
+[2025-01-11 18:17:49] Matchings - CX: 437, U3: 328, Depth: 569
+[2025-01-11 18:17:49] Computing Exact walk
+[2025-01-11 18:17:50] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:50] Successfully processed graph 45 - Category: lose
+[2025-01-11 18:17:50] 
+Processing graph 46/200
+[2025-01-11 18:17:50] Graph 46 has 16 nodes and 100 edges
+[2025-01-11 18:17:50] Converted to 100 bitstring edges
+[2025-01-11 18:17:50] Computing Matchings Dynamic walk
+[2025-01-11 18:17:54] Matchings - CX: 453, U3: 356, Depth: 602
+[2025-01-11 18:17:54] Computing Exact walk
+[2025-01-11 18:17:55] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:17:55] Successfully processed graph 46 - Category: lose
+[2025-01-11 18:17:55] 
+Processing graph 47/200
+[2025-01-11 18:17:55] Graph 47 has 16 nodes and 101 edges
+[2025-01-11 18:17:55] Converted to 101 bitstring edges
+[2025-01-11 18:17:55] Computing Matchings Dynamic walk
+[2025-01-11 18:17:59] Matchings - CX: 596, U3: 464, Depth: 790
+[2025-01-11 18:17:59] Computing Exact walk
+[2025-01-11 18:18:00] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:00] Successfully processed graph 47 - Category: lose
+[2025-01-11 18:18:00] 
+Processing graph 48/200
+[2025-01-11 18:18:00] Graph 48 has 16 nodes and 84 edges
+[2025-01-11 18:18:00] Converted to 84 bitstring edges
+[2025-01-11 18:18:00] Computing Matchings Dynamic walk
+[2025-01-11 18:18:03] Matchings - CX: 413, U3: 306, Depth: 541
+[2025-01-11 18:18:03] Computing Exact walk
+[2025-01-11 18:18:04] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:04] Successfully processed graph 48 - Category: lose
+[2025-01-11 18:18:04] 
+Processing graph 49/200
+[2025-01-11 18:18:04] Graph 49 has 16 nodes and 105 edges
+[2025-01-11 18:18:04] Converted to 105 bitstring edges
+[2025-01-11 18:18:04] Computing Matchings Dynamic walk
+[2025-01-11 18:18:08] Matchings - CX: 489, U3: 356, Depth: 643
+[2025-01-11 18:18:08] Computing Exact walk
+[2025-01-11 18:18:09] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:09] Successfully processed graph 49 - Category: lose
+[2025-01-11 18:18:09] 
+Processing graph 50/200
+[2025-01-11 18:18:09] Graph 50 has 16 nodes and 101 edges
+[2025-01-11 18:18:09] Converted to 101 bitstring edges
+[2025-01-11 18:18:09] Computing Matchings Dynamic walk
+[2025-01-11 18:18:14] Matchings - CX: 517, U3: 411, Depth: 699
+[2025-01-11 18:18:14] Computing Exact walk
+[2025-01-11 18:18:15] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:15] Successfully processed graph 50 - Category: lose
+[2025-01-11 18:18:15] 
+Processing graph 51/200
+[2025-01-11 18:18:15] Graph 51 has 16 nodes and 97 edges
+[2025-01-11 18:18:15] Converted to 97 bitstring edges
+[2025-01-11 18:18:15] Computing Matchings Dynamic walk
+[2025-01-11 18:18:18] Matchings - CX: 382, U3: 309, Depth: 515
+[2025-01-11 18:18:18] Computing Exact walk
+[2025-01-11 18:18:19] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:19] Successfully processed graph 51 - Category: lose
+[2025-01-11 18:18:19] 
+Processing graph 52/200
+[2025-01-11 18:18:19] Graph 52 has 16 nodes and 107 edges
+[2025-01-11 18:18:19] Converted to 107 bitstring edges
+[2025-01-11 18:18:19] Computing Matchings Dynamic walk
+[2025-01-11 18:18:23] Matchings - CX: 563, U3: 408, Depth: 738
+[2025-01-11 18:18:23] Computing Exact walk
+[2025-01-11 18:18:25] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:25] Successfully processed graph 52 - Category: lose
+[2025-01-11 18:18:25] 
+Processing graph 53/200
+[2025-01-11 18:18:25] Graph 53 has 16 nodes and 83 edges
+[2025-01-11 18:18:25] Converted to 83 bitstring edges
+[2025-01-11 18:18:25] Computing Matchings Dynamic walk
+[2025-01-11 18:18:27] Matchings - CX: 368, U3: 283, Depth: 486
+[2025-01-11 18:18:27] Computing Exact walk
+[2025-01-11 18:18:29] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:29] Successfully processed graph 53 - Category: lose
+[2025-01-11 18:18:29] 
+Processing graph 54/200
+[2025-01-11 18:18:29] Graph 54 has 16 nodes and 104 edges
+[2025-01-11 18:18:29] Converted to 104 bitstring edges
+[2025-01-11 18:18:29] Computing Matchings Dynamic walk
+[2025-01-11 18:18:32] Matchings - CX: 490, U3: 367, Depth: 648
+[2025-01-11 18:18:32] Computing Exact walk
+[2025-01-11 18:18:33] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:33] Successfully processed graph 54 - Category: lose
+[2025-01-11 18:18:33] 
+Processing graph 55/200
+[2025-01-11 18:18:33] Graph 55 has 16 nodes and 99 edges
+[2025-01-11 18:18:33] Converted to 99 bitstring edges
+[2025-01-11 18:18:33] Computing Matchings Dynamic walk
+[2025-01-11 18:18:37] Matchings - CX: 473, U3: 358, Depth: 625
+[2025-01-11 18:18:37] Computing Exact walk
+[2025-01-11 18:18:38] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:38] Successfully processed graph 55 - Category: lose
+[2025-01-11 18:18:38] 
+Processing graph 56/200
+[2025-01-11 18:18:38] Graph 56 has 16 nodes and 103 edges
+[2025-01-11 18:18:38] Converted to 103 bitstring edges
+[2025-01-11 18:18:38] Computing Matchings Dynamic walk
+[2025-01-11 18:18:42] Matchings - CX: 551, U3: 427, Depth: 734
+[2025-01-11 18:18:42] Computing Exact walk
+[2025-01-11 18:18:43] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:43] Successfully processed graph 56 - Category: lose
+[2025-01-11 18:18:43] 
+Processing graph 57/200
+[2025-01-11 18:18:43] Graph 57 has 16 nodes and 100 edges
+[2025-01-11 18:18:43] Converted to 100 bitstring edges
+[2025-01-11 18:18:43] Computing Matchings Dynamic walk
+[2025-01-11 18:18:46] Matchings - CX: 501, U3: 375, Depth: 669
+[2025-01-11 18:18:46] Computing Exact walk
+[2025-01-11 18:18:47] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:47] Successfully processed graph 57 - Category: lose
+[2025-01-11 18:18:47] 
+Processing graph 58/200
+[2025-01-11 18:18:47] Graph 58 has 16 nodes and 95 edges
+[2025-01-11 18:18:47] Converted to 95 bitstring edges
+[2025-01-11 18:18:47] Computing Matchings Dynamic walk
+[2025-01-11 18:18:51] Matchings - CX: 484, U3: 366, Depth: 644
+[2025-01-11 18:18:51] Computing Exact walk
+[2025-01-11 18:18:52] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:52] Successfully processed graph 58 - Category: lose
+[2025-01-11 18:18:52] 
+Processing graph 59/200
+[2025-01-11 18:18:52] Graph 59 has 16 nodes and 88 edges
+[2025-01-11 18:18:52] Converted to 88 bitstring edges
+[2025-01-11 18:18:52] Computing Matchings Dynamic walk
+[2025-01-11 18:18:55] Matchings - CX: 510, U3: 394, Depth: 674
+[2025-01-11 18:18:55] Computing Exact walk
+[2025-01-11 18:18:57] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:18:57] Successfully processed graph 59 - Category: lose
+[2025-01-11 18:18:57] 
+Processing graph 60/200
+[2025-01-11 18:18:57] Graph 60 has 16 nodes and 108 edges
+[2025-01-11 18:18:57] Converted to 108 bitstring edges
+[2025-01-11 18:18:57] Computing Matchings Dynamic walk
+[2025-01-11 18:19:01] Matchings - CX: 613, U3: 473, Depth: 814
+[2025-01-11 18:19:01] Computing Exact walk
+[2025-01-11 18:19:02] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:02] Successfully processed graph 60 - Category: lose
+[2025-01-11 18:19:02] 
+Processing graph 61/200
+[2025-01-11 18:19:02] Graph 61 has 16 nodes and 110 edges
+[2025-01-11 18:19:02] Converted to 110 bitstring edges
+[2025-01-11 18:19:02] Computing Matchings Dynamic walk
+[2025-01-11 18:19:05] Matchings - CX: 401, U3: 299, Depth: 533
+[2025-01-11 18:19:05] Computing Exact walk
+[2025-01-11 18:19:07] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:07] Successfully processed graph 61 - Category: lose
+[2025-01-11 18:19:07] 
+Processing graph 62/200
+[2025-01-11 18:19:07] Graph 62 has 16 nodes and 110 edges
+[2025-01-11 18:19:07] Converted to 110 bitstring edges
+[2025-01-11 18:19:07] Computing Matchings Dynamic walk
+[2025-01-11 18:19:10] Matchings - CX: 511, U3: 398, Depth: 687
+[2025-01-11 18:19:10] Computing Exact walk
+[2025-01-11 18:19:11] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:11] Successfully processed graph 62 - Category: lose
+[2025-01-11 18:19:11] 
+Processing graph 63/200
+[2025-01-11 18:19:11] Graph 63 has 16 nodes and 84 edges
+[2025-01-11 18:19:11] Converted to 84 bitstring edges
+[2025-01-11 18:19:11] Computing Matchings Dynamic walk
+[2025-01-11 18:19:14] Matchings - CX: 420, U3: 312, Depth: 542
+[2025-01-11 18:19:14] Computing Exact walk
+[2025-01-11 18:19:15] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:15] Successfully processed graph 63 - Category: lose
+[2025-01-11 18:19:15] 
+Processing graph 64/200
+[2025-01-11 18:19:15] Graph 64 has 16 nodes and 92 edges
+[2025-01-11 18:19:15] Converted to 92 bitstring edges
+[2025-01-11 18:19:15] Computing Matchings Dynamic walk
+[2025-01-11 18:19:19] Matchings - CX: 551, U3: 438, Depth: 736
+[2025-01-11 18:19:19] Computing Exact walk
+[2025-01-11 18:19:20] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:20] Successfully processed graph 64 - Category: lose
+[2025-01-11 18:19:20] 
+Processing graph 65/200
+[2025-01-11 18:19:20] Graph 65 has 16 nodes and 94 edges
+[2025-01-11 18:19:20] Converted to 94 bitstring edges
+[2025-01-11 18:19:20] Computing Matchings Dynamic walk
+[2025-01-11 18:19:23] Matchings - CX: 451, U3: 345, Depth: 589
+[2025-01-11 18:19:23] Computing Exact walk
+[2025-01-11 18:19:24] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:24] Successfully processed graph 65 - Category: lose
+[2025-01-11 18:19:24] 
+Processing graph 66/200
+[2025-01-11 18:19:24] Graph 66 has 16 nodes and 108 edges
+[2025-01-11 18:19:24] Converted to 108 bitstring edges
+[2025-01-11 18:19:24] Computing Matchings Dynamic walk
+[2025-01-11 18:19:27] Matchings - CX: 402, U3: 323, Depth: 547
+[2025-01-11 18:19:27] Computing Exact walk
+[2025-01-11 18:19:29] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:29] Successfully processed graph 66 - Category: lose
+[2025-01-11 18:19:29] 
+Processing graph 67/200
+[2025-01-11 18:19:29] Graph 67 has 16 nodes and 85 edges
+[2025-01-11 18:19:29] Converted to 85 bitstring edges
+[2025-01-11 18:19:29] Computing Matchings Dynamic walk
+[2025-01-11 18:19:31] Matchings - CX: 386, U3: 291, Depth: 510
+[2025-01-11 18:19:31] Computing Exact walk
+[2025-01-11 18:19:32] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:32] Successfully processed graph 67 - Category: lose
+[2025-01-11 18:19:32] 
+Processing graph 68/200
+[2025-01-11 18:19:32] Graph 68 has 16 nodes and 101 edges
+[2025-01-11 18:19:32] Converted to 101 bitstring edges
+[2025-01-11 18:19:32] Computing Matchings Dynamic walk
+[2025-01-11 18:19:36] Matchings - CX: 544, U3: 389, Depth: 710
+[2025-01-11 18:19:36] Computing Exact walk
+[2025-01-11 18:19:37] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:37] Successfully processed graph 68 - Category: lose
+[2025-01-11 18:19:37] 
+Processing graph 69/200
+[2025-01-11 18:19:37] Graph 69 has 16 nodes and 104 edges
+[2025-01-11 18:19:37] Converted to 104 bitstring edges
+[2025-01-11 18:19:37] Computing Matchings Dynamic walk
+[2025-01-11 18:19:41] Matchings - CX: 617, U3: 479, Depth: 822
+[2025-01-11 18:19:41] Computing Exact walk
+[2025-01-11 18:19:42] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:42] Successfully processed graph 69 - Category: lose
+[2025-01-11 18:19:42] 
+Processing graph 70/200
+[2025-01-11 18:19:42] Graph 70 has 16 nodes and 107 edges
+[2025-01-11 18:19:42] Converted to 107 bitstring edges
+[2025-01-11 18:19:42] Computing Matchings Dynamic walk
+[2025-01-11 18:19:46] Matchings - CX: 485, U3: 372, Depth: 646
+[2025-01-11 18:19:46] Computing Exact walk
+[2025-01-11 18:19:47] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:47] Successfully processed graph 70 - Category: lose
+[2025-01-11 18:19:47] 
+Processing graph 71/200
+[2025-01-11 18:19:47] Graph 71 has 16 nodes and 100 edges
+[2025-01-11 18:19:47] Converted to 100 bitstring edges
+[2025-01-11 18:19:47] Computing Matchings Dynamic walk
+[2025-01-11 18:19:50] Matchings - CX: 448, U3: 333, Depth: 587
+[2025-01-11 18:19:50] Computing Exact walk
+[2025-01-11 18:19:51] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:51] Successfully processed graph 71 - Category: lose
+[2025-01-11 18:19:51] 
+Processing graph 72/200
+[2025-01-11 18:19:51] Graph 72 has 16 nodes and 95 edges
+[2025-01-11 18:19:51] Converted to 95 bitstring edges
+[2025-01-11 18:19:51] Computing Matchings Dynamic walk
+[2025-01-11 18:19:55] Matchings - CX: 555, U3: 430, Depth: 743
+[2025-01-11 18:19:55] Computing Exact walk
+[2025-01-11 18:19:56] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:19:56] Successfully processed graph 72 - Category: lose
+[2025-01-11 18:19:56] 
+Processing graph 73/200
+[2025-01-11 18:19:56] Graph 73 has 16 nodes and 103 edges
+[2025-01-11 18:19:56] Converted to 103 bitstring edges
+[2025-01-11 18:19:56] Computing Matchings Dynamic walk
+[2025-01-11 18:20:00] Matchings - CX: 507, U3: 378, Depth: 666
+[2025-01-11 18:20:00] Computing Exact walk
+[2025-01-11 18:20:01] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:01] Successfully processed graph 73 - Category: lose
+[2025-01-11 18:20:01] 
+Processing graph 74/200
+[2025-01-11 18:20:01] Graph 74 has 16 nodes and 91 edges
+[2025-01-11 18:20:01] Converted to 91 bitstring edges
+[2025-01-11 18:20:01] Computing Matchings Dynamic walk
+[2025-01-11 18:20:04] Matchings - CX: 407, U3: 333, Depth: 559
+[2025-01-11 18:20:04] Computing Exact walk
+[2025-01-11 18:20:06] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:06] Successfully processed graph 74 - Category: lose
+[2025-01-11 18:20:06] 
+Processing graph 75/200
+[2025-01-11 18:20:06] Graph 75 has 16 nodes and 91 edges
+[2025-01-11 18:20:06] Converted to 91 bitstring edges
+[2025-01-11 18:20:06] Computing Matchings Dynamic walk
+[2025-01-11 18:20:09] Matchings - CX: 486, U3: 370, Depth: 636
+[2025-01-11 18:20:09] Computing Exact walk
+[2025-01-11 18:20:10] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:10] Successfully processed graph 75 - Category: lose
+[2025-01-11 18:20:10] 
+Processing graph 76/200
+[2025-01-11 18:20:10] Graph 76 has 16 nodes and 96 edges
+[2025-01-11 18:20:10] Converted to 96 bitstring edges
+[2025-01-11 18:20:10] Computing Matchings Dynamic walk
+[2025-01-11 18:20:13] Matchings - CX: 503, U3: 374, Depth: 664
+[2025-01-11 18:20:13] Computing Exact walk
+[2025-01-11 18:20:15] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:15] Successfully processed graph 76 - Category: lose
+[2025-01-11 18:20:15] 
+Processing graph 77/200
+[2025-01-11 18:20:15] Graph 77 has 16 nodes and 101 edges
+[2025-01-11 18:20:15] Converted to 101 bitstring edges
+[2025-01-11 18:20:15] Computing Matchings Dynamic walk
+[2025-01-11 18:20:17] Matchings - CX: 430, U3: 305, Depth: 559
+[2025-01-11 18:20:17] Computing Exact walk
+[2025-01-11 18:20:19] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:19] Successfully processed graph 77 - Category: lose
+[2025-01-11 18:20:19] 
+Processing graph 78/200
+[2025-01-11 18:20:19] Graph 78 has 16 nodes and 94 edges
+[2025-01-11 18:20:19] Converted to 94 bitstring edges
+[2025-01-11 18:20:19] Computing Matchings Dynamic walk
+[2025-01-11 18:20:22] Matchings - CX: 426, U3: 318, Depth: 570
+[2025-01-11 18:20:22] Computing Exact walk
+[2025-01-11 18:20:23] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:23] Successfully processed graph 78 - Category: lose
+[2025-01-11 18:20:23] 
+Processing graph 79/200
+[2025-01-11 18:20:23] Graph 79 has 16 nodes and 96 edges
+[2025-01-11 18:20:23] Converted to 96 bitstring edges
+[2025-01-11 18:20:23] Computing Matchings Dynamic walk
+[2025-01-11 18:20:26] Matchings - CX: 441, U3: 348, Depth: 585
+[2025-01-11 18:20:26] Computing Exact walk
+[2025-01-11 18:20:28] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:28] Successfully processed graph 79 - Category: lose
+[2025-01-11 18:20:28] 
+Processing graph 80/200
+[2025-01-11 18:20:28] Graph 80 has 16 nodes and 101 edges
+[2025-01-11 18:20:28] Converted to 101 bitstring edges
+[2025-01-11 18:20:28] Computing Matchings Dynamic walk
+[2025-01-11 18:20:31] Matchings - CX: 400, U3: 306, Depth: 529
+[2025-01-11 18:20:31] Computing Exact walk
+[2025-01-11 18:20:32] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:32] Successfully processed graph 80 - Category: lose
+[2025-01-11 18:20:32] 
+Processing graph 81/200
+[2025-01-11 18:20:32] Graph 81 has 16 nodes and 101 edges
+[2025-01-11 18:20:32] Converted to 101 bitstring edges
+[2025-01-11 18:20:32] Computing Matchings Dynamic walk
+[2025-01-11 18:20:35] Matchings - CX: 407, U3: 325, Depth: 544
+[2025-01-11 18:20:35] Computing Exact walk
+[2025-01-11 18:20:37] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:37] Successfully processed graph 81 - Category: lose
+[2025-01-11 18:20:37] 
+Processing graph 82/200
+[2025-01-11 18:20:37] Graph 82 has 16 nodes and 92 edges
+[2025-01-11 18:20:37] Converted to 92 bitstring edges
+[2025-01-11 18:20:37] Computing Matchings Dynamic walk
+[2025-01-11 18:20:40] Matchings - CX: 460, U3: 350, Depth: 606
+[2025-01-11 18:20:40] Computing Exact walk
+[2025-01-11 18:20:41] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:41] Successfully processed graph 82 - Category: lose
+[2025-01-11 18:20:41] 
+Processing graph 83/200
+[2025-01-11 18:20:41] Graph 83 has 16 nodes and 96 edges
+[2025-01-11 18:20:41] Converted to 96 bitstring edges
+[2025-01-11 18:20:41] Computing Matchings Dynamic walk
+[2025-01-11 18:20:45] Matchings - CX: 423, U3: 343, Depth: 576
+[2025-01-11 18:20:45] Computing Exact walk
+[2025-01-11 18:20:46] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:46] Successfully processed graph 83 - Category: lose
+[2025-01-11 18:20:46] 
+Processing graph 84/200
+[2025-01-11 18:20:46] Graph 84 has 16 nodes and 92 edges
+[2025-01-11 18:20:46] Converted to 92 bitstring edges
+[2025-01-11 18:20:46] Computing Matchings Dynamic walk
+[2025-01-11 18:20:49] Matchings - CX: 504, U3: 382, Depth: 661
+[2025-01-11 18:20:49] Computing Exact walk
+[2025-01-11 18:20:51] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:51] Successfully processed graph 84 - Category: lose
+[2025-01-11 18:20:51] 
+Processing graph 85/200
+[2025-01-11 18:20:51] Graph 85 has 16 nodes and 105 edges
+[2025-01-11 18:20:51] Converted to 105 bitstring edges
+[2025-01-11 18:20:51] Computing Matchings Dynamic walk
+[2025-01-11 18:20:54] Matchings - CX: 509, U3: 397, Depth: 680
+[2025-01-11 18:20:54] Computing Exact walk
+[2025-01-11 18:20:55] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:20:55] Successfully processed graph 85 - Category: lose
+[2025-01-11 18:20:55] 
+Processing graph 86/200
+[2025-01-11 18:20:55] Graph 86 has 16 nodes and 104 edges
+[2025-01-11 18:20:55] Converted to 104 bitstring edges
+[2025-01-11 18:20:55] Computing Matchings Dynamic walk
+[2025-01-11 18:20:59] Matchings - CX: 455, U3: 333, Depth: 604
+[2025-01-11 18:20:59] Computing Exact walk
+[2025-01-11 18:21:00] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:00] Successfully processed graph 86 - Category: lose
+[2025-01-11 18:21:00] 
+Processing graph 87/200
+[2025-01-11 18:21:00] Graph 87 has 16 nodes and 101 edges
+[2025-01-11 18:21:00] Converted to 101 bitstring edges
+[2025-01-11 18:21:00] Computing Matchings Dynamic walk
+[2025-01-11 18:21:04] Matchings - CX: 543, U3: 408, Depth: 717
+[2025-01-11 18:21:04] Computing Exact walk
+[2025-01-11 18:21:05] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:05] Successfully processed graph 87 - Category: lose
+[2025-01-11 18:21:05] 
+Processing graph 88/200
+[2025-01-11 18:21:05] Graph 88 has 16 nodes and 103 edges
+[2025-01-11 18:21:05] Converted to 103 bitstring edges
+[2025-01-11 18:21:05] Computing Matchings Dynamic walk
+[2025-01-11 18:21:08] Matchings - CX: 348, U3: 268, Depth: 467
+[2025-01-11 18:21:08] Computing Exact walk
+[2025-01-11 18:21:09] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:09] Successfully processed graph 88 - Category: lose
+[2025-01-11 18:21:09] 
+Processing graph 89/200
+[2025-01-11 18:21:09] Graph 89 has 16 nodes and 105 edges
+[2025-01-11 18:21:09] Converted to 105 bitstring edges
+[2025-01-11 18:21:09] Computing Matchings Dynamic walk
+[2025-01-11 18:21:13] Matchings - CX: 472, U3: 386, Depth: 638
+[2025-01-11 18:21:13] Computing Exact walk
+[2025-01-11 18:21:14] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:14] Successfully processed graph 89 - Category: lose
+[2025-01-11 18:21:14] 
+Processing graph 90/200
+[2025-01-11 18:21:14] Graph 90 has 16 nodes and 87 edges
+[2025-01-11 18:21:14] Converted to 87 bitstring edges
+[2025-01-11 18:21:14] Computing Matchings Dynamic walk
+[2025-01-11 18:21:18] Matchings - CX: 477, U3: 356, Depth: 633
+[2025-01-11 18:21:18] Computing Exact walk
+[2025-01-11 18:21:19] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:19] Successfully processed graph 90 - Category: lose
+[2025-01-11 18:21:19] 
+Processing graph 91/200
+[2025-01-11 18:21:19] Graph 91 has 16 nodes and 82 edges
+[2025-01-11 18:21:19] Converted to 82 bitstring edges
+[2025-01-11 18:21:19] Computing Matchings Dynamic walk
+[2025-01-11 18:21:22] Matchings - CX: 481, U3: 369, Depth: 637
+[2025-01-11 18:21:22] Computing Exact walk
+[2025-01-11 18:21:24] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:24] Successfully processed graph 91 - Category: lose
+[2025-01-11 18:21:24] 
+Processing graph 92/200
+[2025-01-11 18:21:24] Graph 92 has 16 nodes and 105 edges
+[2025-01-11 18:21:24] Converted to 105 bitstring edges
+[2025-01-11 18:21:24] Computing Matchings Dynamic walk
+[2025-01-11 18:21:27] Matchings - CX: 550, U3: 422, Depth: 723
+[2025-01-11 18:21:27] Computing Exact walk
+[2025-01-11 18:21:29] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:29] Successfully processed graph 92 - Category: lose
+[2025-01-11 18:21:29] 
+Processing graph 93/200
+[2025-01-11 18:21:29] Graph 93 has 16 nodes and 105 edges
+[2025-01-11 18:21:29] Converted to 105 bitstring edges
+[2025-01-11 18:21:29] Computing Matchings Dynamic walk
+[2025-01-11 18:21:32] Matchings - CX: 476, U3: 340, Depth: 618
+[2025-01-11 18:21:32] Computing Exact walk
+[2025-01-11 18:21:34] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:34] Successfully processed graph 93 - Category: lose
+[2025-01-11 18:21:34] 
+Processing graph 94/200
+[2025-01-11 18:21:34] Graph 94 has 16 nodes and 105 edges
+[2025-01-11 18:21:34] Converted to 105 bitstring edges
+[2025-01-11 18:21:34] Computing Matchings Dynamic walk
+[2025-01-11 18:21:37] Matchings - CX: 419, U3: 293, Depth: 549
+[2025-01-11 18:21:37] Computing Exact walk
+[2025-01-11 18:21:39] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:39] Successfully processed graph 94 - Category: lose
+[2025-01-11 18:21:39] 
+Processing graph 95/200
+[2025-01-11 18:21:39] Graph 95 has 16 nodes and 108 edges
+[2025-01-11 18:21:39] Converted to 108 bitstring edges
+[2025-01-11 18:21:39] Computing Matchings Dynamic walk
+[2025-01-11 18:21:42] Matchings - CX: 560, U3: 398, Depth: 728
+[2025-01-11 18:21:42] Computing Exact walk
+[2025-01-11 18:21:44] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:44] Successfully processed graph 95 - Category: lose
+[2025-01-11 18:21:44] 
+Processing graph 96/200
+[2025-01-11 18:21:44] Graph 96 has 16 nodes and 84 edges
+[2025-01-11 18:21:44] Converted to 84 bitstring edges
+[2025-01-11 18:21:44] Computing Matchings Dynamic walk
+[2025-01-11 18:21:46] Matchings - CX: 367, U3: 277, Depth: 485
+[2025-01-11 18:21:46] Computing Exact walk
+[2025-01-11 18:21:48] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:48] Successfully processed graph 96 - Category: lose
+[2025-01-11 18:21:48] 
+Processing graph 97/200
+[2025-01-11 18:21:48] Graph 97 has 16 nodes and 96 edges
+[2025-01-11 18:21:48] Converted to 96 bitstring edges
+[2025-01-11 18:21:48] Computing Matchings Dynamic walk
+[2025-01-11 18:21:51] Matchings - CX: 455, U3: 317, Depth: 578
+[2025-01-11 18:21:51] Computing Exact walk
+[2025-01-11 18:21:52] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:52] Successfully processed graph 97 - Category: lose
+[2025-01-11 18:21:52] 
+Processing graph 98/200
+[2025-01-11 18:21:52] Graph 98 has 16 nodes and 107 edges
+[2025-01-11 18:21:52] Converted to 107 bitstring edges
+[2025-01-11 18:21:52] Computing Matchings Dynamic walk
+[2025-01-11 18:21:56] Matchings - CX: 570, U3: 407, Depth: 742
+[2025-01-11 18:21:56] Computing Exact walk
+[2025-01-11 18:21:57] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:21:57] Successfully processed graph 98 - Category: lose
+[2025-01-11 18:21:57] 
+Processing graph 99/200
+[2025-01-11 18:21:57] Graph 99 has 16 nodes and 88 edges
+[2025-01-11 18:21:57] Converted to 88 bitstring edges
+[2025-01-11 18:21:57] Computing Matchings Dynamic walk
+[2025-01-11 18:22:00] Matchings - CX: 462, U3: 343, Depth: 607
+[2025-01-11 18:22:00] Computing Exact walk
+[2025-01-11 18:22:01] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:01] Successfully processed graph 99 - Category: lose
+[2025-01-11 18:22:01] 
+Processing graph 100/200
+[2025-01-11 18:22:01] Graph 100 has 16 nodes and 108 edges
+[2025-01-11 18:22:01] Converted to 108 bitstring edges
+[2025-01-11 18:22:01] Computing Matchings Dynamic walk
+[2025-01-11 18:22:05] Matchings - CX: 508, U3: 374, Depth: 667
+[2025-01-11 18:22:05] Computing Exact walk
+[2025-01-11 18:22:06] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:06] Successfully processed graph 100 - Category: lose
+[2025-01-11 18:22:06] 
+Processing graph 101/200
+[2025-01-11 18:22:06] Graph 101 has 16 nodes and 104 edges
+[2025-01-11 18:22:06] Converted to 104 bitstring edges
+[2025-01-11 18:22:06] Computing Matchings Dynamic walk
+[2025-01-11 18:22:11] Matchings - CX: 606, U3: 461, Depth: 804
+[2025-01-11 18:22:11] Computing Exact walk
+[2025-01-11 18:22:12] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:12] Successfully processed graph 101 - Category: lose
+[2025-01-11 18:22:12] 
+Processing graph 102/200
+[2025-01-11 18:22:12] Graph 102 has 16 nodes and 103 edges
+[2025-01-11 18:22:12] Converted to 103 bitstring edges
+[2025-01-11 18:22:12] Computing Matchings Dynamic walk
+[2025-01-11 18:22:15] Matchings - CX: 511, U3: 362, Depth: 671
+[2025-01-11 18:22:15] Computing Exact walk
+[2025-01-11 18:22:16] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:16] Successfully processed graph 102 - Category: lose
+[2025-01-11 18:22:16] 
+Processing graph 103/200
+[2025-01-11 18:22:16] Graph 103 has 16 nodes and 78 edges
+[2025-01-11 18:22:16] Converted to 78 bitstring edges
+[2025-01-11 18:22:16] Computing Matchings Dynamic walk
+[2025-01-11 18:22:19] Matchings - CX: 433, U3: 315, Depth: 569
+[2025-01-11 18:22:19] Computing Exact walk
+[2025-01-11 18:22:20] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:20] Successfully processed graph 103 - Category: lose
+[2025-01-11 18:22:20] 
+Processing graph 104/200
+[2025-01-11 18:22:20] Graph 104 has 16 nodes and 110 edges
+[2025-01-11 18:22:20] Converted to 110 bitstring edges
+[2025-01-11 18:22:20] Computing Matchings Dynamic walk
+[2025-01-11 18:22:24] Matchings - CX: 606, U3: 456, Depth: 803
+[2025-01-11 18:22:24] Computing Exact walk
+[2025-01-11 18:22:25] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:25] Successfully processed graph 104 - Category: lose
+[2025-01-11 18:22:25] 
+Processing graph 105/200
+[2025-01-11 18:22:25] Graph 105 has 16 nodes and 105 edges
+[2025-01-11 18:22:25] Converted to 105 bitstring edges
+[2025-01-11 18:22:25] Computing Matchings Dynamic walk
+[2025-01-11 18:22:29] Matchings - CX: 513, U3: 389, Depth: 686
+[2025-01-11 18:22:29] Computing Exact walk
+[2025-01-11 18:22:30] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:30] Successfully processed graph 105 - Category: lose
+[2025-01-11 18:22:30] 
+Processing graph 106/200
+[2025-01-11 18:22:30] Graph 106 has 16 nodes and 99 edges
+[2025-01-11 18:22:30] Converted to 99 bitstring edges
+[2025-01-11 18:22:30] Computing Matchings Dynamic walk
+[2025-01-11 18:22:33] Matchings - CX: 601, U3: 440, Depth: 792
+[2025-01-11 18:22:33] Computing Exact walk
+[2025-01-11 18:22:35] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:35] Successfully processed graph 106 - Category: lose
+[2025-01-11 18:22:35] 
+Processing graph 107/200
+[2025-01-11 18:22:35] Graph 107 has 16 nodes and 100 edges
+[2025-01-11 18:22:35] Converted to 100 bitstring edges
+[2025-01-11 18:22:35] Computing Matchings Dynamic walk
+[2025-01-11 18:22:38] Matchings - CX: 457, U3: 333, Depth: 598
+[2025-01-11 18:22:38] Computing Exact walk
+[2025-01-11 18:22:39] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:39] Successfully processed graph 107 - Category: lose
+[2025-01-11 18:22:39] 
+Processing graph 108/200
+[2025-01-11 18:22:39] Graph 108 has 16 nodes and 107 edges
+[2025-01-11 18:22:39] Converted to 107 bitstring edges
+[2025-01-11 18:22:39] Computing Matchings Dynamic walk
+[2025-01-11 18:22:43] Matchings - CX: 482, U3: 365, Depth: 641
+[2025-01-11 18:22:43] Computing Exact walk
+[2025-01-11 18:22:44] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:44] Successfully processed graph 108 - Category: lose
+[2025-01-11 18:22:44] 
+Processing graph 109/200
+[2025-01-11 18:22:44] Graph 109 has 16 nodes and 87 edges
+[2025-01-11 18:22:44] Converted to 87 bitstring edges
+[2025-01-11 18:22:44] Computing Matchings Dynamic walk
+[2025-01-11 18:22:49] Matchings - CX: 427, U3: 319, Depth: 565
+[2025-01-11 18:22:49] Computing Exact walk
+[2025-01-11 18:22:52] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:52] Successfully processed graph 109 - Category: lose
+[2025-01-11 18:22:52] 
+Processing graph 110/200
+[2025-01-11 18:22:52] Graph 110 has 16 nodes and 87 edges
+[2025-01-11 18:22:52] Converted to 87 bitstring edges
+[2025-01-11 18:22:52] Computing Matchings Dynamic walk
+[2025-01-11 18:22:56] Matchings - CX: 365, U3: 276, Depth: 488
+[2025-01-11 18:22:56] Computing Exact walk
+[2025-01-11 18:22:59] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:22:59] Successfully processed graph 110 - Category: lose
+[2025-01-11 18:22:59] 
+Processing graph 111/200
+[2025-01-11 18:22:59] Graph 111 has 16 nodes and 83 edges
+[2025-01-11 18:22:59] Converted to 83 bitstring edges
+[2025-01-11 18:22:59] Computing Matchings Dynamic walk
+[2025-01-11 18:23:03] Matchings - CX: 344, U3: 268, Depth: 467
+[2025-01-11 18:23:03] Computing Exact walk
+[2025-01-11 18:23:05] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:05] Successfully processed graph 111 - Category: lose
+[2025-01-11 18:23:05] 
+Processing graph 112/200
+[2025-01-11 18:23:05] Graph 112 has 16 nodes and 87 edges
+[2025-01-11 18:23:05] Converted to 87 bitstring edges
+[2025-01-11 18:23:05] Computing Matchings Dynamic walk
+[2025-01-11 18:23:08] Matchings - CX: 440, U3: 324, Depth: 568
+[2025-01-11 18:23:08] Computing Exact walk
+[2025-01-11 18:23:09] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:09] Successfully processed graph 112 - Category: lose
+[2025-01-11 18:23:09] 
+Processing graph 113/200
+[2025-01-11 18:23:09] Graph 113 has 16 nodes and 95 edges
+[2025-01-11 18:23:09] Converted to 95 bitstring edges
+[2025-01-11 18:23:09] Computing Matchings Dynamic walk
+[2025-01-11 18:23:12] Matchings - CX: 482, U3: 370, Depth: 644
+[2025-01-11 18:23:12] Computing Exact walk
+[2025-01-11 18:23:13] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:13] Successfully processed graph 113 - Category: lose
+[2025-01-11 18:23:13] 
+Processing graph 114/200
+[2025-01-11 18:23:13] Graph 114 has 16 nodes and 95 edges
+[2025-01-11 18:23:13] Converted to 95 bitstring edges
+[2025-01-11 18:23:13] Computing Matchings Dynamic walk
+[2025-01-11 18:23:17] Matchings - CX: 438, U3: 345, Depth: 582
+[2025-01-11 18:23:17] Computing Exact walk
+[2025-01-11 18:23:18] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:18] Successfully processed graph 114 - Category: lose
+[2025-01-11 18:23:18] 
+Processing graph 115/200
+[2025-01-11 18:23:18] Graph 115 has 16 nodes and 86 edges
+[2025-01-11 18:23:18] Converted to 86 bitstring edges
+[2025-01-11 18:23:18] Computing Matchings Dynamic walk
+[2025-01-11 18:23:21] Matchings - CX: 445, U3: 337, Depth: 589
+[2025-01-11 18:23:21] Computing Exact walk
+[2025-01-11 18:23:22] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:22] Successfully processed graph 115 - Category: lose
+[2025-01-11 18:23:22] 
+Processing graph 116/200
+[2025-01-11 18:23:22] Graph 116 has 16 nodes and 87 edges
+[2025-01-11 18:23:22] Converted to 87 bitstring edges
+[2025-01-11 18:23:22] Computing Matchings Dynamic walk
+[2025-01-11 18:23:25] Matchings - CX: 344, U3: 267, Depth: 469
+[2025-01-11 18:23:25] Computing Exact walk
+[2025-01-11 18:23:26] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:26] Successfully processed graph 116 - Category: lose
+[2025-01-11 18:23:26] 
+Processing graph 117/200
+[2025-01-11 18:23:26] Graph 117 has 16 nodes and 98 edges
+[2025-01-11 18:23:26] Converted to 98 bitstring edges
+[2025-01-11 18:23:26] Computing Matchings Dynamic walk
+[2025-01-11 18:23:29] Matchings - CX: 372, U3: 274, Depth: 495
+[2025-01-11 18:23:29] Computing Exact walk
+[2025-01-11 18:23:30] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:30] Successfully processed graph 117 - Category: lose
+[2025-01-11 18:23:30] 
+Processing graph 118/200
+[2025-01-11 18:23:30] Graph 118 has 16 nodes and 87 edges
+[2025-01-11 18:23:30] Converted to 87 bitstring edges
+[2025-01-11 18:23:30] Computing Matchings Dynamic walk
+[2025-01-11 18:23:33] Matchings - CX: 346, U3: 270, Depth: 455
+[2025-01-11 18:23:33] Computing Exact walk
+[2025-01-11 18:23:34] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:34] Successfully processed graph 118 - Category: lose
+[2025-01-11 18:23:34] 
+Processing graph 119/200
+[2025-01-11 18:23:34] Graph 119 has 16 nodes and 101 edges
+[2025-01-11 18:23:34] Converted to 101 bitstring edges
+[2025-01-11 18:23:34] Computing Matchings Dynamic walk
+[2025-01-11 18:23:38] Matchings - CX: 433, U3: 331, Depth: 567
+[2025-01-11 18:23:38] Computing Exact walk
+[2025-01-11 18:23:39] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:39] Successfully processed graph 119 - Category: lose
+[2025-01-11 18:23:39] 
+Processing graph 120/200
+[2025-01-11 18:23:39] Graph 120 has 16 nodes and 104 edges
+[2025-01-11 18:23:39] Converted to 104 bitstring edges
+[2025-01-11 18:23:39] Computing Matchings Dynamic walk
+[2025-01-11 18:23:42] Matchings - CX: 472, U3: 379, Depth: 628
+[2025-01-11 18:23:42] Computing Exact walk
+[2025-01-11 18:23:43] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:43] Successfully processed graph 120 - Category: lose
+[2025-01-11 18:23:43] 
+Processing graph 121/200
+[2025-01-11 18:23:43] Graph 121 has 16 nodes and 106 edges
+[2025-01-11 18:23:43] Converted to 106 bitstring edges
+[2025-01-11 18:23:43] Computing Matchings Dynamic walk
+[2025-01-11 18:23:47] Matchings - CX: 507, U3: 385, Depth: 679
+[2025-01-11 18:23:47] Computing Exact walk
+[2025-01-11 18:23:48] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:48] Successfully processed graph 121 - Category: lose
+[2025-01-11 18:23:48] 
+Processing graph 122/200
+[2025-01-11 18:23:48] Graph 122 has 16 nodes and 100 edges
+[2025-01-11 18:23:48] Converted to 100 bitstring edges
+[2025-01-11 18:23:48] Computing Matchings Dynamic walk
+[2025-01-11 18:23:51] Matchings - CX: 454, U3: 326, Depth: 592
+[2025-01-11 18:23:51] Computing Exact walk
+[2025-01-11 18:23:53] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:53] Successfully processed graph 122 - Category: lose
+[2025-01-11 18:23:53] 
+Processing graph 123/200
+[2025-01-11 18:23:53] Graph 123 has 16 nodes and 101 edges
+[2025-01-11 18:23:53] Converted to 101 bitstring edges
+[2025-01-11 18:23:53] Computing Matchings Dynamic walk
+[2025-01-11 18:23:56] Matchings - CX: 446, U3: 336, Depth: 593
+[2025-01-11 18:23:56] Computing Exact walk
+[2025-01-11 18:23:57] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:23:57] Successfully processed graph 123 - Category: lose
+[2025-01-11 18:23:57] 
+Processing graph 124/200
+[2025-01-11 18:23:57] Graph 124 has 16 nodes and 95 edges
+[2025-01-11 18:23:57] Converted to 95 bitstring edges
+[2025-01-11 18:23:57] Computing Matchings Dynamic walk
+[2025-01-11 18:24:00] Matchings - CX: 411, U3: 316, Depth: 549
+[2025-01-11 18:24:00] Computing Exact walk
+[2025-01-11 18:24:01] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:01] Successfully processed graph 124 - Category: lose
+[2025-01-11 18:24:01] 
+Processing graph 125/200
+[2025-01-11 18:24:01] Graph 125 has 16 nodes and 105 edges
+[2025-01-11 18:24:01] Converted to 105 bitstring edges
+[2025-01-11 18:24:01] Computing Matchings Dynamic walk
+[2025-01-11 18:24:05] Matchings - CX: 571, U3: 420, Depth: 750
+[2025-01-11 18:24:05] Computing Exact walk
+[2025-01-11 18:24:07] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:07] Successfully processed graph 125 - Category: lose
+[2025-01-11 18:24:07] 
+Processing graph 126/200
+[2025-01-11 18:24:07] Graph 126 has 16 nodes and 94 edges
+[2025-01-11 18:24:07] Converted to 94 bitstring edges
+[2025-01-11 18:24:07] Computing Matchings Dynamic walk
+[2025-01-11 18:24:09] Matchings - CX: 414, U3: 295, Depth: 533
+[2025-01-11 18:24:09] Computing Exact walk
+[2025-01-11 18:24:11] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:11] Successfully processed graph 126 - Category: lose
+[2025-01-11 18:24:11] 
+Processing graph 127/200
+[2025-01-11 18:24:11] Graph 127 has 16 nodes and 102 edges
+[2025-01-11 18:24:11] Converted to 102 bitstring edges
+[2025-01-11 18:24:11] Computing Matchings Dynamic walk
+[2025-01-11 18:24:14] Matchings - CX: 478, U3: 361, Depth: 629
+[2025-01-11 18:24:14] Computing Exact walk
+[2025-01-11 18:24:15] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:15] Successfully processed graph 127 - Category: lose
+[2025-01-11 18:24:15] 
+Processing graph 128/200
+[2025-01-11 18:24:15] Graph 128 has 16 nodes and 96 edges
+[2025-01-11 18:24:15] Converted to 96 bitstring edges
+[2025-01-11 18:24:15] Computing Matchings Dynamic walk
+[2025-01-11 18:24:19] Matchings - CX: 502, U3: 378, Depth: 657
+[2025-01-11 18:24:19] Computing Exact walk
+[2025-01-11 18:24:21] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:21] Successfully processed graph 128 - Category: lose
+[2025-01-11 18:24:21] 
+Processing graph 129/200
+[2025-01-11 18:24:21] Graph 129 has 16 nodes and 87 edges
+[2025-01-11 18:24:21] Converted to 87 bitstring edges
+[2025-01-11 18:24:21] Computing Matchings Dynamic walk
+[2025-01-11 18:24:24] Matchings - CX: 430, U3: 332, Depth: 579
+[2025-01-11 18:24:24] Computing Exact walk
+[2025-01-11 18:24:25] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:25] Successfully processed graph 129 - Category: lose
+[2025-01-11 18:24:25] 
+Processing graph 130/200
+[2025-01-11 18:24:25] Graph 130 has 16 nodes and 82 edges
+[2025-01-11 18:24:25] Converted to 82 bitstring edges
+[2025-01-11 18:24:25] Computing Matchings Dynamic walk
+[2025-01-11 18:24:28] Matchings - CX: 356, U3: 279, Depth: 471
+[2025-01-11 18:24:28] Computing Exact walk
+[2025-01-11 18:24:29] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:29] Successfully processed graph 130 - Category: lose
+[2025-01-11 18:24:29] 
+Processing graph 131/200
+[2025-01-11 18:24:29] Graph 131 has 16 nodes and 88 edges
+[2025-01-11 18:24:29] Converted to 88 bitstring edges
+[2025-01-11 18:24:29] Computing Matchings Dynamic walk
+[2025-01-11 18:24:32] Matchings - CX: 374, U3: 276, Depth: 494
+[2025-01-11 18:24:32] Computing Exact walk
+[2025-01-11 18:24:33] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:33] Successfully processed graph 131 - Category: lose
+[2025-01-11 18:24:33] 
+Processing graph 132/200
+[2025-01-11 18:24:33] Graph 132 has 16 nodes and 87 edges
+[2025-01-11 18:24:33] Converted to 87 bitstring edges
+[2025-01-11 18:24:33] Computing Matchings Dynamic walk
+[2025-01-11 18:24:36] Matchings - CX: 328, U3: 242, Depth: 429
+[2025-01-11 18:24:36] Computing Exact walk
+[2025-01-11 18:24:37] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:37] Successfully processed graph 132 - Category: lose
+[2025-01-11 18:24:37] 
+Processing graph 133/200
+[2025-01-11 18:24:37] Graph 133 has 16 nodes and 105 edges
+[2025-01-11 18:24:37] Converted to 105 bitstring edges
+[2025-01-11 18:24:37] Computing Matchings Dynamic walk
+[2025-01-11 18:24:40] Matchings - CX: 393, U3: 281, Depth: 502
+[2025-01-11 18:24:40] Computing Exact walk
+[2025-01-11 18:24:41] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:41] Successfully processed graph 133 - Category: lose
+[2025-01-11 18:24:41] 
+Processing graph 134/200
+[2025-01-11 18:24:41] Graph 134 has 16 nodes and 100 edges
+[2025-01-11 18:24:41] Converted to 100 bitstring edges
+[2025-01-11 18:24:41] Computing Matchings Dynamic walk
+[2025-01-11 18:24:44] Matchings - CX: 438, U3: 344, Depth: 591
+[2025-01-11 18:24:44] Computing Exact walk
+[2025-01-11 18:24:46] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:46] Successfully processed graph 134 - Category: lose
+[2025-01-11 18:24:46] 
+Processing graph 135/200
+[2025-01-11 18:24:46] Graph 135 has 16 nodes and 94 edges
+[2025-01-11 18:24:46] Converted to 94 bitstring edges
+[2025-01-11 18:24:46] Computing Matchings Dynamic walk
+[2025-01-11 18:24:49] Matchings - CX: 486, U3: 383, Depth: 656
+[2025-01-11 18:24:49] Computing Exact walk
+[2025-01-11 18:24:51] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:51] Successfully processed graph 135 - Category: lose
+[2025-01-11 18:24:51] 
+Processing graph 136/200
+[2025-01-11 18:24:51] Graph 136 has 16 nodes and 89 edges
+[2025-01-11 18:24:51] Converted to 89 bitstring edges
+[2025-01-11 18:24:51] Computing Matchings Dynamic walk
+[2025-01-11 18:24:54] Matchings - CX: 368, U3: 277, Depth: 489
+[2025-01-11 18:24:54] Computing Exact walk
+[2025-01-11 18:24:56] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:24:56] Successfully processed graph 136 - Category: lose
+[2025-01-11 18:24:56] 
+Processing graph 137/200
+[2025-01-11 18:24:56] Graph 137 has 16 nodes and 98 edges
+[2025-01-11 18:24:56] Converted to 98 bitstring edges
+[2025-01-11 18:24:56] Computing Matchings Dynamic walk
+[2025-01-11 18:25:00] Matchings - CX: 499, U3: 379, Depth: 669
+[2025-01-11 18:25:00] Computing Exact walk
+[2025-01-11 18:25:01] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:01] Successfully processed graph 137 - Category: lose
+[2025-01-11 18:25:01] 
+Processing graph 138/200
+[2025-01-11 18:25:01] Graph 138 has 16 nodes and 101 edges
+[2025-01-11 18:25:01] Converted to 101 bitstring edges
+[2025-01-11 18:25:01] Computing Matchings Dynamic walk
+[2025-01-11 18:25:03] Matchings - CX: 430, U3: 319, Depth: 561
+[2025-01-11 18:25:03] Computing Exact walk
+[2025-01-11 18:25:05] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:05] Successfully processed graph 138 - Category: lose
+[2025-01-11 18:25:05] 
+Processing graph 139/200
+[2025-01-11 18:25:05] Graph 139 has 16 nodes and 106 edges
+[2025-01-11 18:25:05] Converted to 106 bitstring edges
+[2025-01-11 18:25:05] Computing Matchings Dynamic walk
+[2025-01-11 18:25:07] Matchings - CX: 454, U3: 353, Depth: 603
+[2025-01-11 18:25:07] Computing Exact walk
+[2025-01-11 18:25:08] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:08] Successfully processed graph 139 - Category: lose
+[2025-01-11 18:25:08] 
+Processing graph 140/200
+[2025-01-11 18:25:08] Graph 140 has 16 nodes and 100 edges
+[2025-01-11 18:25:08] Converted to 100 bitstring edges
+[2025-01-11 18:25:08] Computing Matchings Dynamic walk
+[2025-01-11 18:25:11] Matchings - CX: 469, U3: 355, Depth: 621
+[2025-01-11 18:25:11] Computing Exact walk
+[2025-01-11 18:25:12] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:12] Successfully processed graph 140 - Category: lose
+[2025-01-11 18:25:12] 
+Processing graph 141/200
+[2025-01-11 18:25:12] Graph 141 has 16 nodes and 90 edges
+[2025-01-11 18:25:12] Converted to 90 bitstring edges
+[2025-01-11 18:25:12] Computing Matchings Dynamic walk
+[2025-01-11 18:25:13] Matchings - CX: 321, U3: 246, Depth: 425
+[2025-01-11 18:25:13] Computing Exact walk
+[2025-01-11 18:25:14] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:14] Successfully processed graph 141 - Category: lose
+[2025-01-11 18:25:14] 
+Processing graph 142/200
+[2025-01-11 18:25:14] Graph 142 has 16 nodes and 101 edges
+[2025-01-11 18:25:14] Converted to 101 bitstring edges
+[2025-01-11 18:25:14] Computing Matchings Dynamic walk
+[2025-01-11 18:25:17] Matchings - CX: 487, U3: 379, Depth: 652
+[2025-01-11 18:25:17] Computing Exact walk
+[2025-01-11 18:25:18] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:18] Successfully processed graph 142 - Category: lose
+[2025-01-11 18:25:18] 
+Processing graph 143/200
+[2025-01-11 18:25:18] Graph 143 has 16 nodes and 94 edges
+[2025-01-11 18:25:18] Converted to 94 bitstring edges
+[2025-01-11 18:25:18] Computing Matchings Dynamic walk
+[2025-01-11 18:25:20] Matchings - CX: 344, U3: 253, Depth: 448
+[2025-01-11 18:25:20] Computing Exact walk
+[2025-01-11 18:25:21] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:21] Successfully processed graph 143 - Category: lose
+[2025-01-11 18:25:21] 
+Processing graph 144/200
+[2025-01-11 18:25:21] Graph 144 has 16 nodes and 96 edges
+[2025-01-11 18:25:21] Converted to 96 bitstring edges
+[2025-01-11 18:25:21] Computing Matchings Dynamic walk
+[2025-01-11 18:25:23] Matchings - CX: 432, U3: 330, Depth: 569
+[2025-01-11 18:25:23] Computing Exact walk
+[2025-01-11 18:25:24] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:24] Successfully processed graph 144 - Category: lose
+[2025-01-11 18:25:24] 
+Processing graph 145/200
+[2025-01-11 18:25:24] Graph 145 has 16 nodes and 92 edges
+[2025-01-11 18:25:24] Converted to 92 bitstring edges
+[2025-01-11 18:25:24] Computing Matchings Dynamic walk
+[2025-01-11 18:25:26] Matchings - CX: 370, U3: 283, Depth: 485
+[2025-01-11 18:25:26] Computing Exact walk
+[2025-01-11 18:25:27] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:27] Successfully processed graph 145 - Category: lose
+[2025-01-11 18:25:27] 
+Processing graph 146/200
+[2025-01-11 18:25:27] Graph 146 has 16 nodes and 104 edges
+[2025-01-11 18:25:27] Converted to 104 bitstring edges
+[2025-01-11 18:25:27] Computing Matchings Dynamic walk
+[2025-01-11 18:25:31] Matchings - CX: 515, U3: 394, Depth: 677
+[2025-01-11 18:25:31] Computing Exact walk
+[2025-01-11 18:25:32] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:32] Successfully processed graph 146 - Category: lose
+[2025-01-11 18:25:32] 
+Processing graph 147/200
+[2025-01-11 18:25:32] Graph 147 has 16 nodes and 100 edges
+[2025-01-11 18:25:32] Converted to 100 bitstring edges
+[2025-01-11 18:25:32] Computing Matchings Dynamic walk
+[2025-01-11 18:25:35] Matchings - CX: 436, U3: 345, Depth: 590
+[2025-01-11 18:25:35] Computing Exact walk
+[2025-01-11 18:25:36] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:36] Successfully processed graph 147 - Category: lose
+[2025-01-11 18:25:36] 
+Processing graph 148/200
+[2025-01-11 18:25:36] Graph 148 has 16 nodes and 92 edges
+[2025-01-11 18:25:36] Converted to 92 bitstring edges
+[2025-01-11 18:25:36] Computing Matchings Dynamic walk
+[2025-01-11 18:25:39] Matchings - CX: 424, U3: 316, Depth: 565
+[2025-01-11 18:25:39] Computing Exact walk
+[2025-01-11 18:25:40] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:40] Successfully processed graph 148 - Category: lose
+[2025-01-11 18:25:40] 
+Processing graph 149/200
+[2025-01-11 18:25:40] Graph 149 has 16 nodes and 102 edges
+[2025-01-11 18:25:40] Converted to 102 bitstring edges
+[2025-01-11 18:25:40] Computing Matchings Dynamic walk
+[2025-01-11 18:25:43] Matchings - CX: 491, U3: 369, Depth: 663
+[2025-01-11 18:25:43] Computing Exact walk
+[2025-01-11 18:25:45] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:45] Successfully processed graph 149 - Category: lose
+[2025-01-11 18:25:45] 
+Processing graph 150/200
+[2025-01-11 18:25:45] Graph 150 has 16 nodes and 95 edges
+[2025-01-11 18:25:45] Converted to 95 bitstring edges
+[2025-01-11 18:25:45] Computing Matchings Dynamic walk
+[2025-01-11 18:25:47] Matchings - CX: 413, U3: 306, Depth: 549
+[2025-01-11 18:25:47] Computing Exact walk
+[2025-01-11 18:25:48] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:48] Successfully processed graph 150 - Category: lose
+[2025-01-11 18:25:48] 
+Processing graph 151/200
+[2025-01-11 18:25:48] Graph 151 has 16 nodes and 97 edges
+[2025-01-11 18:25:48] Converted to 97 bitstring edges
+[2025-01-11 18:25:48] Computing Matchings Dynamic walk
+[2025-01-11 18:25:51] Matchings - CX: 373, U3: 280, Depth: 490
+[2025-01-11 18:25:51] Computing Exact walk
+[2025-01-11 18:25:52] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:52] Successfully processed graph 151 - Category: lose
+[2025-01-11 18:25:52] 
+Processing graph 152/200
+[2025-01-11 18:25:52] Graph 152 has 16 nodes and 102 edges
+[2025-01-11 18:25:52] Converted to 102 bitstring edges
+[2025-01-11 18:25:52] Computing Matchings Dynamic walk
+[2025-01-11 18:25:56] Matchings - CX: 400, U3: 320, Depth: 537
+[2025-01-11 18:25:56] Computing Exact walk
+[2025-01-11 18:25:57] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:25:57] Successfully processed graph 152 - Category: lose
+[2025-01-11 18:25:57] 
+Processing graph 153/200
+[2025-01-11 18:25:57] Graph 153 has 16 nodes and 97 edges
+[2025-01-11 18:25:57] Converted to 97 bitstring edges
+[2025-01-11 18:25:57] Computing Matchings Dynamic walk
+[2025-01-11 18:26:00] Matchings - CX: 471, U3: 368, Depth: 626
+[2025-01-11 18:26:00] Computing Exact walk
+[2025-01-11 18:26:01] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:01] Successfully processed graph 153 - Category: lose
+[2025-01-11 18:26:01] 
+Processing graph 154/200
+[2025-01-11 18:26:01] Graph 154 has 16 nodes and 91 edges
+[2025-01-11 18:26:01] Converted to 91 bitstring edges
+[2025-01-11 18:26:01] Computing Matchings Dynamic walk
+[2025-01-11 18:26:04] Matchings - CX: 420, U3: 303, Depth: 549
+[2025-01-11 18:26:04] Computing Exact walk
+[2025-01-11 18:26:05] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:05] Successfully processed graph 154 - Category: lose
+[2025-01-11 18:26:05] 
+Processing graph 155/200
+[2025-01-11 18:26:05] Graph 155 has 16 nodes and 88 edges
+[2025-01-11 18:26:05] Converted to 88 bitstring edges
+[2025-01-11 18:26:05] Computing Matchings Dynamic walk
+[2025-01-11 18:26:07] Matchings - CX: 375, U3: 277, Depth: 493
+[2025-01-11 18:26:07] Computing Exact walk
+[2025-01-11 18:26:08] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:08] Successfully processed graph 155 - Category: lose
+[2025-01-11 18:26:08] 
+Processing graph 156/200
+[2025-01-11 18:26:08] Graph 156 has 16 nodes and 98 edges
+[2025-01-11 18:26:08] Converted to 98 bitstring edges
+[2025-01-11 18:26:08] Computing Matchings Dynamic walk
+[2025-01-11 18:26:11] Matchings - CX: 407, U3: 312, Depth: 537
+[2025-01-11 18:26:11] Computing Exact walk
+[2025-01-11 18:26:12] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:12] Successfully processed graph 156 - Category: lose
+[2025-01-11 18:26:12] 
+Processing graph 157/200
+[2025-01-11 18:26:12] Graph 157 has 16 nodes and 85 edges
+[2025-01-11 18:26:12] Converted to 85 bitstring edges
+[2025-01-11 18:26:12] Computing Matchings Dynamic walk
+[2025-01-11 18:26:15] Matchings - CX: 458, U3: 346, Depth: 596
+[2025-01-11 18:26:15] Computing Exact walk
+[2025-01-11 18:26:16] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:16] Successfully processed graph 157 - Category: lose
+[2025-01-11 18:26:16] 
+Processing graph 158/200
+[2025-01-11 18:26:16] Graph 158 has 16 nodes and 84 edges
+[2025-01-11 18:26:16] Converted to 84 bitstring edges
+[2025-01-11 18:26:16] Computing Matchings Dynamic walk
+[2025-01-11 18:26:19] Matchings - CX: 429, U3: 326, Depth: 576
+[2025-01-11 18:26:19] Computing Exact walk
+[2025-01-11 18:26:20] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:20] Successfully processed graph 158 - Category: lose
+[2025-01-11 18:26:20] 
+Processing graph 159/200
+[2025-01-11 18:26:20] Graph 159 has 16 nodes and 86 edges
+[2025-01-11 18:26:20] Converted to 86 bitstring edges
+[2025-01-11 18:26:20] Computing Matchings Dynamic walk
+[2025-01-11 18:26:22] Matchings - CX: 389, U3: 306, Depth: 525
+[2025-01-11 18:26:22] Computing Exact walk
+[2025-01-11 18:26:24] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:24] Successfully processed graph 159 - Category: lose
+[2025-01-11 18:26:24] 
+Processing graph 160/200
+[2025-01-11 18:26:24] Graph 160 has 16 nodes and 104 edges
+[2025-01-11 18:26:24] Converted to 104 bitstring edges
+[2025-01-11 18:26:24] Computing Matchings Dynamic walk
+[2025-01-11 18:26:26] Matchings - CX: 467, U3: 361, Depth: 614
+[2025-01-11 18:26:26] Computing Exact walk
+[2025-01-11 18:26:28] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:28] Successfully processed graph 160 - Category: lose
+[2025-01-11 18:26:28] 
+Processing graph 161/200
+[2025-01-11 18:26:28] Graph 161 has 16 nodes and 90 edges
+[2025-01-11 18:26:28] Converted to 90 bitstring edges
+[2025-01-11 18:26:28] Computing Matchings Dynamic walk
+[2025-01-11 18:26:30] Matchings - CX: 358, U3: 265, Depth: 481
+[2025-01-11 18:26:30] Computing Exact walk
+[2025-01-11 18:26:31] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:31] Successfully processed graph 161 - Category: lose
+[2025-01-11 18:26:31] 
+Processing graph 162/200
+[2025-01-11 18:26:31] Graph 162 has 16 nodes and 106 edges
+[2025-01-11 18:26:31] Converted to 106 bitstring edges
+[2025-01-11 18:26:31] Computing Matchings Dynamic walk
+[2025-01-11 18:26:34] Matchings - CX: 523, U3: 404, Depth: 691
+[2025-01-11 18:26:34] Computing Exact walk
+[2025-01-11 18:26:35] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:35] Successfully processed graph 162 - Category: lose
+[2025-01-11 18:26:35] 
+Processing graph 163/200
+[2025-01-11 18:26:35] Graph 163 has 16 nodes and 87 edges
+[2025-01-11 18:26:35] Converted to 87 bitstring edges
+[2025-01-11 18:26:35] Computing Matchings Dynamic walk
+[2025-01-11 18:26:38] Matchings - CX: 464, U3: 338, Depth: 611
+[2025-01-11 18:26:38] Computing Exact walk
+[2025-01-11 18:26:40] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:40] Successfully processed graph 163 - Category: lose
+[2025-01-11 18:26:40] 
+Processing graph 164/200
+[2025-01-11 18:26:40] Graph 164 has 16 nodes and 88 edges
+[2025-01-11 18:26:40] Converted to 88 bitstring edges
+[2025-01-11 18:26:40] Computing Matchings Dynamic walk
+[2025-01-11 18:26:43] Matchings - CX: 401, U3: 307, Depth: 531
+[2025-01-11 18:26:43] Computing Exact walk
+[2025-01-11 18:26:44] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:44] Successfully processed graph 164 - Category: lose
+[2025-01-11 18:26:44] 
+Processing graph 165/200
+[2025-01-11 18:26:44] Graph 165 has 16 nodes and 105 edges
+[2025-01-11 18:26:44] Converted to 105 bitstring edges
+[2025-01-11 18:26:44] Computing Matchings Dynamic walk
+[2025-01-11 18:26:48] Matchings - CX: 530, U3: 395, Depth: 700
+[2025-01-11 18:26:48] Computing Exact walk
+[2025-01-11 18:26:49] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:49] Successfully processed graph 165 - Category: lose
+[2025-01-11 18:26:49] 
+Processing graph 166/200
+[2025-01-11 18:26:49] Graph 166 has 16 nodes and 95 edges
+[2025-01-11 18:26:49] Converted to 95 bitstring edges
+[2025-01-11 18:26:49] Computing Matchings Dynamic walk
+[2025-01-11 18:26:52] Matchings - CX: 339, U3: 260, Depth: 451
+[2025-01-11 18:26:52] Computing Exact walk
+[2025-01-11 18:26:53] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:53] Successfully processed graph 166 - Category: lose
+[2025-01-11 18:26:53] 
+Processing graph 167/200
+[2025-01-11 18:26:53] Graph 167 has 16 nodes and 106 edges
+[2025-01-11 18:26:53] Converted to 106 bitstring edges
+[2025-01-11 18:26:53] Computing Matchings Dynamic walk
+[2025-01-11 18:26:57] Matchings - CX: 447, U3: 334, Depth: 584
+[2025-01-11 18:26:57] Computing Exact walk
+[2025-01-11 18:26:58] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:26:58] Successfully processed graph 167 - Category: lose
+[2025-01-11 18:26:58] 
+Processing graph 168/200
+[2025-01-11 18:26:58] Graph 168 has 16 nodes and 94 edges
+[2025-01-11 18:26:58] Converted to 94 bitstring edges
+[2025-01-11 18:26:58] Computing Matchings Dynamic walk
+[2025-01-11 18:27:01] Matchings - CX: 402, U3: 319, Depth: 538
+[2025-01-11 18:27:01] Computing Exact walk
+[2025-01-11 18:27:03] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:03] Successfully processed graph 168 - Category: lose
+[2025-01-11 18:27:03] 
+Processing graph 169/200
+[2025-01-11 18:27:03] Graph 169 has 16 nodes and 90 edges
+[2025-01-11 18:27:03] Converted to 90 bitstring edges
+[2025-01-11 18:27:03] Computing Matchings Dynamic walk
+[2025-01-11 18:27:05] Matchings - CX: 349, U3: 268, Depth: 464
+[2025-01-11 18:27:05] Computing Exact walk
+[2025-01-11 18:27:06] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:06] Successfully processed graph 169 - Category: lose
+[2025-01-11 18:27:06] 
+Processing graph 170/200
+[2025-01-11 18:27:06] Graph 170 has 16 nodes and 105 edges
+[2025-01-11 18:27:06] Converted to 105 bitstring edges
+[2025-01-11 18:27:06] Computing Matchings Dynamic walk
+[2025-01-11 18:27:10] Matchings - CX: 549, U3: 420, Depth: 730
+[2025-01-11 18:27:10] Computing Exact walk
+[2025-01-11 18:27:11] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:11] Successfully processed graph 170 - Category: lose
+[2025-01-11 18:27:11] 
+Processing graph 171/200
+[2025-01-11 18:27:11] Graph 171 has 16 nodes and 102 edges
+[2025-01-11 18:27:11] Converted to 102 bitstring edges
+[2025-01-11 18:27:11] Computing Matchings Dynamic walk
+[2025-01-11 18:27:15] Matchings - CX: 554, U3: 420, Depth: 732
+[2025-01-11 18:27:15] Computing Exact walk
+[2025-01-11 18:27:16] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:16] Successfully processed graph 171 - Category: lose
+[2025-01-11 18:27:16] 
+Processing graph 172/200
+[2025-01-11 18:27:16] Graph 172 has 16 nodes and 105 edges
+[2025-01-11 18:27:16] Converted to 105 bitstring edges
+[2025-01-11 18:27:16] Computing Matchings Dynamic walk
+[2025-01-11 18:27:20] Matchings - CX: 488, U3: 361, Depth: 651
+[2025-01-11 18:27:20] Computing Exact walk
+[2025-01-11 18:27:21] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:21] Successfully processed graph 172 - Category: lose
+[2025-01-11 18:27:21] 
+Processing graph 173/200
+[2025-01-11 18:27:21] Graph 173 has 16 nodes and 104 edges
+[2025-01-11 18:27:21] Converted to 104 bitstring edges
+[2025-01-11 18:27:21] Computing Matchings Dynamic walk
+[2025-01-11 18:27:24] Matchings - CX: 419, U3: 333, Depth: 561
+[2025-01-11 18:27:24] Computing Exact walk
+[2025-01-11 18:27:25] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:25] Successfully processed graph 173 - Category: lose
+[2025-01-11 18:27:25] 
+Processing graph 174/200
+[2025-01-11 18:27:25] Graph 174 has 16 nodes and 87 edges
+[2025-01-11 18:27:25] Converted to 87 bitstring edges
+[2025-01-11 18:27:25] Computing Matchings Dynamic walk
+[2025-01-11 18:27:28] Matchings - CX: 353, U3: 253, Depth: 464
+[2025-01-11 18:27:28] Computing Exact walk
+[2025-01-11 18:27:29] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:29] Successfully processed graph 174 - Category: lose
+[2025-01-11 18:27:29] 
+Processing graph 175/200
+[2025-01-11 18:27:29] Graph 175 has 16 nodes and 105 edges
+[2025-01-11 18:27:29] Converted to 105 bitstring edges
+[2025-01-11 18:27:29] Computing Matchings Dynamic walk
+[2025-01-11 18:27:32] Matchings - CX: 556, U3: 412, Depth: 728
+[2025-01-11 18:27:32] Computing Exact walk
+[2025-01-11 18:27:33] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:33] Successfully processed graph 175 - Category: lose
+[2025-01-11 18:27:33] 
+Processing graph 176/200
+[2025-01-11 18:27:33] Graph 176 has 16 nodes and 110 edges
+[2025-01-11 18:27:33] Converted to 110 bitstring edges
+[2025-01-11 18:27:33] Computing Matchings Dynamic walk
+[2025-01-11 18:27:37] Matchings - CX: 600, U3: 476, Depth: 799
+[2025-01-11 18:27:37] Computing Exact walk
+[2025-01-11 18:27:38] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:38] Successfully processed graph 176 - Category: lose
+[2025-01-11 18:27:38] 
+Processing graph 177/200
+[2025-01-11 18:27:38] Graph 177 has 16 nodes and 105 edges
+[2025-01-11 18:27:38] Converted to 105 bitstring edges
+[2025-01-11 18:27:38] Computing Matchings Dynamic walk
+[2025-01-11 18:27:43] Matchings - CX: 411, U3: 325, Depth: 553
+[2025-01-11 18:27:43] Computing Exact walk
+[2025-01-11 18:27:47] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:27:47] Successfully processed graph 177 - Category: lose
+[2025-01-11 18:27:47] 
+Processing graph 178/200
+[2025-01-11 18:27:47] Graph 178 has 16 nodes and 104 edges
+[2025-01-11 18:27:47] Converted to 104 bitstring edges
+[2025-01-11 18:27:47] Computing Matchings Dynamic walk
+[2025-01-11 18:27:56] Matchings - CX: 433, U3: 319, Depth: 565
+[2025-01-11 18:27:56] Computing Exact walk
+[2025-01-11 18:28:00] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:28:00] Successfully processed graph 178 - Category: lose
+[2025-01-11 18:28:00] 
+Processing graph 179/200
+[2025-01-11 18:28:00] Graph 179 has 16 nodes and 77 edges
+[2025-01-11 18:28:00] Converted to 77 bitstring edges
+[2025-01-11 18:28:00] Computing Matchings Dynamic walk
+[2025-01-11 18:28:08] Matchings - CX: 349, U3: 267, Depth: 474
+[2025-01-11 18:28:08] Computing Exact walk
+[2025-01-11 18:28:11] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:28:11] Successfully processed graph 179 - Category: lose
+[2025-01-11 18:28:11] 
+Processing graph 180/200
+[2025-01-11 18:28:11] Graph 180 has 16 nodes and 99 edges
+[2025-01-11 18:28:11] Converted to 99 bitstring edges
+[2025-01-11 18:28:11] Computing Matchings Dynamic walk
+[2025-01-11 18:28:21] Matchings - CX: 498, U3: 377, Depth: 670
+[2025-01-11 18:28:21] Computing Exact walk
+[2025-01-11 18:28:24] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:28:24] Successfully processed graph 180 - Category: lose
+[2025-01-11 18:28:24] 
+Processing graph 181/200
+[2025-01-11 18:28:24] Graph 181 has 16 nodes and 93 edges
+[2025-01-11 18:28:24] Converted to 93 bitstring edges
+[2025-01-11 18:28:24] Computing Matchings Dynamic walk
+[2025-01-11 18:28:31] Matchings - CX: 352, U3: 263, Depth: 467
+[2025-01-11 18:28:31] Computing Exact walk
+[2025-01-11 18:28:35] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:28:35] Successfully processed graph 181 - Category: lose
+[2025-01-11 18:28:35] 
+Processing graph 182/200
+[2025-01-11 18:28:35] Graph 182 has 16 nodes and 97 edges
+[2025-01-11 18:28:35] Converted to 97 bitstring edges
+[2025-01-11 18:28:35] Computing Matchings Dynamic walk
+[2025-01-11 18:28:43] Matchings - CX: 366, U3: 282, Depth: 490
+[2025-01-11 18:28:43] Computing Exact walk
+[2025-01-11 18:28:47] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:28:47] Successfully processed graph 182 - Category: lose
+[2025-01-11 18:28:47] 
+Processing graph 183/200
+[2025-01-11 18:28:47] Graph 183 has 16 nodes and 96 edges
+[2025-01-11 18:28:47] Converted to 96 bitstring edges
+[2025-01-11 18:28:47] Computing Matchings Dynamic walk
+[2025-01-11 18:28:53] Matchings - CX: 338, U3: 266, Depth: 453
+[2025-01-11 18:28:53] Computing Exact walk
+[2025-01-11 18:28:57] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:28:57] Successfully processed graph 183 - Category: lose
+[2025-01-11 18:28:57] 
+Processing graph 184/200
+[2025-01-11 18:28:57] Graph 184 has 16 nodes and 84 edges
+[2025-01-11 18:28:57] Converted to 84 bitstring edges
+[2025-01-11 18:28:57] Computing Matchings Dynamic walk
+[2025-01-11 18:29:02] Matchings - CX: 293, U3: 229, Depth: 400
+[2025-01-11 18:29:03] Computing Exact walk
+[2025-01-11 18:29:06] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:29:06] Successfully processed graph 184 - Category: lose
+[2025-01-11 18:29:06] 
+Processing graph 185/200
+[2025-01-11 18:29:06] Graph 185 has 16 nodes and 84 edges
+[2025-01-11 18:29:06] Converted to 84 bitstring edges
+[2025-01-11 18:29:06] Computing Matchings Dynamic walk
+[2025-01-11 18:29:12] Matchings - CX: 373, U3: 284, Depth: 493
+[2025-01-11 18:29:12] Computing Exact walk
+[2025-01-11 18:29:15] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:29:15] Successfully processed graph 185 - Category: lose
+[2025-01-11 18:29:15] 
+Processing graph 186/200
+[2025-01-11 18:29:15] Graph 186 has 16 nodes and 95 edges
+[2025-01-11 18:29:15] Converted to 95 bitstring edges
+[2025-01-11 18:29:15] Computing Matchings Dynamic walk
+[2025-01-11 18:29:23] Matchings - CX: 381, U3: 284, Depth: 502
+[2025-01-11 18:29:23] Computing Exact walk
+[2025-01-11 18:29:26] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:29:26] Successfully processed graph 186 - Category: lose
+[2025-01-11 18:29:26] 
+Processing graph 187/200
+[2025-01-11 18:29:26] Graph 187 has 16 nodes and 100 edges
+[2025-01-11 18:29:26] Converted to 100 bitstring edges
+[2025-01-11 18:29:26] Computing Matchings Dynamic walk
+[2025-01-11 18:29:34] Matchings - CX: 419, U3: 319, Depth: 559
+[2025-01-11 18:29:34] Computing Exact walk
+[2025-01-11 18:29:37] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:29:37] Successfully processed graph 187 - Category: lose
+[2025-01-11 18:29:37] 
+Processing graph 188/200
+[2025-01-11 18:29:37] Graph 188 has 16 nodes and 101 edges
+[2025-01-11 18:29:37] Converted to 101 bitstring edges
+[2025-01-11 18:29:37] Computing Matchings Dynamic walk
+[2025-01-11 18:29:45] Matchings - CX: 445, U3: 336, Depth: 601
+[2025-01-11 18:29:45] Computing Exact walk
+[2025-01-11 18:29:48] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:29:48] Successfully processed graph 188 - Category: lose
+[2025-01-11 18:29:48] 
+Processing graph 189/200
+[2025-01-11 18:29:48] Graph 189 has 16 nodes and 82 edges
+[2025-01-11 18:29:48] Converted to 82 bitstring edges
+[2025-01-11 18:29:48] Computing Matchings Dynamic walk
+[2025-01-11 18:29:56] Matchings - CX: 465, U3: 347, Depth: 609
+[2025-01-11 18:29:56] Computing Exact walk
+[2025-01-11 18:29:59] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:29:59] Successfully processed graph 189 - Category: lose
+[2025-01-11 18:29:59] 
+Processing graph 190/200
+[2025-01-11 18:29:59] Graph 190 has 16 nodes and 98 edges
+[2025-01-11 18:29:59] Converted to 98 bitstring edges
+[2025-01-11 18:29:59] Computing Matchings Dynamic walk
+[2025-01-11 18:30:06] Matchings - CX: 311, U3: 224, Depth: 410
+[2025-01-11 18:30:06] Computing Exact walk
+[2025-01-11 18:30:09] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:30:09] Successfully processed graph 190 - Category: lose
+[2025-01-11 18:30:09] 
+Processing graph 191/200
+[2025-01-11 18:30:09] Graph 191 has 16 nodes and 82 edges
+[2025-01-11 18:30:09] Converted to 82 bitstring edges
+[2025-01-11 18:30:09] Computing Matchings Dynamic walk
+[2025-01-11 18:30:15] Matchings - CX: 312, U3: 242, Depth: 409
+[2025-01-11 18:30:15] Computing Exact walk
+[2025-01-11 18:30:18] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:30:18] Successfully processed graph 191 - Category: lose
+[2025-01-11 18:30:18] 
+Processing graph 192/200
+[2025-01-11 18:30:18] Graph 192 has 16 nodes and 103 edges
+[2025-01-11 18:30:18] Converted to 103 bitstring edges
+[2025-01-11 18:30:18] Computing Matchings Dynamic walk
+[2025-01-11 18:30:28] Matchings - CX: 512, U3: 373, Depth: 669
+[2025-01-11 18:30:28] Computing Exact walk
+[2025-01-11 18:30:31] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:30:31] Successfully processed graph 192 - Category: lose
+[2025-01-11 18:30:31] 
+Processing graph 193/200
+[2025-01-11 18:30:31] Graph 193 has 16 nodes and 93 edges
+[2025-01-11 18:30:31] Converted to 93 bitstring edges
+[2025-01-11 18:30:31] Computing Matchings Dynamic walk
+[2025-01-11 18:30:38] Matchings - CX: 356, U3: 270, Depth: 465
+[2025-01-11 18:30:38] Computing Exact walk
+[2025-01-11 18:30:41] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:30:41] Successfully processed graph 193 - Category: lose
+[2025-01-11 18:30:41] 
+Processing graph 194/200
+[2025-01-11 18:30:41] Graph 194 has 16 nodes and 98 edges
+[2025-01-11 18:30:41] Converted to 98 bitstring edges
+[2025-01-11 18:30:41] Computing Matchings Dynamic walk
+[2025-01-11 18:30:49] Matchings - CX: 440, U3: 323, Depth: 577
+[2025-01-11 18:30:49] Computing Exact walk
+[2025-01-11 18:30:52] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:30:52] Successfully processed graph 194 - Category: lose
+[2025-01-11 18:30:52] 
+Processing graph 195/200
+[2025-01-11 18:30:52] Graph 195 has 16 nodes and 109 edges
+[2025-01-11 18:30:52] Converted to 109 bitstring edges
+[2025-01-11 18:30:52] Computing Matchings Dynamic walk
+[2025-01-11 18:31:00] Matchings - CX: 442, U3: 323, Depth: 578
+[2025-01-11 18:31:00] Computing Exact walk
+[2025-01-11 18:31:03] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:31:03] Successfully processed graph 195 - Category: lose
+[2025-01-11 18:31:03] 
+Processing graph 196/200
+[2025-01-11 18:31:03] Graph 196 has 16 nodes and 90 edges
+[2025-01-11 18:31:03] Converted to 90 bitstring edges
+[2025-01-11 18:31:03] Computing Matchings Dynamic walk
+[2025-01-11 18:31:12] Matchings - CX: 481, U3: 364, Depth: 642
+[2025-01-11 18:31:12] Computing Exact walk
+[2025-01-11 18:31:15] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:31:15] Successfully processed graph 196 - Category: lose
+[2025-01-11 18:31:15] 
+Processing graph 197/200
+[2025-01-11 18:31:15] Graph 197 has 16 nodes and 106 edges
+[2025-01-11 18:31:15] Converted to 106 bitstring edges
+[2025-01-11 18:31:15] Computing Matchings Dynamic walk
+[2025-01-11 18:31:22] Matchings - CX: 337, U3: 270, Depth: 454
+[2025-01-11 18:31:22] Computing Exact walk
+[2025-01-11 18:31:26] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:31:26] Successfully processed graph 197 - Category: lose
+[2025-01-11 18:31:26] 
+Processing graph 198/200
+[2025-01-11 18:31:26] Graph 198 has 16 nodes and 101 edges
+[2025-01-11 18:31:26] Converted to 101 bitstring edges
+[2025-01-11 18:31:26] Computing Matchings Dynamic walk
+[2025-01-11 18:31:34] Matchings - CX: 480, U3: 369, Depth: 640
+[2025-01-11 18:31:34] Computing Exact walk
+[2025-01-11 18:31:37] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:31:37] Successfully processed graph 198 - Category: lose
+[2025-01-11 18:31:37] 
+Processing graph 199/200
+[2025-01-11 18:31:37] Graph 199 has 16 nodes and 105 edges
+[2025-01-11 18:31:37] Converted to 105 bitstring edges
+[2025-01-11 18:31:37] Computing Matchings Dynamic walk
+[2025-01-11 18:31:45] Matchings - CX: 435, U3: 310, Depth: 574
+[2025-01-11 18:31:45] Computing Exact walk
+[2025-01-11 18:31:49] Exact - CX: 100, U3: 165, Depth: 197
+[2025-01-11 18:31:49] Successfully processed graph 199 - Category: lose
+[2025-01-11 18:31:49] 
+Final Results Summary:
+[2025-01-11 18:31:49] Total graphs in file: 200
+[2025-01-11 18:31:49] Successfully processed: 200
+[2025-01-11 18:31:49] win: 0 (0.0%)
+[2025-01-11 18:31:49] lose: 200 (100.0%)
+[2025-01-11 18:31:49] draw: 0 (0.0%)
+[2025-01-11 18:31:49] 
+Average Gate Counts by Category:
+[2025-01-11 18:31:49] lose_matching_cx: 451.29
+[2025-01-11 18:31:49] lose_matching_u3: 341.54
+[2025-01-11 18:31:49] lose_exact_cx: 100.00
+[2025-01-11 18:31:49] lose_exact_u3: 165.00
+[2025-01-11 18:31:49] lose_matching_depth: 597.99
+[2025-01-11 18:31:49] lose_exact_depth: 197.00

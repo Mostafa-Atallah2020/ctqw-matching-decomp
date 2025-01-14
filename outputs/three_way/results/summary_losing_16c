@@ -1,0 +1,10 @@
+win_both: 0
+lose_both: 200
+draw_both: 0
+win_exact_lose_pauli: 0
+win_pauli_lose_exact: 0
+draw_exact_win_pauli: 0
+draw_exact_lose_pauli: 0
+win_exact_draw_pauli: 0
+lose_exact_draw_pauli: 0
+undefined: 0
