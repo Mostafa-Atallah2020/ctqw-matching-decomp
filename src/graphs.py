@@ -304,38 +304,92 @@ class ParallelEdgeGraph(StaticGraph):
 
 
 class NonDiagonalEdgeGraph(StaticGraph):
+    """
+    A graph class for handling non-diagonal edges in quantum circuits.
+    Non-diagonal edges represent transitions between quantum states that differ by
+    a Hamming distance of 1.
+    """
+
     def __init__(self, edges):
         super().__init__(edges)
-        self._validate_unique_vertices()
+        self._validate_edge_distances()
+        self._validate_vertex_usage()
         self.edge_sets = self.__split_tuples_by_changing_bit()
         self.targets, self.exprs = self.__get_targets_exprs()
 
+    def _validate_edge_distances(self):
+        """Ensure all edges have Hamming distance of 1."""
+        for edge in self.edges:
+            dist = sum(b1 != b2 for b1, b2 in zip(edge[0], edge[1]))
+            if dist != 1:
+                raise ValueError(f"Edge {edge} has Hamming distance {dist}, expected 1")
+
+    def _validate_vertex_usage(self):
+        """Ensure each vertex appears in at most 2 edges (for implementable quantum circuits)."""
+        vertex_count = defaultdict(int)
+        for edge in self.edges:
+            vertex_count[edge[0]] += 1
+            vertex_count[edge[1]] += 1
+
+        for vertex, count in vertex_count.items():
+            if count > 2:
+                raise ValueError(f"Vertex {vertex} appears in {count} edges, maximum allowed is 2")
+
     def get_qc(self, simplified=False):
+        """
+        Generate a quantum circuit implementing the graph transformations.
+
+        Args:
+            simplified (bool): Whether to simplify the resulting circuit
+
+        Returns:
+            QuantumCircuit: The constructed quantum circuit
+        """
         qc_dict = {}
 
+        # Build subcircuits for each edge set
         for idx, edges in self.edge_sets.items():
             G = ParallelEdgeGraph(edges)
             qc = G.get_qc(simplified=simplified)
             qc_dict[idx] = qc
 
+        # Combine subcircuits in order
         circ = QuantumCircuit(self.n_qubits)
-        keys = sorted(qc_dict.keys())
-        for idx in keys:
+        for idx in sorted(qc_dict.keys()):
             qc = qc_dict[idx]
             circ = circ.compose(qc, range(self.n_qubits))
 
         return circ
 
-    def _validate_unique_vertices(self):
-        vertices = set()
-        for edge in self.edges:
-            if edge[0] in vertices or edge[1] in vertices:
-                raise ValueError("No two edges can share the same vertex.")
-            vertices.update(edge)
+    def __split_tuples_by_changing_bit(self):
+        """
+        Group edges by which qubit position changes.
+        Returns:
+            dict: Maps bit position to set of edges that change that bit
+        """
+        subsets = {}
+
+        for t in self.edges:
+            # Find position where bits differ
+            for i, (b1, b2) in enumerate(zip(t[0], t[1])):
+                if b1 != b2:
+                    if i not in subsets:
+                        subsets[i] = set()
+                    subsets[i].add(t)
+                    break  # Only one bit changes per edge
+
+        return subsets
 
     def __get_targets_exprs(self):
+        """
+        Extract target qubits and expressions for MCRX gates.
+
+        Returns:
+            tuple: (list of target qubits, list of control expressions)
+        """
         targets = []
         exprs = []
+
         for idx, edges in self.edge_sets.items():
             G = ParallelEdgeGraph(edges)
             target = G.target
@@ -343,31 +397,10 @@ class NonDiagonalEdgeGraph(StaticGraph):
 
             if target not in targets:
                 targets.append(target)
-
             if expr not in exprs:
                 exprs.append(expr)
 
         return targets, exprs
-
-    def __split_tuples_by_changing_bit(self):
-        # Initialize a dictionary to store subsets based on the changing bit position
-        subsets = {}
-
-        # Iterate through each tuple in the set
-        for t in self.edges:
-            # Find the position where the bits differ
-            for i in range(len(t[0])):
-                if t[0][i] != t[1][i]:
-                    changing_bit_position = i
-                    break
-
-            # Add the tuple to the corresponding subset
-            if changing_bit_position not in subsets:
-                subsets[changing_bit_position] = set()
-
-            subsets[changing_bit_position].add(t)
-
-        return subsets
 
 
 class DiagonalEdgeGraph(StaticGraph):
@@ -400,54 +433,69 @@ class DiagonalEdgeGraph(StaticGraph):
 
     def _get_candidates(self):
         """
-        Get valid candidates for transformation.
-        For each diagonal edge, generates projections for each qubit position that differs.
+        Get valid candidates for transformation with detailed debugging.
         """
+        # print("Starting _get_candidates")
         if not self.set_hamming_greater_1:
+            print("No diagonal edges found")
             return []
 
-        try:
-            valid_candidates = []
-            hamming1_edges = self.set_hamming_1.copy()
+        valid_candidates = []
+        hamming1_edges = self.set_hamming_1.copy()
+        # print(f"Hamming-1 edges: {hamming1_edges}")
+        # print(f"Diagonal edges: {self.set_hamming_greater_1}")
 
-            # For each diagonal edge
-            for diagonal_edge in self.set_hamming_greater_1:
-                edge_obj = Edge(diagonal_edge)
+        # For each diagonal edge
+        for diagonal_edge in self.set_hamming_greater_1:
+            # print(f"\nProcessing diagonal edge: {diagonal_edge}")
+            start, end = diagonal_edge
 
-                # Find positions where bits differ
-                diff_positions = []
-                for i, (b1, b2) in enumerate(zip(edge_obj.start, edge_obj.end)):
-                    if b1 != b2:
-                        diff_positions.append(i)
+            # Find positions where bits differ
+            diff_positions = []
+            for i, (b1, b2) in enumerate(zip(start, end)):
+                if b1 != b2:
+                    diff_positions.append(i)
+            # print(f"Differing positions: {diff_positions}")
 
-                # For each differing position, create a projection
-                for target_qubit in diff_positions:
-                    projections = set()
+            # For each differing position, create projections
+            for target_qubit in diff_positions:
+                # print(f"\nTrying target qubit {target_qubit}")
+                projections = set()
 
-                    # Create projections for start node
-                    start_proj = list(edge_obj.start)
-                    start_proj[target_qubit] = edge_obj.end[target_qubit]
-                    start_intermediate = "".join(start_proj)
-                    projections.add(Edge((edge_obj.start, start_intermediate)))
+                # Create projection for start node
+                start_proj = list(start)
+                start_proj[target_qubit] = end[target_qubit]
+                start_intermediate = "".join(start_proj)
+                projections.add((start, start_intermediate))
 
-                    # Create projections for end node
-                    end_proj = list(edge_obj.end)
-                    end_proj[target_qubit] = edge_obj.start[target_qubit]
-                    end_intermediate = "".join(end_proj)
-                    projections.add(Edge((end_intermediate, edge_obj.end)))
+                # Create projection for end node
+                end_proj = list(end)
+                end_proj[target_qubit] = start[target_qubit]
+                end_intermediate = "".join(end_proj)
+                projections.add((end_intermediate, end))
 
-                    # Combine with Hamming-1 edges and create candidate
-                    try:
-                        combined_edges = {e.edge for e in projections} | hamming1_edges
-                        candidate_graph = NonDiagonalEdgeGraph(combined_edges)
-                        valid_candidates.append(candidate_graph)
-                    except ValueError:
-                        continue
+                # print(f"Generated projections: {projections}")
 
-            return valid_candidates
+                # Add projections to existing Hamming-1 edges
+                try:
+                    combined_edges = projections | hamming1_edges
+                    # print(f"Combined edges: {combined_edges}")
 
-        except Exception:
-            return []
+                    # Let's see why NonDiagonalEdgeGraph might be failing
+                    # print("Checking Hamming distances in combined edges:")
+                    for edge in combined_edges:
+                        dist = sum(1 for a, b in zip(edge[0], edge[1]) if a != b)
+                        # print(f"Edge {edge}: Hamming distance = {dist}")
+
+                    candidate_graph = NonDiagonalEdgeGraph(combined_edges)
+                    valid_candidates.append(candidate_graph)
+                    # print("Successfully created candidate")
+                except ValueError as e:
+                    print(f"Failed to create candidate: {str(e)}")
+                    continue
+
+        # print(f"\nFinal number of valid candidates: {len(valid_candidates)}")
+        return valid_candidates
 
     def _get_best_candidate(self):
         """Select the best candidate based on the minimum number of variables."""
