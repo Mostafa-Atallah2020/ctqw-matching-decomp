@@ -6,11 +6,11 @@ class Node:
     def __init__(self, value: str, level: int):
         self.value = value
         self.level = level
-        self.left = None
-        self.right = None
-        self.zigzag_connections = []  # Initialize here explicitly
-        self.x = 0.0
-        self.y = 0.0
+        self.left: Optional[Node] = None
+        self.right: Optional[Node] = None
+        self.zigzag_connections = []
+        self.x: float = 0.0
+        self.y: float = 0.0
 
     def set_position(self, x: float, y: float):
         self.x = x
@@ -195,7 +195,7 @@ class BinaryWeldedTree:
         return plt.gcf()
 
 
-class ZigzagBinaryTree:
+class HardWeldedTree:
     def __init__(self, height: int):
         if height < 2:
             raise ValueError("Height must be at least 2")
@@ -209,6 +209,23 @@ class ZigzagBinaryTree:
         self.middle_layer_2 = []
         self._create_tree()
 
+    def _get_middle_layer_labels(self, layer_num: int) -> List[str]:
+        """Generate labels for middle layer nodes.
+        layer_num: 1 for first middle layer, 2 for second middle layer"""
+        num_nodes = 2**self.height
+        labels = []
+        for i in range(num_nodes):
+            if layer_num == 1:
+                # First middle layer: combine unique top bits with sequential bottom bits
+                top_part = (i + 1) % (2**self.height)  # Ensure non-zero top part
+                bottom_part = i % (2**self.height)
+            else:
+                # Second middle layer: use different pattern
+                top_part = (i + 2) % (2**self.height)  # Offset to avoid duplicates
+                bottom_part = (i + 1) % (2**self.height)
+            labels.append(self._create_label(top_part, bottom_part))
+        return labels
+
     def _create_label(self, top_part: int, bottom_part: int) -> str:
         """Create a binary label with correct number of bits for each part"""
         top_bits = format(top_part, f"0{self.bits_per_part}b")
@@ -217,8 +234,8 @@ class ZigzagBinaryTree:
 
     def _create_upper_tree(self):
         """Create upper tree including first middle layer"""
-        # Create entrance node
-        self.entrance = Node(self._create_label(0, 0), 0)
+        # Create entrance (all zeros)
+        self.entrance = Node("0" * self.total_bits, 0)
         self.entrance.set_position(0, 1.0)
         self.all_nodes.append(self.entrance)
         current_level = [self.entrance]
@@ -232,11 +249,18 @@ class ZigzagBinaryTree:
 
             for j, parent in enumerate(current_level):
                 # Create left and right children
-                left_value = self._create_label(2 * j + 1, 0)
-                right_value = self._create_label(2 * j + 2, 0)
+                if level == self.height - 1:  # Middle layer 1
+                    middle_labels = self._get_middle_layer_labels(1)
+                    left_idx = 2 * j
+                    right_idx = 2 * j + 1
+                    left_label = middle_labels[left_idx]
+                    right_label = middle_labels[right_idx]
+                else:
+                    left_label = self._create_label(2 * j + 1, 0)
+                    right_label = self._create_label(2 * j + 2, 0)
 
-                left_child = Node(left_value, level + 1)
-                right_child = Node(right_value, level + 1)
+                left_child = Node(left_label, level + 1)
+                right_child = Node(right_label, level + 1)
 
                 # Set positions
                 left_child.set_position(-0.5 + (2 * j + 1) * x_spacing, y_position)
@@ -260,9 +284,10 @@ class ZigzagBinaryTree:
         x_spacing = 1.0 / (nodes_in_level + 1)
         y_position = 0.4  # Lower than first middle layer
 
-        # Create middle layer nodes
-        for i in range(nodes_in_level):
-            node = Node(self._create_label(0, i + 1), self.height + 1)
+        # Create middle layer nodes with distinct labels
+        middle_labels = self._get_middle_layer_labels(2)
+        for i, label in enumerate(middle_labels):
+            node = Node(label, self.height + 1)
             node.set_position(-0.5 + (i + 1) * x_spacing, y_position)
             self.middle_layer_2.append(node)
             self.all_nodes.append(node)
@@ -280,6 +305,7 @@ class ZigzagBinaryTree:
                 child = Node(value, self.height + level + 2)
                 child.set_position(-0.5 + (j // 2 + 1) * x_spacing, y_position)
 
+                # Connect nodes
                 current_level[j].left = child
                 if j + 1 < len(current_level):
                     current_level[j + 1].right = child
@@ -290,7 +316,8 @@ class ZigzagBinaryTree:
             current_level = next_level
 
         # Create exit node
-        self.exit = Node(self._create_label(0, 2**self.bits_per_part - 1), 2 * self.height)
+        max_value = 2**self.bits_per_part - 1
+        self.exit = Node(self._create_label(0, max_value), 2 * self.height)
         self.exit.set_position(0, 0)
         self.all_nodes.append(self.exit)
 
@@ -316,15 +343,29 @@ class ZigzagBinaryTree:
         self._create_zigzag_connections()
 
     def get_edges(self) -> Set[Tuple[str, str]]:
-        """Get all edges in the required format"""
+        """Get all edges in the required format including zigzag connections"""
         edges = set()
+
+        # Collect all regular tree edges
         for node in self.all_nodes:
             if node.left:
                 edges.add((node.value, node.left.value))
             if node.right:
                 edges.add((node.value, node.right.value))
-            for zigzag_node in node.zigzag_connections:
-                edges.add((node.value, zigzag_node.value))
+
+        # Collect all zigzag connections from both middle layers
+        for node in self.middle_layer_1:
+            if hasattr(node, "zigzag_connections"):
+                for zigzag_node in node.zigzag_connections:
+                    edges.add((node.value, zigzag_node.value))
+                    # Add reverse connection as well
+                    edges.add((zigzag_node.value, node.value))
+
+        # Print all edges for verification
+        # print("\nTree edges:")
+        # for edge in sorted(edges):
+        #     print(f"{edge[0]} -> {edge[1]}")
+
         return edges
 
     def draw(self, figsize=(12, 15)):
