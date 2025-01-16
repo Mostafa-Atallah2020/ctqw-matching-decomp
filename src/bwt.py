@@ -1,5 +1,7 @@
+import numpy as np
 import matplotlib.pyplot as plt
-from typing import Optional, List, Tuple, Set
+from typing import Optional, List, Dict, Tuple, Set
+from collections import defaultdict
 
 
 class Node:
@@ -17,7 +19,6 @@ class Node:
         self.y = y
 
     def add_zigzag_connection(self, node: "Node"):
-        """Add a zigzag connection to another node"""
         if node not in self.zigzag_connections:
             self.zigzag_connections.append(node)
 
@@ -200,8 +201,23 @@ class HardWeldedTree:
         if height < 2:
             raise ValueError("Height must be at least 2")
         self.height = height
-        self.bits_per_part = height
-        self.total_bits = 2 * height
+
+        # Calculate total number of vertices
+        self.num_vertices = 0
+        # Entrance + Exit
+        self.num_vertices += 2
+        # Upper tree (excluding middle layer)
+        for i in range(self.height - 1):
+            self.num_vertices += 2**i
+        # Lower tree (excluding middle layer)
+        for i in range(self.height - 1):
+            self.num_vertices += 2**i
+        # Two middle layers
+        self.num_vertices += 2 * (2**self.height)
+
+        # Calculate number of bits needed
+        self.bits_needed = len(bin(self.num_vertices - 1)[2:])  # -1 because we start from 0
+        self.current_label = 0
         self.entrance = None
         self.exit = None
         self.all_nodes = []
@@ -209,33 +225,55 @@ class HardWeldedTree:
         self.middle_layer_2 = []
         self._create_tree()
 
-    def _get_middle_layer_labels(self, layer_num: int) -> List[str]:
-        """Generate labels for middle layer nodes.
-        layer_num: 1 for first middle layer, 2 for second middle layer"""
-        num_nodes = 2**self.height
-        labels = []
-        for i in range(num_nodes):
-            if layer_num == 1:
-                # First middle layer: combine unique top bits with sequential bottom bits
-                top_part = (i + 1) % (2**self.height)  # Ensure non-zero top part
-                bottom_part = i % (2**self.height)
-            else:
-                # Second middle layer: use different pattern
-                top_part = (i + 2) % (2**self.height)  # Offset to avoid duplicates
-                bottom_part = (i + 1) % (2**self.height)
-            labels.append(self._create_label(top_part, bottom_part))
-        return labels
+    def _get_next_label(self) -> str:
+        """Get next unique label"""
+        label = format(self.current_label, f"0{self.bits_needed}b")
+        self.current_label += 1
+        return label
 
-    def _create_label(self, top_part: int, bottom_part: int) -> str:
-        """Create a binary label with correct number of bits for each part"""
-        top_bits = format(top_part, f"0{self.bits_per_part}b")
-        bottom_bits = format(bottom_part, f"0{self.bits_per_part}b")
-        return top_bits + bottom_bits
+    def _create_unique_label(self, level: int, position: int, is_top: bool) -> str:
+        """Create a unique binary label with exactly total_bits length"""
+        label = None
+        counter = 0
+        while label is None or label in self.used_labels:
+            if is_top:
+                # For top part, fill first half with unique bits, second half with zeros
+                top_part = (level * (2**self.height) + position + counter) % (2**self.bits_per_part)
+                label = format(top_part, f"0{self.bits_per_part}b") + "0" * self.bits_per_part
+            else:
+                # For bottom part, fill first half with zeros, second half with unique bits
+                bottom_part = (level * (2**self.height) + position + counter) % (
+                    2**self.bits_per_part
+                )
+                label = "0" * self.bits_per_part + format(bottom_part, f"0{self.bits_per_part}b")
+            counter += 1
+        self.used_labels.add(label)
+        return label
+
+    def _create_middle_layer_label(self, layer_num: int, position: int) -> str:
+        """Create unique middle layer label with exactly total_bits length"""
+        label = None
+        counter = 0
+        while label is None or label in self.used_labels:
+            if layer_num == 1:
+                # First middle layer: unique first half, incremental second half
+                top_part = ((2**self.height) + position + counter) % (2**self.bits_per_part)
+                bottom_part = position % (2**self.bits_per_part)
+            else:
+                # Second middle layer: incremental first half, unique second half
+                top_part = position % (2**self.bits_per_part)
+                bottom_part = ((2**self.height) + position + counter) % (2**self.bits_per_part)
+            label = format(top_part, f"0{self.bits_per_part}b") + format(
+                bottom_part, f"0{self.bits_per_part}b"
+            )
+            counter += 1
+        self.used_labels.add(label)
+        return label
 
     def _create_upper_tree(self):
         """Create upper tree including first middle layer"""
-        # Create entrance (all zeros)
-        self.entrance = Node("0" * self.total_bits, 0)
+        # Create entrance node
+        self.entrance = Node(self._get_next_label(), 0)
         self.entrance.set_position(0, 1.0)
         self.all_nodes.append(self.entrance)
         current_level = [self.entrance]
@@ -248,19 +286,9 @@ class HardWeldedTree:
             y_position = 1.0 - ((level + 1) / (self.height + 1))
 
             for j, parent in enumerate(current_level):
-                # Create left and right children
-                if level == self.height - 1:  # Middle layer 1
-                    middle_labels = self._get_middle_layer_labels(1)
-                    left_idx = 2 * j
-                    right_idx = 2 * j + 1
-                    left_label = middle_labels[left_idx]
-                    right_label = middle_labels[right_idx]
-                else:
-                    left_label = self._create_label(2 * j + 1, 0)
-                    right_label = self._create_label(2 * j + 2, 0)
-
-                left_child = Node(left_label, level + 1)
-                right_child = Node(right_label, level + 1)
+                # Create left and right children with unique labels
+                left_child = Node(self._get_next_label(), level + 1)
+                right_child = Node(self._get_next_label(), level + 1)
 
                 # Set positions
                 left_child.set_position(-0.5 + (2 * j + 1) * x_spacing, y_position)
@@ -279,15 +307,13 @@ class HardWeldedTree:
 
     def _create_lower_tree(self):
         """Create lower tree including second middle layer"""
-        # Create middle layer first
         nodes_in_level = 2**self.height
         x_spacing = 1.0 / (nodes_in_level + 1)
-        y_position = 0.4  # Lower than first middle layer
+        y_position = 0.4
 
-        # Create middle layer nodes with distinct labels
-        middle_labels = self._get_middle_layer_labels(2)
-        for i, label in enumerate(middle_labels):
-            node = Node(label, self.height + 1)
+        # Create middle layer 2
+        for i in range(nodes_in_level):
+            node = Node(self._get_next_label(), self.height + 1)
             node.set_position(-0.5 + (i + 1) * x_spacing, y_position)
             self.middle_layer_2.append(node)
             self.all_nodes.append(node)
@@ -301,11 +327,9 @@ class HardWeldedTree:
             y_position = 0.4 - ((level + 1) / (self.height + 1))
 
             for j in range(0, len(current_level), 2):
-                value = self._create_label(0, j // 2 + 1)
-                child = Node(value, self.height + level + 2)
+                child = Node(self._get_next_label(), self.height + level + 2)
                 child.set_position(-0.5 + (j // 2 + 1) * x_spacing, y_position)
 
-                # Connect nodes
                 current_level[j].left = child
                 if j + 1 < len(current_level):
                     current_level[j + 1].right = child
@@ -316,8 +340,7 @@ class HardWeldedTree:
             current_level = next_level
 
         # Create exit node
-        max_value = 2**self.bits_per_part - 1
-        self.exit = Node(self._create_label(0, max_value), 2 * self.height)
+        self.exit = Node(self._get_next_label(), 2 * self.height)
         self.exit.set_position(0, 0)
         self.all_nodes.append(self.exit)
 
@@ -337,41 +360,91 @@ class HardWeldedTree:
             node1.add_zigzag_connection(self.middle_layer_2[next_next_idx])
 
     def _create_tree(self):
-        """Create complete tree structure"""
         self._create_upper_tree()
         self._create_lower_tree()
         self._create_zigzag_connections()
 
     def get_edges(self) -> Set[Tuple[str, str]]:
-        """Get all edges in the required format including zigzag connections"""
+        """Get all edges including zigzag connections"""
         edges = set()
 
-        # Collect all regular tree edges
+        # Regular tree edges
         for node in self.all_nodes:
             if node.left:
                 edges.add((node.value, node.left.value))
             if node.right:
                 edges.add((node.value, node.right.value))
 
-        # Collect all zigzag connections from both middle layers
+        # Zigzag connections (bidirectional)
         for node in self.middle_layer_1:
-            if hasattr(node, "zigzag_connections"):
-                for zigzag_node in node.zigzag_connections:
-                    edges.add((node.value, zigzag_node.value))
-                    # Add reverse connection as well
-                    edges.add((zigzag_node.value, node.value))
-
-        # Print all edges for verification
-        # print("\nTree edges:")
-        # for edge in sorted(edges):
-        #     print(f"{edge[0]} -> {edge[1]}")
+            for zigzag_node in node.zigzag_connections:
+                edges.add((node.value, zigzag_node.value))
+                edges.add((zigzag_node.value, node.value))
 
         return edges
 
-    def draw(self, figsize=(12, 15)):
+    def draw(self, figsize=None):
+        """Draw the tree with perfect mirroring between upper and lower parts."""
+        if figsize is None:
+            width = min(10, 3 + self.height)
+            height = min(12, 4 + self.height)
+            figsize = (width, height)
+
         plt.figure(figsize=figsize)
 
-        # Draw regular edges
+        # Basic parameters
+        total_height = 1.0
+        middle_y = total_height / 2
+        middle_gap = 0.1
+
+        # Position entrance and exit
+        self.entrance.x = 0
+        self.entrance.y = 1.0
+        self.exit.x = 0
+        self.exit.y = 0.0
+
+        # Position middle layers
+        for i, node in enumerate(self.middle_layer_1):
+            width = len(self.middle_layer_1)
+            x = -1 + 2 * (i + 1) / (width + 1)
+            node.x = x
+            node.y = middle_y + middle_gap / 2
+
+        for i, node in enumerate(self.middle_layer_2):
+            width = len(self.middle_layer_2)
+            x = -1 + 2 * (i + 1) / (width + 1)
+            node.x = x
+            node.y = middle_y - middle_gap / 2
+
+        # Group nodes by level
+        upper_levels = {}
+        lower_levels = {}
+        for node in self.all_nodes:
+            if node in [self.entrance, self.exit] + self.middle_layer_1 + self.middle_layer_2:
+                continue
+            if node.level < self.height:
+                upper_levels.setdefault(node.level, []).append(node)
+            elif node.level > self.height:
+                lower_levels.setdefault(node.level, []).append(node)
+
+        # Position upper tree nodes
+        for level, nodes in upper_levels.items():
+            y = 1.0 - (level / self.height) * (1.0 - (middle_y + middle_gap / 2))
+            width = len(nodes)
+            for i, node in enumerate(nodes):
+                node.x = -1 + 2 * (i + 1) / (width + 1)
+                node.y = y
+
+        # Position lower tree nodes with mirroring
+        for level, nodes in lower_levels.items():
+            mirror_level = 2 * self.height - level
+            y = (mirror_level / self.height) * (middle_y - middle_gap / 2)
+            width = len(nodes)
+            for i, node in enumerate(nodes):
+                node.x = -1 + 2 * (i + 1) / (width + 1)
+                node.y = y
+
+        # Draw edges
         for node in self.all_nodes:
             if node.left:
                 plt.plot([node.x, node.left.x], [node.y, node.left.y], "b-", linewidth=1)
@@ -385,16 +458,17 @@ class HardWeldedTree:
                     [node.x, zigzag_node.x], [node.y, zigzag_node.y], "r--", linewidth=1, alpha=0.6
                 )
 
-        # Draw nodes
+        # Draw nodes and labels
+        label_size = max(6, 8 - (self.height - 2))
         for node in self.all_nodes:
-            plt.plot(node.x, node.y, "ko", markersize=10)
+            plt.plot(node.x, node.y, "ko", markersize=8)
             plt.text(
-                node.x + 0.02,
+                node.x + 0.05,
                 node.y,
                 node.value,
                 horizontalalignment="left",
                 verticalalignment="center",
-                fontsize=8,
+                fontsize=label_size,
             )
 
             if node == self.entrance or node == self.exit:
@@ -406,7 +480,7 @@ class HardWeldedTree:
                     label,
                     horizontalalignment="center",
                     verticalalignment="center",
-                    fontsize=10,
+                    fontsize=label_size + 1,
                 )
 
         plt.axis("equal")
