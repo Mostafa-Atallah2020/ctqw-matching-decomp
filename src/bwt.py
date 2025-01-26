@@ -1,12 +1,12 @@
+from typing import Dict, Set, Tuple, List, Optional
 import numpy as np
 import matplotlib.pyplot as plt
-from typing import Optional, List, Dict, Tuple, Set
 from collections import defaultdict
 
 
 class Node:
-    def __init__(self, value: str, level: int):
-        self.value = value
+    def __init__(self, level: int):
+        self.value = None  # Will be set later based on label length
         self.level = level
         self.left: Optional[Node] = None
         self.right: Optional[Node] = None
@@ -21,6 +21,297 @@ class Node:
     def add_zigzag_connection(self, node: "Node"):
         if node not in self.zigzag_connections:
             self.zigzag_connections.append(node)
+
+
+class OptimalLabeler:
+    def __init__(self, num_vertices: int):
+        self.num_vertices = num_vertices
+        self.label_length = self._calculate_min_bits()
+        self.used_labels = {"0" * self.label_length}
+        self.vertex_to_label = {0: "0" * self.label_length}
+
+    def _calculate_min_bits(self) -> int:
+        num_bits = len(bin(self.num_vertices)[2:])
+        return num_bits + (1 if self.num_vertices > 2**num_bits else 0)
+
+    def get_hamming_distance(self, label1: str, label2: str) -> int:
+        return sum(c1 != c2 for c1, c2 in zip(label1, label2))
+
+    def get_available_labels(self) -> List[str]:
+        all_possible = [format(i, f"0{self.label_length}b") for i in range(2**self.label_length)]
+        return [label for label in all_possible if label not in self.used_labels]
+
+    def find_best_label(
+        self, vertex: int, neighbors: List[int], edges: List[Tuple[int, int]]
+    ) -> str:
+        available_labels = self.get_available_labels()
+        if not available_labels:
+            self.label_length += 1
+            self.vertex_to_label = {
+                k: v.zfill(self.label_length) for k, v in self.vertex_to_label.items()
+            }
+            self.used_labels = {label.zfill(self.label_length) for label in self.used_labels}
+            available_labels = self.get_available_labels()
+
+        best_score = float("inf")
+        best_label = available_labels[0]
+
+        for label in available_labels:
+            score = 0
+            for neighbor in neighbors:
+                if neighbor in self.vertex_to_label:
+                    neighbor_label = self.vertex_to_label[neighbor]
+                    ham_dist = self.get_hamming_distance(label, neighbor_label)
+                    score += (ham_dist - 1) ** 2 if ham_dist > 1 else 0
+
+            if score < best_score:
+                best_score = score
+                best_label = label
+
+        return best_label
+
+    def optimize_labels(
+        self, edges: List[Tuple[int, int]], starting_vertex: int = 0
+    ) -> Dict[int, str]:
+        adj_list = defaultdict(list)
+        for v1, v2 in edges:
+            adj_list[v1].append(v2)
+            adj_list[v2].append(v1)
+
+        queue = [(starting_vertex, [])]
+        visited = {starting_vertex}
+
+        while queue:
+            vertex, neighbors = queue.pop(0)
+            if vertex not in self.vertex_to_label:
+                best_label = self.find_best_label(vertex, neighbors, edges)
+                self.vertex_to_label[vertex] = best_label
+                self.used_labels.add(best_label)
+
+            for neighbor in adj_list[vertex]:
+                if neighbor not in visited:
+                    visited.add(neighbor)
+                    queue.append(
+                        (neighbor, [v for v in adj_list[neighbor] if v in self.vertex_to_label])
+                    )
+
+        return self.vertex_to_label
+
+    def verify_labeling(self, edges: List[Tuple[int, int]]) -> Tuple[bool, Dict[str, int]]:
+        if len(set(self.vertex_to_label.values())) != len(self.vertex_to_label):
+            return False, {}
+
+        dist_count = defaultdict(int)
+        for v1, v2 in edges:
+            if v1 in self.vertex_to_label and v2 in self.vertex_to_label:
+                dist = self.get_hamming_distance(self.vertex_to_label[v1], self.vertex_to_label[v2])
+                dist_count[dist] += 1
+
+        return True, dict(dist_count)
+
+
+class HardWeldedTree:
+    def __init__(self, height: int, fixed_labels: Optional[Dict[int, str]] = None):
+        if height < 2:
+            raise ValueError("Height must be at least 2")
+
+        self.height = height
+        self.num_vertices = self._calculate_num_vertices()
+        self.entrance = None
+        self.exit = None
+        self.all_nodes = []
+        self.middle_layer_1 = []
+        self.middle_layer_2 = []
+
+        # Create tree structure first
+        self._create_tree()
+
+        # Then assign labels
+        if fixed_labels:
+            self._assign_labels(fixed_labels)
+        else:
+            labeler = OptimalLabeler(self.num_vertices)
+            edges = self._create_edge_list()
+            vertex_labels = labeler.optimize_labels(edges)
+            is_valid, _ = labeler.verify_labeling(edges)
+            if not is_valid:
+                raise ValueError("Invalid labeling: duplicate labels found")
+            self._assign_labels(vertex_labels)
+
+    def _calculate_num_vertices(self) -> int:
+        num = 2  # Entrance + Exit
+        for i in range(self.height - 1):
+            num += 2**i  # Upper tree
+        for i in range(self.height - 1):
+            num += 2**i  # Lower tree
+        num += 2 * (2**self.height)  # Two middle layers
+        return num
+
+    def _create_upper_tree(self):
+        self.entrance = Node(0)
+        self.entrance.set_position(0, 1.0)
+        self.all_nodes.append(self.entrance)
+        current_level = [self.entrance]
+
+        for level in range(self.height):
+            next_level = []
+            nodes_in_level = 2 ** (level + 1)
+            x_spacing = 1.0 / (nodes_in_level + 1)
+            y_position = 1.0 - ((level + 1) / (self.height + 1))
+
+            for j, parent in enumerate(current_level):
+                left_child = Node(level + 1)
+                right_child = Node(level + 1)
+
+                left_child.set_position(-0.5 + (2 * j + 1) * x_spacing, y_position)
+                right_child.set_position(-0.5 + (2 * j + 2) * x_spacing, y_position)
+
+                parent.left = left_child
+                parent.right = right_child
+
+                next_level.extend([left_child, right_child])
+                self.all_nodes.extend([left_child, right_child])
+
+            current_level = next_level
+            if level == self.height - 1:
+                self.middle_layer_1 = current_level
+
+    def _create_lower_tree(self):
+        nodes_in_level = 2**self.height
+        x_spacing = 1.0 / (nodes_in_level + 1)
+        y_position = 0.4
+
+        for i in range(nodes_in_level):
+            node = Node(self.height + 1)
+            node.set_position(-0.5 + (i + 1) * x_spacing, y_position)
+            self.middle_layer_2.append(node)
+            self.all_nodes.append(node)
+
+        current_level = self.middle_layer_2
+        for level in range(self.height - 1):
+            next_level = []
+            nodes_in_level = 2 ** (self.height - level - 1)
+            x_spacing = 1.0 / (nodes_in_level + 1)
+            y_position = 0.4 - ((level + 1) / (self.height + 1))
+
+            for j in range(0, len(current_level), 2):
+                child = Node(self.height + level + 2)
+                child.set_position(-0.5 + (j // 2 + 1) * x_spacing, y_position)
+
+                current_level[j].left = child
+                if j + 1 < len(current_level):
+                    current_level[j + 1].right = child
+
+                next_level.append(child)
+                self.all_nodes.append(child)
+
+            current_level = next_level
+
+        self.exit = Node(2 * self.height)
+        self.exit.set_position(0, 0)
+        self.all_nodes.append(self.exit)
+
+        for node in current_level:
+            node.left = self.exit
+
+    def _create_zigzag_connections(self):
+        n = len(self.middle_layer_1)
+        for i in range(n):
+            node1 = self.middle_layer_1[i]
+            next_idx = (i + 1) % n
+            next_next_idx = (i + 2) % n
+            node1.add_zigzag_connection(self.middle_layer_2[next_idx])
+            node1.add_zigzag_connection(self.middle_layer_2[next_next_idx])
+
+    def _create_edge_list(self) -> List[Tuple[int, int]]:
+        edges = []
+        for node in self.all_nodes:
+            if node.left:
+                edges.append((self.all_nodes.index(node), self.all_nodes.index(node.left)))
+            if node.right:
+                edges.append((self.all_nodes.index(node), self.all_nodes.index(node.right)))
+
+        for node in self.middle_layer_1:
+            for zigzag_node in node.zigzag_connections:
+                edges.append((self.all_nodes.index(node), self.all_nodes.index(zigzag_node)))
+
+        return edges
+
+    def _assign_labels(self, vertex_labels: Dict[int, str]):
+        for vertex_id, label in vertex_labels.items():
+            if vertex_id < len(self.all_nodes):
+                self.all_nodes[vertex_id].value = label
+
+    def _create_tree(self):
+        self._create_upper_tree()
+        self._create_lower_tree()
+        self._create_zigzag_connections()
+
+    def get_edges(self) -> Set[Tuple[str, str]]:
+        edges = set()
+        for node in self.all_nodes:
+            if node.left:
+                edges.add((node.value, node.left.value))
+            if node.right:
+                edges.add((node.value, node.right.value))
+
+        for node in self.middle_layer_1:
+            for zigzag_node in node.zigzag_connections:
+                edges.add((node.value, zigzag_node.value))
+                edges.add((zigzag_node.value, node.value))
+        return edges
+
+    def get_vertex_labels(self) -> Dict[int, str]:
+        return {i: node.value for i, node in enumerate(self.all_nodes)}
+
+    def draw(self, figsize=None):
+        if figsize is None:
+            width = min(10, 3 + self.height)
+            height = min(12, 4 + self.height)
+            figsize = (width, height)
+
+        plt.figure(figsize=figsize)
+
+        for node in self.all_nodes:
+            if node.left:
+                plt.plot([node.x, node.left.x], [node.y, node.left.y], "b-", linewidth=1)
+            if node.right:
+                plt.plot([node.x, node.right.x], [node.y, node.right.y], "b-", linewidth=1)
+
+        for node in self.middle_layer_1:
+            for zigzag_node in node.zigzag_connections:
+                plt.plot(
+                    [node.x, zigzag_node.x], [node.y, zigzag_node.y], "r--", linewidth=1, alpha=0.6
+                )
+
+        label_size = max(6, 8 - (self.height - 2))
+        for node in self.all_nodes:
+            plt.plot(node.x, node.y, "ko", markersize=8)
+            plt.text(
+                node.x + 0.05,
+                node.y,
+                node.value,
+                horizontalalignment="left",
+                verticalalignment="center",
+                fontsize=label_size,
+            )
+
+            if node == self.entrance or node == self.exit:
+                label = "Entrance" if node == self.entrance else "Exit"
+                y_offset = 0.05 if node == self.entrance else -0.05
+                plt.text(
+                    node.x,
+                    node.y + y_offset,
+                    label,
+                    horizontalalignment="center",
+                    verticalalignment="center",
+                    fontsize=label_size + 1,
+                )
+
+        plt.axis("equal")
+        plt.axis("off")
+        plt.tight_layout()
+        return plt.gcf()
 
 
 class BinaryWeldedTree:
@@ -188,299 +479,6 @@ class BinaryWeldedTree:
                     horizontalalignment="center",
                     verticalalignment="center",
                     fontsize=10,
-                )
-
-        plt.axis("equal")
-        plt.axis("off")
-        plt.tight_layout()
-        return plt.gcf()
-
-
-class HardWeldedTree:
-    def __init__(self, height: int):
-        if height < 2:
-            raise ValueError("Height must be at least 2")
-        self.height = height
-
-        # Calculate total number of vertices
-        self.num_vertices = 0
-        # Entrance + Exit
-        self.num_vertices += 2
-        # Upper tree (excluding middle layer)
-        for i in range(self.height - 1):
-            self.num_vertices += 2**i
-        # Lower tree (excluding middle layer)
-        for i in range(self.height - 1):
-            self.num_vertices += 2**i
-        # Two middle layers
-        self.num_vertices += 2 * (2**self.height)
-
-        # Calculate number of bits needed
-        self.bits_needed = len(bin(self.num_vertices - 1)[2:])  # -1 because we start from 0
-        self.current_label = 0
-        self.entrance = None
-        self.exit = None
-        self.all_nodes = []
-        self.middle_layer_1 = []
-        self.middle_layer_2 = []
-        self._create_tree()
-
-    def _get_next_label(self) -> str:
-        """Get next unique label"""
-        label = format(self.current_label, f"0{self.bits_needed}b")
-        self.current_label += 1
-        return label
-
-    def _create_unique_label(self, level: int, position: int, is_top: bool) -> str:
-        """Create a unique binary label with exactly total_bits length"""
-        label = None
-        counter = 0
-        while label is None or label in self.used_labels:
-            if is_top:
-                # For top part, fill first half with unique bits, second half with zeros
-                top_part = (level * (2**self.height) + position + counter) % (2**self.bits_per_part)
-                label = format(top_part, f"0{self.bits_per_part}b") + "0" * self.bits_per_part
-            else:
-                # For bottom part, fill first half with zeros, second half with unique bits
-                bottom_part = (level * (2**self.height) + position + counter) % (
-                    2**self.bits_per_part
-                )
-                label = "0" * self.bits_per_part + format(bottom_part, f"0{self.bits_per_part}b")
-            counter += 1
-        self.used_labels.add(label)
-        return label
-
-    def _create_middle_layer_label(self, layer_num: int, position: int) -> str:
-        """Create unique middle layer label with exactly total_bits length"""
-        label = None
-        counter = 0
-        while label is None or label in self.used_labels:
-            if layer_num == 1:
-                # First middle layer: unique first half, incremental second half
-                top_part = ((2**self.height) + position + counter) % (2**self.bits_per_part)
-                bottom_part = position % (2**self.bits_per_part)
-            else:
-                # Second middle layer: incremental first half, unique second half
-                top_part = position % (2**self.bits_per_part)
-                bottom_part = ((2**self.height) + position + counter) % (2**self.bits_per_part)
-            label = format(top_part, f"0{self.bits_per_part}b") + format(
-                bottom_part, f"0{self.bits_per_part}b"
-            )
-            counter += 1
-        self.used_labels.add(label)
-        return label
-
-    def _create_upper_tree(self):
-        """Create upper tree including first middle layer"""
-        # Create entrance node
-        self.entrance = Node(self._get_next_label(), 0)
-        self.entrance.set_position(0, 1.0)
-        self.all_nodes.append(self.entrance)
-        current_level = [self.entrance]
-
-        # Create intermediate levels
-        for level in range(self.height):
-            next_level = []
-            nodes_in_level = 2 ** (level + 1)
-            x_spacing = 1.0 / (nodes_in_level + 1)
-            y_position = 1.0 - ((level + 1) / (self.height + 1))
-
-            for j, parent in enumerate(current_level):
-                # Create left and right children with unique labels
-                left_child = Node(self._get_next_label(), level + 1)
-                right_child = Node(self._get_next_label(), level + 1)
-
-                # Set positions
-                left_child.set_position(-0.5 + (2 * j + 1) * x_spacing, y_position)
-                right_child.set_position(-0.5 + (2 * j + 2) * x_spacing, y_position)
-
-                # Connect nodes
-                parent.left = left_child
-                parent.right = right_child
-
-                next_level.extend([left_child, right_child])
-                self.all_nodes.extend([left_child, right_child])
-
-            current_level = next_level
-            if level == self.height - 1:
-                self.middle_layer_1 = current_level
-
-    def _create_lower_tree(self):
-        """Create lower tree including second middle layer"""
-        nodes_in_level = 2**self.height
-        x_spacing = 1.0 / (nodes_in_level + 1)
-        y_position = 0.4
-
-        # Create middle layer 2
-        for i in range(nodes_in_level):
-            node = Node(self._get_next_label(), self.height + 1)
-            node.set_position(-0.5 + (i + 1) * x_spacing, y_position)
-            self.middle_layer_2.append(node)
-            self.all_nodes.append(node)
-
-        # Create remaining levels
-        current_level = self.middle_layer_2
-        for level in range(self.height - 1):
-            next_level = []
-            nodes_in_level = 2 ** (self.height - level - 1)
-            x_spacing = 1.0 / (nodes_in_level + 1)
-            y_position = 0.4 - ((level + 1) / (self.height + 1))
-
-            for j in range(0, len(current_level), 2):
-                child = Node(self._get_next_label(), self.height + level + 2)
-                child.set_position(-0.5 + (j // 2 + 1) * x_spacing, y_position)
-
-                current_level[j].left = child
-                if j + 1 < len(current_level):
-                    current_level[j + 1].right = child
-
-                next_level.append(child)
-                self.all_nodes.append(child)
-
-            current_level = next_level
-
-        # Create exit node
-        self.exit = Node(self._get_next_label(), 2 * self.height)
-        self.exit.set_position(0, 0)
-        self.all_nodes.append(self.exit)
-
-        # Connect last level to exit
-        for node in current_level:
-            node.left = self.exit
-
-    def _create_zigzag_connections(self):
-        """Create zigzag connections between middle layers"""
-        n = len(self.middle_layer_1)
-        for i in range(n):
-            node1 = self.middle_layer_1[i]
-            next_idx = (i + 1) % n
-            next_next_idx = (i + 2) % n
-
-            node1.add_zigzag_connection(self.middle_layer_2[next_idx])
-            node1.add_zigzag_connection(self.middle_layer_2[next_next_idx])
-
-    def _create_tree(self):
-        self._create_upper_tree()
-        self._create_lower_tree()
-        self._create_zigzag_connections()
-
-    def get_edges(self) -> Set[Tuple[str, str]]:
-        """Get all edges including zigzag connections"""
-        edges = set()
-
-        # Regular tree edges
-        for node in self.all_nodes:
-            if node.left:
-                edges.add((node.value, node.left.value))
-            if node.right:
-                edges.add((node.value, node.right.value))
-
-        # Zigzag connections (bidirectional)
-        for node in self.middle_layer_1:
-            for zigzag_node in node.zigzag_connections:
-                edges.add((node.value, zigzag_node.value))
-                edges.add((zigzag_node.value, node.value))
-
-        return edges
-
-    def draw(self, figsize=None):
-        """Draw the tree with perfect mirroring between upper and lower parts."""
-        if figsize is None:
-            width = min(10, 3 + self.height)
-            height = min(12, 4 + self.height)
-            figsize = (width, height)
-
-        plt.figure(figsize=figsize)
-
-        # Basic parameters
-        total_height = 1.0
-        middle_y = total_height / 2
-        middle_gap = 0.1
-
-        # Position entrance and exit
-        self.entrance.x = 0
-        self.entrance.y = 1.0
-        self.exit.x = 0
-        self.exit.y = 0.0
-
-        # Position middle layers
-        for i, node in enumerate(self.middle_layer_1):
-            width = len(self.middle_layer_1)
-            x = -1 + 2 * (i + 1) / (width + 1)
-            node.x = x
-            node.y = middle_y + middle_gap / 2
-
-        for i, node in enumerate(self.middle_layer_2):
-            width = len(self.middle_layer_2)
-            x = -1 + 2 * (i + 1) / (width + 1)
-            node.x = x
-            node.y = middle_y - middle_gap / 2
-
-        # Group nodes by level
-        upper_levels = {}
-        lower_levels = {}
-        for node in self.all_nodes:
-            if node in [self.entrance, self.exit] + self.middle_layer_1 + self.middle_layer_2:
-                continue
-            if node.level < self.height:
-                upper_levels.setdefault(node.level, []).append(node)
-            elif node.level > self.height:
-                lower_levels.setdefault(node.level, []).append(node)
-
-        # Position upper tree nodes
-        for level, nodes in upper_levels.items():
-            y = 1.0 - (level / self.height) * (1.0 - (middle_y + middle_gap / 2))
-            width = len(nodes)
-            for i, node in enumerate(nodes):
-                node.x = -1 + 2 * (i + 1) / (width + 1)
-                node.y = y
-
-        # Position lower tree nodes with mirroring
-        for level, nodes in lower_levels.items():
-            mirror_level = 2 * self.height - level
-            y = (mirror_level / self.height) * (middle_y - middle_gap / 2)
-            width = len(nodes)
-            for i, node in enumerate(nodes):
-                node.x = -1 + 2 * (i + 1) / (width + 1)
-                node.y = y
-
-        # Draw edges
-        for node in self.all_nodes:
-            if node.left:
-                plt.plot([node.x, node.left.x], [node.y, node.left.y], "b-", linewidth=1)
-            if node.right:
-                plt.plot([node.x, node.right.x], [node.y, node.right.y], "b-", linewidth=1)
-
-        # Draw zigzag connections
-        for node in self.middle_layer_1:
-            for zigzag_node in node.zigzag_connections:
-                plt.plot(
-                    [node.x, zigzag_node.x], [node.y, zigzag_node.y], "r--", linewidth=1, alpha=0.6
-                )
-
-        # Draw nodes and labels
-        label_size = max(6, 8 - (self.height - 2))
-        for node in self.all_nodes:
-            plt.plot(node.x, node.y, "ko", markersize=8)
-            plt.text(
-                node.x + 0.05,
-                node.y,
-                node.value,
-                horizontalalignment="left",
-                verticalalignment="center",
-                fontsize=label_size,
-            )
-
-            if node == self.entrance or node == self.exit:
-                label = "Entrance" if node == self.entrance else "Exit"
-                y_offset = 0.05 if node == self.entrance else -0.05
-                plt.text(
-                    node.x,
-                    node.y + y_offset,
-                    label,
-                    horizontalalignment="center",
-                    verticalalignment="center",
-                    fontsize=label_size + 1,
                 )
 
         plt.axis("equal")
