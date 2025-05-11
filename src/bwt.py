@@ -6,6 +6,7 @@ import matplotlib.pyplot as plt
 import numpy as np
 from scipy import sparse
 from scipy.sparse.linalg import expm_multiply
+from scipy.optimize import minimize
 
 
 class Node:
@@ -602,6 +603,32 @@ class QuantumWalkBWT:
         prob = np.abs(psi_t[self.exit_idx]) ** 2
         return prob
 
+    def column_subspace_hamiltonian(self):
+        """
+        Construct the effective Hamiltonian in the column subspace.
+
+        This corresponds to the column-based analysis in the paper, which shows
+        that the quantum walk dynamics can be understood by considering a simpler
+        effective Hamiltonian acting on column states.
+
+        Returns:
+            numpy.ndarray: Effective Hamiltonian in the column subspace
+        """
+        # Create a (2n+1)×(2n+1) Hamiltonian for the column subspace
+        n = self.height
+        H_column = np.zeros((2 * n + 1, 2 * n + 1), dtype=np.complex128)
+
+        # Set non-zero elements - nearest-neighbor couplings
+        for j in range(2 * n):
+            if j == n - 1:  # At the defect
+                H_column[j, j + 1] = np.sqrt(2)
+                H_column[j + 1, j] = np.sqrt(2)
+            else:
+                H_column[j, j + 1] = 1
+                H_column[j + 1, j] = 1
+
+        return H_column
+
     def theoretical_exit_probability(self, t: float):
         """
         Calculate theoretical exit probability based on the correct formula:
@@ -624,10 +651,6 @@ class QuantumWalkBWT:
         # Note: In a column subspace of size (2n+1), indices range from 0 to 2n
         entrance_idx = 0  # First column
         exit_idx = 2 * self.n  # Last column
-
-        # Ensure exit_idx is within bounds (it should be 2n, which is the last valid index)
-        if exit_idx >= H_col.shape[0]:
-            exit_idx = H_col.shape[0] - 1  # Adjust to the last valid index
 
         # First term: sum_E |⟨E|1⟩|² |⟨E|2n⟩|²
         first_term = 0.0
@@ -672,33 +695,178 @@ class QuantumWalkBWT:
 
         return float(total_probability)
 
-    def column_subspace_hamiltonian(self):
+    def exit_probability_derivative(self, t: float, delta: float = 1e-6):
         """
-        Construct the effective Hamiltonian in the column subspace.
+        Calculate the numerical derivative of the exit probability function.
 
-        This corresponds to the column-based analysis in the paper, which shows
-        that the quantum walk dynamics can be understood by considering a simpler
-        effective Hamiltonian acting on column states.
+        Args:
+            t: Time point at which to calculate the derivative
+            delta: Small time increment for numerical differentiation
 
         Returns:
-            numpy.ndarray: Effective Hamiltonian in the column subspace
+            float: Approximate derivative of exit probability at time t
         """
-        # Create a 2n×2n Hamiltonian for the column subspace
-        n = self.height
-        H_column = np.zeros((2 * n, 2 * n), dtype=np.complex128)
+        # Central difference approximation
+        p_plus = self.theoretical_exit_probability(t + delta)
+        p_minus = self.theoretical_exit_probability(t - delta)
 
-        # Set non-zero elements - nearest-neighbor couplings
-        for j in range(2 * n - 1):
-            if j == n - 1:  # At the defect
-                H_column[j, j + 1] = np.sqrt(2)
-                H_column[j + 1, j] = np.sqrt(2)
-            else:
-                H_column[j, j + 1] = 1
-                H_column[j + 1, j] = 1
+        return (p_plus - p_minus) / (2 * delta)
 
-        return H_column
+    def analytical_hitting_time(
+        self, t_min: float = 0.1, t_max: Optional[float] = None, num_initial_points: int = 5
+    ) -> Tuple[float, float]:
+        """
+        Find the analytical hitting time by solving for the time when the derivative
+        of the exit probability equals zero.
 
-    def plot_exit_probability(self, t_max=None, samples=200, ax=None):
+        Args:
+            t_min: Minimum time to consider
+            t_max: Maximum time to consider (defaults to 2*π*(2n+1)/2)
+            num_initial_points: Number of initial points to try for optimization
+
+        Returns:
+            tuple: (hitting_time, max_probability)
+        """
+        if t_max is None:
+            # Use twice the expected optimal time as search range
+            t_max = 2 * np.pi * (2 * self.n + 1) / 2
+
+        # Objective function: We want to find where derivative = 0 (root finding)
+        # Convert to minimization by returning absolute value of derivative
+        def objective(t):
+            if t <= 0:  # Avoid negative times
+                return float("inf")
+            return abs(self.exit_probability_derivative(float(t)))
+
+        # We'll try multiple starting points to avoid local minima
+        theoretical_t = np.pi * (2 * self.n + 1) / 2  # Expected hitting time from theory
+
+        # Create initial points spread around the theoretical value
+        initial_points = np.linspace(t_min, t_max, num_initial_points)
+        if theoretical_t > t_min and theoretical_t < t_max:
+            # Make sure theoretical value is one of our starting points
+            initial_points = np.sort(np.append(initial_points, theoretical_t))
+
+        best_result = None
+        best_objective = float("inf")
+
+        # Try optimization from each starting point
+        for t0 in initial_points:
+            result = minimize(
+                objective,
+                t0,
+                method="Nelder-Mead",
+                bounds=[(t_min, t_max)],
+                options={"xatol": 1e-8, "fatol": 1e-8},
+            )
+
+            if result.success and result.fun < best_objective:
+                best_objective = result.fun
+                best_result = result
+
+        if best_result is None:
+            print("Warning: Optimization failed to find a hitting time.")
+            # Fallback to the theoretical expectation
+            hitting_time = theoretical_t
+        else:
+            hitting_time = float(best_result.x[0])
+
+        # Calculate the maximum probability at the hitting time
+        max_probability = self.theoretical_exit_probability(hitting_time)
+
+        return hitting_time, max_probability
+
+    def optimize_hitting_time_gradient(
+        self, t_min: float = 0.1, t_max: Optional[float] = None
+    ) -> Tuple[float, float]:
+        """
+        Find the analytical hitting time using gradient descent to maximize exit probability.
+
+        Args:
+            t_min: Minimum time to consider
+            t_max: Maximum time to consider (defaults to 2*π*(2n+1)/2)
+
+        Returns:
+            tuple: (hitting_time, max_probability)
+        """
+        if t_max is None:
+            # Use twice the expected optimal time as search range
+            t_max = 2 * np.pi * (2 * self.n + 1) / 2
+
+        # Objective function: Negative of exit probability (for minimization)
+        def objective(t):
+            return -self.theoretical_exit_probability(float(t[0]))
+
+        # Gradient function (numerical approximation)
+        def gradient(t):
+            return np.array([-self.exit_probability_derivative(float(t[0]))])
+
+        # Initial guess based on theoretical prediction
+        t0 = np.array([np.pi * (2 * self.n + 1) / 2])
+
+        # Run optimization
+        result = minimize(
+            objective,
+            t0,
+            method="L-BFGS-B",
+            jac=gradient,
+            bounds=[(t_min, t_max)],
+            options={"ftol": 1e-8, "gtol": 1e-8},
+        )
+
+        if not result.success:
+            print("Warning: Gradient-based optimization failed to find a hitting time.")
+            print(f"Reason: {result.message}")
+            # Fallback to the theoretical expectation
+            hitting_time = float(t0[0])
+        else:
+            hitting_time = float(result.x[0])
+
+        # Calculate the maximum probability at the hitting time
+        max_probability = self.theoretical_exit_probability(hitting_time)
+
+        return hitting_time, max_probability
+
+    def find_hitting_time_numerical(self, num_samples=300, t_max=None) -> Tuple[float, float]:
+        """
+        Find the hitting time (time of maximum exit probability) using numerical sampling.
+
+        Args:
+            num_samples: Number of time points to sample
+            t_max: Maximum time to consider (if None, estimated automatically)
+
+        Returns:
+            Tuple containing:
+            - numerical_hitting_time: Time of maximum probability
+            - max_numerical_prob: Maximum probability
+        """
+        # Estimate optimal time if not provided
+        if t_max is None:
+            # Theoretical estimate from paper: π(2n+1)/2
+            theoretical_optimal_t = np.pi * (2 * self.n + 1) / 2
+            t_max = 2 * theoretical_optimal_t
+
+        # Create time points with more samples around expected peak
+        t_values_standard = np.linspace(0, t_max, num_samples)
+        t_values_peak = np.linspace(
+            0.8 * theoretical_optimal_t, 1.2 * theoretical_optimal_t, num_samples // 2
+        )
+        t_values = np.sort(np.unique(np.concatenate([t_values_standard, t_values_peak])))
+
+        # Calculate theoretical exit probabilities
+        theo_probs = []
+        for t in t_values:
+            theo_prob = self.theoretical_exit_probability(t)
+            theo_probs.append(theo_prob)
+
+        # Find maximum probability and corresponding time
+        max_idx = np.argmax(theo_probs)
+        hitting_time = t_values[max_idx]
+        max_prob = theo_probs[max_idx]
+
+        return hitting_time, max_prob
+
+    def plot_exit_probability(self, t_max=None, samples=200, ax=None, show_hitting_times=True):
         """
         Plot the exit probability over time, comparing numerical and theoretical values.
 
@@ -706,9 +874,11 @@ class QuantumWalkBWT:
             t_max (float, optional): Maximum time for the plot
             samples (int): Number of time points to sample
             ax (matplotlib.axes.Axes, optional): Axes to plot on
+            show_hitting_times (bool): Whether to mark hitting times
 
         Returns:
             matplotlib.figure.Figure: Figure containing the plot
+            tuple: (numerical_hitting_time, max_numerical_prob, theoretical_hitting_time, max_theoretical_prob)
         """
         if t_max is None:
             # Use the expected optimal time as reference
@@ -743,23 +913,61 @@ class QuantumWalkBWT:
         ax.plot(t_values, numerical_probs, "b-", linewidth=2, label="Numerical")
         ax.plot(t_values, theoretical_probs, "r--", linewidth=2, label="Theoretical")
 
-        # Highlight optimal time
-        optimal_t = np.pi * (2 * self.n + 1) / 2
-        ax.axvline(
-            x=optimal_t, color="g", linestyle=":", label=f"Optimal time: t ≈ {optimal_t:.2f}"
-        )
-
         # Calculate peak points
         max_num_idx = np.argmax(numerical_probs)
         max_num_t = t_values[max_num_idx]
         max_num_prob = numerical_probs[max_num_idx]
 
-        ax.annotate(
-            f"Max: {max_num_prob:.4f} at t = {max_num_t:.2f}",
-            xy=(max_num_t, max_num_prob),
-            xytext=(max_num_t + 0.1 * t_max, max_num_prob - 0.1),
-            arrowprops=dict(arrowstyle="->"),
-        )
+        # Find theoretical maximum
+        theo_max_idx = np.argmax(theoretical_probs)
+        theo_hitting_time = t_values[theo_max_idx]
+        theo_max_prob = theoretical_probs[theo_max_idx]
+
+        if show_hitting_times:
+            # Find analytical hitting time
+            analytical_t, analytical_p = self.analytical_hitting_time()
+            gradient_t, gradient_p = self.optimize_hitting_time_gradient()
+
+            # Highlight optimal times
+            # Formula-based
+            optimal_t = np.pi * (2 * self.n + 1) / 2
+            ax.axvline(
+                x=optimal_t, color="k", linestyle="-.", label=f"Formula: t = {optimal_t:.2f}"
+            )
+
+            # Analytical
+            ax.axvline(
+                x=analytical_t,
+                color="r",
+                linestyle=":",
+                label=f"Root finding: t = {analytical_t:.2f}",
+            )
+
+            # Gradient-based
+            ax.axvline(
+                x=gradient_t, color="g", linestyle="--", label=f"Gradient: t = {gradient_t:.2f}"
+            )
+
+            # Mark maximum points
+            ax.plot(max_num_t, max_num_prob, "bo", markersize=8)
+            ax.plot(theo_hitting_time, theo_max_prob, "ro", markersize=8)
+            ax.plot(analytical_t, analytical_p, "rx", markersize=10)
+            ax.plot(gradient_t, gradient_p, "gx", markersize=10)
+
+            # Add annotations
+            ax.annotate(
+                f"Num max: {max_num_prob:.4f} at t = {max_num_t:.2f}",
+                xy=(max_num_t, max_num_prob),
+                xytext=(max_num_t + 0.1 * t_max, max_num_prob - 0.1),
+                arrowprops=dict(arrowstyle="->"),
+            )
+
+            ax.annotate(
+                f"Theo max: {theo_max_prob:.4f} at t = {theo_hitting_time:.2f}",
+                xy=(theo_hitting_time, theo_max_prob),
+                xytext=(theo_hitting_time - 0.1 * t_max, theo_max_prob - 0.15),
+                arrowprops=dict(arrowstyle="->"),
+            )
 
         ax.set_title(f"Exit Probability for BWT Quantum Walk (height = {self.height})")
         ax.set_xlabel("Time t")
@@ -772,7 +980,9 @@ class QuantumWalkBWT:
         ax.set_ylim(0, 1.05 * max(max_num_prob, max(theoretical_probs)))
 
         plt.tight_layout()
-        return fig
+
+        # Return both the figure and the hitting time information
+        return fig, (max_num_t, max_num_prob, theo_hitting_time, theo_max_prob)
 
     def visualize_quantum_state(self, t, figsize=(10, 10)):
         """
@@ -832,229 +1042,3 @@ class QuantumWalkBWT:
         plt.tight_layout()
 
         return fig
-
-
-def compare_theory_numerical(height=3, num_samples=200):
-    """
-    Compare theoretical and numerical exit probabilities for BWT quantum walk.
-
-    Args:
-        height (int): Height of the Binary Welded Tree
-        num_samples (int): Number of time points to sample
-
-    Returns:
-        dict: Results of the comparison
-    """
-    print(f"=== BWT Quantum Walk Comparison (height={height}) ===")
-
-    # Initialize quantum walk
-    start_time = time.time()
-    print("Initializing Binary Welded Tree and Hamiltonian...")
-    qwalk = QuantumWalkBWT(height=height)
-    print(f"Initialization completed in {time.time() - start_time:.2f} seconds")
-    print(f"Number of vertices in BWT: {qwalk.n_vertices}")
-
-    # Calculate theoretical optimal time
-    optimal_t = np.pi * (2 * height + 1) / 2
-    print(f"Theoretical optimal time: {optimal_t:.4f}")
-
-    # Calculate exit probability at optimal time
-    print("\nCalculating exit probability at optimal time...")
-    num_prob = qwalk.exit_probability(optimal_t)
-    theo_prob = qwalk.theoretical_exit_probability(optimal_t)
-
-    print(f"  Numerical: {num_prob:.6f}")
-    print(f"  Theoretical: {theo_prob:.6f}")
-    print(f"  Absolute difference: {abs(num_prob - theo_prob):.6f}")
-    print(f"  Relative difference: {abs(num_prob - theo_prob)/theo_prob*100:.2f}%")
-
-    # Plot exit probability over time
-    print("\nGenerating exit probability plot...")
-    t_max = 2 * optimal_t
-
-    # Sample more points around the expected peak for better resolution
-    t_values_standard = np.linspace(0, t_max, num_samples)
-    t_values_around_peak = np.linspace(0.8 * optimal_t, 1.2 * optimal_t, num_samples // 2)
-    t_values = np.sort(np.unique(np.concatenate([t_values_standard, t_values_around_peak])))
-
-    # Calculate probabilities
-    print(f"Calculating probabilities for {len(t_values)} time points...")
-    start_time = time.time()
-    num_probs = [qwalk.exit_probability(t) for t in t_values]
-    theo_probs = [qwalk.theoretical_exit_probability(t) for t in t_values]
-    print(f"Calculations completed in {time.time() - start_time:.2f} seconds")
-
-    # Find peak values
-    max_num_idx = np.argmax(num_probs)
-    max_num_t = t_values[max_num_idx]
-    max_num_prob = num_probs[max_num_idx]
-
-    max_theo_idx = np.argmax(theo_probs)
-    max_theo_t = t_values[max_theo_idx]
-    max_theo_prob = theo_probs[max_theo_idx]
-
-    print("\nPeak exit probabilities:")
-    print(f"  Numerical peak: {max_num_prob:.6f} at time {max_num_t:.4f}")
-    print(f"  Theoretical peak: {max_theo_prob:.6f} at time {max_theo_t:.4f}")
-    print(f"  Time difference: {abs(max_num_t - max_theo_t):.4f}")
-    print(f"  Probability difference: {abs(max_num_prob - max_theo_prob):.6f}")
-
-    # Plot the results
-    fig, (ax1, ax2) = plt.subplots(2, 1, figsize=(12, 10), gridspec_kw={"height_ratios": [3, 1]})
-
-    # Main plot
-    ax1.plot(t_values, num_probs, "b-", linewidth=2, label="Numerical")
-    ax1.plot(t_values, theo_probs, "r--", linewidth=2, label="Theoretical")
-    ax1.axvline(
-        x=optimal_t, color="g", linestyle=":", label=f"Expected optimal time: t = {optimal_t:.4f}"
-    )
-
-    # Mark peak points
-    ax1.plot(max_num_t, max_num_prob, "bo", markersize=8)
-    ax1.plot(max_theo_t, max_theo_prob, "ro", markersize=8)
-
-    ax1.annotate(
-        f"Max numerical: {max_num_prob:.4f} at t = {max_num_t:.2f}",
-        xy=(max_num_t, max_num_prob),
-        xytext=(max_num_t - 0.2 * t_max, max_num_prob - 0.2 * max_num_prob),
-        arrowprops=dict(arrowstyle="->"),
-    )
-
-    ax1.annotate(
-        f"Max theoretical: {max_theo_prob:.4f} at t = {max_theo_t:.2f}",
-        xy=(max_theo_t, max_theo_prob),
-        xytext=(max_theo_t + 0.2 * t_max, max_theo_prob - 0.2 * max_theo_prob),
-        arrowprops=dict(arrowstyle="->"),
-    )
-
-    ax1.set_title(f"Exit Probability for BWT Quantum Walk (height = {height})")
-    ax1.set_ylabel("Probability")
-    ax1.grid(True, alpha=0.3)
-    ax1.legend(loc="best")
-    ax1.set_xlim(0, t_max)
-    ax1.set_ylim(0, 1.05 * max(max_num_prob, max_theo_prob))
-
-    # Difference plot
-    diff = np.array(num_probs) - np.array(theo_probs)
-    ax2.plot(t_values, diff, "k-", linewidth=1.5)
-    ax2.axhline(y=0, color="gray", linestyle="-", alpha=0.5)
-    ax2.set_title("Difference (Numerical - Theoretical)")
-    ax2.set_xlabel("Time t")
-    ax2.set_ylabel("Difference")
-    ax2.grid(True, alpha=0.3)
-    ax2.set_xlim(0, t_max)
-
-    plt.tight_layout()
-
-    # Generate visualizations at key times
-    print("\nGenerating quantum state visualizations...")
-    visualization_times = [
-        0,  # Initial state
-        optimal_t * 0.25,  # Quarter way
-        optimal_t * 0.5,  # Halfway
-        optimal_t * 0.75,  # Three-quarters way
-        optimal_t,  # At optimal time
-        max_num_t,  # At numerical peak
-    ]
-
-    visualizations = []
-    for t in visualization_times:
-        print(f"  Visualizing state at t = {t:.2f}...")
-        vis_fig = qwalk.visualize_quantum_state(t)
-        visualizations.append((t, vis_fig))
-
-    return {
-        "height": height,
-        "n_vertices": qwalk.n_vertices,
-        "optimal_time_theoretical": optimal_t,
-        "optimal_time_numerical": max_num_t,
-        "peak_prob_theoretical": max_theo_prob,
-        "peak_prob_numerical": max_num_prob,
-        "time_difference": abs(max_num_t - optimal_t),
-        "prob_difference": abs(max_num_prob - max_theo_prob),
-        "relative_time_diff": abs(max_num_t - optimal_t) / optimal_t,
-        "relative_prob_diff": abs(max_num_prob - max_theo_prob) / max_theo_prob,
-        "probability_plot": fig,
-        "state_visualizations": visualizations,
-        "qwalk": qwalk,
-    }
-
-
-def analyze_scaling(heights=[2, 3, 4, 5]):
-    """Analyze how optimal time and peak probability scale with BWT height."""
-    print("\n=== BWT Quantum Walk Scaling Analysis ===")
-    results = []
-
-    for h in heights:
-        print(f"\nProcessing BWT with height {h}...")
-        result = compare_theory_numerical(height=h, num_samples=100)
-        results.append(result)
-
-    # Create summary table
-    print("\n=== Scaling Analysis Summary ===")
-    print(
-        f"{'Height':<8} {'Vertices':<10} {'Theo Time':<12} {'Num Time':<12} {'Theo Prob':<12} {'Num Prob':<12} {'Rel Time Diff':<15} {'Rel Prob Diff':<15}"
-    )
-    print(
-        f"{'------':<8} {'--------':<10} {'---------':<12} {'--------':<12} {'---------':<12} {'--------':<12} {'-------------':<15} {'-------------':<15}"
-    )
-
-    for r in results:
-        print(
-            f"{r['height']:<8} {r['n_vertices']:<10} {r['optimal_time_theoretical']:<12.4f} "
-            f"{r['optimal_time_numerical']:<12.4f} {r['peak_prob_theoretical']:<12.6f} "
-            f"{r['peak_prob_numerical']:<12.6f} {r['relative_time_diff']*100:<15.2f}% "
-            f"{r['relative_prob_diff']*100:<15.2f}%"
-        )
-
-    # Create scaling plots
-    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(14, 6))
-
-    # Extract data
-    h_values = [r["height"] for r in results]
-    n_vertices = [r["n_vertices"] for r in results]
-    theo_times = [r["optimal_time_theoretical"] for r in results]
-    num_times = [r["optimal_time_numerical"] for r in results]
-    theo_probs = [r["peak_prob_theoretical"] for r in results]
-    num_probs = [r["peak_prob_numerical"] for r in results]
-
-    # Plot time scaling
-    ax1.plot(h_values, theo_times, "go-", linewidth=2, label="Theoretical")
-    ax1.plot(h_values, num_times, "bo-", linewidth=2, label="Numerical")
-
-    # Linear fit for theoretical times
-    x_fit = np.linspace(min(h_values), max(h_values), 100)
-    y_fit = np.pi * (2 * x_fit + 1) / 2  # Theoretical formula
-    ax1.plot(x_fit, y_fit, "r--", label=r"$\pi(2n+1)/2)")
-
-    ax1.set_title("Optimal Time vs. BWT Height")
-    ax1.set_xlabel("Height (n)")
-    ax1.set_ylabel("Optimal Time")
-    ax1.grid(True, alpha=0.3)
-    ax1.legend()
-
-    # Plot probability scaling
-    ax2.plot(h_values, theo_probs, "go-", linewidth=2, label="Theoretical")
-    ax2.plot(h_values, num_probs, "bo-", linewidth=2, label="Numerical")
-
-    # Theoretical scaling: 4/(2n+1)^2
-    y_fit_prob = 4 / (2 * x_fit + 1) ** 2
-    ax2.plot(x_fit, y_fit_prob, "r--", label=r"$4/(2n+1)^2")
-
-    # Log-log inset for probability scaling
-    axins = ax2.inset_axes([0.55, 0.55, 0.4, 0.4])
-    axins.loglog(h_values, theo_probs, "go-", linewidth=2)
-    axins.loglog(h_values, num_probs, "bo-", linewidth=2)
-    axins.loglog(x_fit, y_fit_prob, "r--")
-    axins.set_title("Log-Log Scale")
-    axins.grid(True, alpha=0.3)
-
-    ax2.set_title("Peak Exit Probability vs. BWT Height")
-    ax2.set_xlabel("Height (n)")
-    ax2.set_ylabel("Peak Probability")
-    ax2.grid(True, alpha=0.3)
-    ax2.legend()
-
-    plt.tight_layout()
-
-    return fig, results
