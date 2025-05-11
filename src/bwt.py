@@ -604,37 +604,73 @@ class QuantumWalkBWT:
 
     def theoretical_exit_probability(self, t: float):
         """
-        Calculate theoretical exit probability based on the paper's formula.
-        For t ≈ π(2n+1)/2, it reaches its peak.
+        Calculate theoretical exit probability based on the correct formula:
+
+        ∑_E |⟨E|1⟩|² |⟨E|2n⟩|² + ∑_{E≠E'} [(1-e^(-i(E-E')τ))/(i(E-E')τ)] ⟨2n|E⟩⟨E|1⟩⟨1|E'⟩⟨E'|2n⟩
 
         Args:
             t (float): Time to calculate the theoretical exit probability
 
         Returns:
-            float: Theoretical probability based on the formulas from the paper
+            float: Theoretical probability
         """
-        # For t near the optimal time, use the simplified formula
-        optimal_t = np.pi * (2 * self.n + 1) / 2
+        # Use the column subspace Hamiltonian to simplify calculations
+        H_col = self.column_subspace_hamiltonian()
 
-        if abs(t - optimal_t) < 0.1 * np.pi:
-            # The formula simplifies to (4/(2n+1)²) * sin⁴(nπ/(2n+1))
-            # As n increases, sin(nπ/(2n+1)) approaches 1
-            sin_term = np.sin(self.n * np.pi / (2 * self.n + 1))
-            return (4 / (2 * self.n + 1) ** 2) * sin_term**4
-        else:
-            # For non-optimal times, use the full formula with phase factors
-            result = 0
-            for m in range(1, 2 * self.n + 1):
-                # Eigenvalues: E_m = 2*cos(mπ/(2n+1))
-                E_m = 2 * np.cos(m * np.pi / (2 * self.n + 1))
-                sin_term = np.sin(m * np.pi / (2 * self.n + 1))
-                phase = np.exp(-1j * E_m * t)
+        # Calculate eigenvalues and eigenvectors
+        eigenvalues, eigenvectors = np.linalg.eigh(H_col)
 
-                # Contribution from this eigenvalue
-                amplitude = (2 / (2 * self.n + 1)) * phase * ((-1) ** (m + 1)) * (sin_term**2)
-                result += amplitude
+        # Define positions of entrance (|1⟩) and exit (|2n⟩) nodes in column representation
+        # Note: In a column subspace of size (2n+1), indices range from 0 to 2n
+        entrance_idx = 0  # First column
+        exit_idx = 2 * self.n  # Last column
 
-            return np.abs(result) ** 2
+        # Ensure exit_idx is within bounds (it should be 2n, which is the last valid index)
+        if exit_idx >= H_col.shape[0]:
+            exit_idx = H_col.shape[0] - 1  # Adjust to the last valid index
+
+        # First term: sum_E |⟨E|1⟩|² |⟨E|2n⟩|²
+        first_term = 0.0
+        for i in range(len(eigenvalues)):
+            # Get amplitudes for entrance and exit columns
+            entrance_amp = eigenvectors[entrance_idx, i]  # ⟨1|E⟩
+            exit_amp = eigenvectors[exit_idx, i]  # ⟨2n|E⟩
+
+            # Add contribution to first term
+            first_term += abs(entrance_amp) ** 2 * abs(exit_amp) ** 2
+
+        # Second term: sum_{E≠E'} [(1-e^(-i(E-E')τ))/(i(E-E')τ)] ⟨2n|E⟩⟨E|1⟩⟨1|E'⟩⟨E'|2n⟩
+        second_term = 0.0 + 0.0j  # Complex accumulator
+        for i in range(len(eigenvalues)):
+            for j in range(len(eigenvalues)):
+                if i != j:  # E ≠ E'
+                    # Calculate energy difference
+                    energy_diff = eigenvalues[i] - eigenvalues[j]
+
+                    # Calculate phase factor with careful handling of small denominators
+                    if abs(energy_diff * t) < 1e-10:
+                        # Use Taylor expansion for small arguments to avoid division by zero
+                        phase_factor = 1.0 - 1j * energy_diff * t / 2.0
+                    else:
+                        phase_factor = (1.0 - np.exp(-1j * energy_diff * t)) / (
+                            1j * energy_diff * t
+                        )
+
+                    # Calculate amplitude products
+                    entrance_exit_i = (
+                        eigenvectors[exit_idx, i] * eigenvectors[entrance_idx, i]
+                    )  # ⟨2n|E⟩⟨E|1⟩
+                    entrance_exit_j = (
+                        eigenvectors[entrance_idx, j] * eigenvectors[exit_idx, j]
+                    )  # ⟨1|E'⟩⟨E'|2n⟩
+
+                    # Add contribution to second term
+                    second_term += phase_factor * entrance_exit_i * entrance_exit_j
+
+        # Total probability is the sum of both terms (take real part to ensure a real result)
+        total_probability = first_term + np.real(second_term)
+
+        return float(total_probability)
 
     def column_subspace_hamiltonian(self):
         """
