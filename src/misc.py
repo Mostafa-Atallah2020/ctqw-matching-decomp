@@ -1,7 +1,9 @@
 import itertools
 
 import networkx as nx
+from qiskit import QuantumCircuit
 from qiskit.circuit.library import RXGate
+from qiskit.quantum_info import Statevector
 
 
 def multi_crx(angle, ctrl_state):
@@ -138,3 +140,34 @@ def estimate_orbit_count(G):
     # Similar to above, NetworkX doesn't have direct equivalent
     # Could use nx.vf2pp_isomorphism but would be much slower
     return len(set(d for _, d in G.degree()))
+
+
+def get_state(circuit=None, initial_state=None):
+    """
+    Evolve a quantum state through a circuit and extract the final state vector.
+
+    Args:
+        `circuit` (`QuantumCircuit`): The quantum circuit to evolve the state through.
+                                  If None, an empty circuit will be created.
+        `initial_state` (`list` or `Statevector`): Initial state. If None, |0⟩ state will be used.
+
+    Returns:
+        `qiskit.Statevector`: The final state vector after evolution
+    """
+    # If no circuit is provided, create an empty one with 1 qubit
+    if circuit is None:
+        circuit = QuantumCircuit(1)
+
+    num_qubits = circuit.num_qubits
+
+    # If no initial state is provided, use |0⟩ state
+    if initial_state is None:
+        # |0⟩ state is the default
+        initial_state = Statevector.from_label("0" * num_qubits)
+    elif not isinstance(initial_state, Statevector):
+        initial_state = Statevector(initial_state)
+
+    # Evolve the state through the circuit
+    final_state = initial_state.evolve(circuit)
+
+    return final_state

@@ -5,8 +5,8 @@ from typing import Dict, List, Optional, Set, Tuple
 import matplotlib.pyplot as plt
 import numpy as np
 from scipy import sparse
-from scipy.sparse.linalg import expm_multiply
 from scipy.optimize import minimize
+from scipy.sparse.linalg import expm_multiply
 
 
 class Node:
