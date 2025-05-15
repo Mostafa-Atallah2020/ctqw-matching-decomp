@@ -149,7 +149,7 @@ def get_state(circuit=None, initial_state=None):
     Args:
         `circuit` (`QuantumCircuit`): The quantum circuit to evolve the state through.
                                   If None, an empty circuit will be created.
-        `initial_state` (`list` or `Statevector`): Initial state. If None, |0⟩ state will be used.
+        `initial_state` (`list` or `Statevector`): Initial state. If None, |+⟩ state will be used.
 
     Returns:
         `qiskit.Statevector`: The final state vector after evolution
@@ -160,10 +160,16 @@ def get_state(circuit=None, initial_state=None):
 
     num_qubits = circuit.num_qubits
 
-    # If no initial state is provided, use |0⟩ state
+    # If no initial state is provided, use |+⟩ state
     if initial_state is None:
-        # |0⟩ state is the default
-        initial_state = Statevector.from_label("0" * num_qubits)
+        # Create |+⟩ state by starting with |0⟩ and applying Hadamard to each qubit
+        plus_circuit = QuantumCircuit(num_qubits)
+        for qubit in range(num_qubits):
+            plus_circuit.h(qubit)
+
+        # Create the |+⟩ state by evolving |0⟩ through Hadamard gates
+        zero_state = Statevector.from_label("0" * num_qubits)
+        initial_state = zero_state.evolve(plus_circuit)
     elif not isinstance(initial_state, Statevector):
         initial_state = Statevector(initial_state)
 
