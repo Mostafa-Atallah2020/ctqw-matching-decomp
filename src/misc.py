@@ -1,7 +1,7 @@
 import itertools
 
 import networkx as nx
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import RXGate
 from qiskit.quantum_info import Statevector
 
@@ -177,3 +177,31 @@ def get_state(circuit=None, initial_state=None):
     final_state = initial_state.evolve(circuit)
 
     return final_state
+
+
+def count_gates(circuit, optimization_level=3):
+    """
+    Count the number of CX and U3 gates in a Qiskit quantum circuit after transpilation.
+
+    Args:
+        circuit (QuantumCircuit): The quantum circuit to analyze
+        optimization_level (int): Optimization level for transpilation (0-3, default=3)
+
+    Returns:
+        tuple: A tuple containing (cx_count, u3_count)
+    """
+    # Transpile the circuit with the specified optimization level
+    transpiled_circuit = transpile(
+        circuit, basis_gates=["cx", "u3"], optimization_level=optimization_level
+    )
+
+    # Get the operation counts dictionary
+    op_counts = transpiled_circuit.count_ops()
+
+    # Get CX gate count (default to 0 if none found)
+    cx_count = op_counts.get("cx", 0)
+
+    # Get U3 gate count (default to 0 if none found)
+    u3_count = op_counts.get("u3", 0)
+
+    return cx_count, u3_count
