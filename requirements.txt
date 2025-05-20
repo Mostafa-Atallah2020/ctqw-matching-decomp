@@ -2,7 +2,6 @@ matplotlib
 networkx
 scipy
 qiskit==1.2.0
-qiskit-aer==0.15
 pylatexenc
 black[jupyter]
 pyzx

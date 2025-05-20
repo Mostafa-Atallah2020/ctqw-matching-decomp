@@ -1,7 +1,9 @@
 import itertools
 
 import networkx as nx
+from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import RXGate
+from qiskit.quantum_info import Statevector
 
 
 def multi_crx(angle, ctrl_state):
@@ -138,3 +140,68 @@ def estimate_orbit_count(G):
     # Similar to above, NetworkX doesn't have direct equivalent
     # Could use nx.vf2pp_isomorphism but would be much slower
     return len(set(d for _, d in G.degree()))
+
+
+def get_state(circuit=None, initial_state=None):
+    """
+    Evolve a quantum state through a circuit and extract the final state vector.
+
+    Args:
+        `circuit` (`QuantumCircuit`): The quantum circuit to evolve the state through.
+                                  If None, an empty circuit will be created.
+        `initial_state` (`list` or `Statevector`): Initial state. If None, |+⟩ state will be used.
+
+    Returns:
+        `qiskit.Statevector`: The final state vector after evolution
+    """
+    # If no circuit is provided, create an empty one with 1 qubit
+    if circuit is None:
+        circuit = QuantumCircuit(1)
+
+    num_qubits = circuit.num_qubits
+
+    # If no initial state is provided, use |+⟩ state
+    if initial_state is None:
+        # Create |+⟩ state by starting with |0⟩ and applying Hadamard to each qubit
+        plus_circuit = QuantumCircuit(num_qubits)
+        for qubit in range(num_qubits):
+            plus_circuit.h(qubit)
+
+        # Create the |+⟩ state by evolving |0⟩ through Hadamard gates
+        zero_state = Statevector.from_label("0" * num_qubits)
+        initial_state = zero_state.evolve(plus_circuit)
+    elif not isinstance(initial_state, Statevector):
+        initial_state = Statevector(initial_state)
+
+    # Evolve the state through the circuit
+    final_state = initial_state.evolve(circuit)
+
+    return final_state
+
+
+def count_gates(circuit, optimization_level=3):
+    """
+    Count the number of CX and U3 gates in a Qiskit quantum circuit after transpilation.
+
+    Args:
+        circuit (QuantumCircuit): The quantum circuit to analyze
+        optimization_level (int): Optimization level for transpilation (0-3, default=3)
+
+    Returns:
+        tuple: A tuple containing (cx_count, u3_count)
+    """
+    # Transpile the circuit with the specified optimization level
+    transpiled_circuit = transpile(
+        circuit, basis_gates=["cx", "u3"], optimization_level=optimization_level
+    )
+
+    # Get the operation counts dictionary
+    op_counts = transpiled_circuit.count_ops()
+
+    # Get CX gate count (default to 0 if none found)
+    cx_count = op_counts.get("cx", 0)
+
+    # Get U3 gate count (default to 0 if none found)
+    u3_count = op_counts.get("u3", 0)
+
+    return cx_count, u3_count
