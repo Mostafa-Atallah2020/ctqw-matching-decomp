@@ -1,0 +1,1182 @@
+[2025-01-04 10:45:23] Starting analysis with:
+[2025-01-04 10:45:23] Number of qubits: 3
+[2025-01-04 10:45:23] Number of vertices: 8
+[2025-01-04 10:45:23] Delta t: 0.1
+[2025-01-04 10:45:23] Input file: ../data/graphs/100graph_50-50_8c.g6
+[2025-01-04 10:45:41] Starting analysis with:
+[2025-01-04 10:45:41] Number of qubits: 3
+[2025-01-04 10:45:41] Number of vertices: 8
+[2025-01-04 10:45:41] Delta t: 0.1
+[2025-01-04 10:45:41] Input file: ../data/graphs/100graph_50-50_8c.g6
+[2025-01-04 10:45:41] Parsed graph info: {'num_graphs': 100, 'size': '50-50', 'vertices': '8', 'type': 'c'}
+[2025-01-04 10:45:41] Found 100 graphs in file
+[2025-01-04 10:45:41] 
+Processing graph 0/100
+[2025-01-04 10:45:41] Graph 0 has 8 nodes and 15 edges
+[2025-01-04 10:45:41] Converted to 15 bitstring edges
+[2025-01-04 10:45:41] Computing Matchings Dynamic walk
+[2025-01-04 10:45:41] Matchings - CX: 7, U3: 10, Depth: 12
+[2025-01-04 10:45:41] Computing Exact walk
+[2025-01-04 10:45:41] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:41] Computing Pauli decomposition
+[2025-01-04 10:45:41] Pauli - CX: 15, U3: 21, Depth: 28
+[2025-01-04 10:45:41] Successfully processed graph 0 - Category: win_both
+[2025-01-04 10:45:41] 
+Processing graph 1/100
+[2025-01-04 10:45:41] Graph 1 has 8 nodes and 7 edges
+[2025-01-04 10:45:41] Converted to 7 bitstring edges
+[2025-01-04 10:45:41] Computing Matchings Dynamic walk
+[2025-01-04 10:45:41] Matchings - CX: 20, U3: 22, Depth: 33
+[2025-01-04 10:45:41] Computing Exact walk
+[2025-01-04 10:45:41] Exact - CX: 20, U3: 36, Depth: 40
+[2025-01-04 10:45:41] Computing Pauli decomposition
+[2025-01-04 10:45:42] Pauli - CX: 12, U3: 25, Depth: 25
+[2025-01-04 10:45:42] Successfully processed graph 1 - Category: draw_exact_lose_pauli
+[2025-01-04 10:45:42] 
+Processing graph 2/100
+[2025-01-04 10:45:42] Graph 2 has 8 nodes and 25 edges
+[2025-01-04 10:45:42] Converted to 25 bitstring edges
+[2025-01-04 10:45:42] Computing Matchings Dynamic walk
+[2025-01-04 10:45:42] Matchings - CX: 48, U3: 51, Depth: 75
+[2025-01-04 10:45:42] Computing Exact walk
+[2025-01-04 10:45:42] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:42] Computing Pauli decomposition
+[2025-01-04 10:45:42] Pauli - CX: 20, U3: 34, Depth: 37
+[2025-01-04 10:45:42] Successfully processed graph 2 - Category: lose_both
+[2025-01-04 10:45:42] 
+Processing graph 3/100
+[2025-01-04 10:45:42] Graph 3 has 8 nodes and 26 edges
+[2025-01-04 10:45:42] Converted to 26 bitstring edges
+[2025-01-04 10:45:42] Computing Matchings Dynamic walk
+[2025-01-04 10:45:43] Matchings - CX: 35, U3: 35, Depth: 54
+[2025-01-04 10:45:43] Computing Exact walk
+[2025-01-04 10:45:43] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:43] Computing Pauli decomposition
+[2025-01-04 10:45:43] Pauli - CX: 21, U3: 33, Depth: 40
+[2025-01-04 10:45:43] Successfully processed graph 3 - Category: lose_both
+[2025-01-04 10:45:43] 
+Processing graph 4/100
+[2025-01-04 10:45:43] Graph 4 has 8 nodes and 11 edges
+[2025-01-04 10:45:43] Converted to 11 bitstring edges
+[2025-01-04 10:45:43] Computing Matchings Dynamic walk
+[2025-01-04 10:45:43] Matchings - CX: 12, U3: 18, Depth: 22
+[2025-01-04 10:45:43] Computing Exact walk
+[2025-01-04 10:45:43] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:43] Computing Pauli decomposition
+[2025-01-04 10:45:44] Pauli - CX: 9, U3: 20, Depth: 19
+[2025-01-04 10:45:44] Successfully processed graph 4 - Category: win_exact_lose_pauli
+[2025-01-04 10:45:44] 
+Processing graph 5/100
+[2025-01-04 10:45:44] Graph 5 has 8 nodes and 7 edges
+[2025-01-04 10:45:44] Converted to 7 bitstring edges
+[2025-01-04 10:45:44] Computing Matchings Dynamic walk
+[2025-01-04 10:45:44] Matchings - CX: 16, U3: 17, Depth: 25
+[2025-01-04 10:45:44] Computing Exact walk
+[2025-01-04 10:45:44] Exact - CX: 19, U3: 31, Depth: 36
+[2025-01-04 10:45:44] Computing Pauli decomposition
+[2025-01-04 10:45:44] Pauli - CX: 9, U3: 14, Depth: 18
+[2025-01-04 10:45:44] Successfully processed graph 5 - Category: win_exact_lose_pauli
+[2025-01-04 10:45:44] 
+Processing graph 6/100
+[2025-01-04 10:45:44] Graph 6 has 8 nodes and 10 edges
+[2025-01-04 10:45:44] Converted to 10 bitstring edges
+[2025-01-04 10:45:44] Computing Matchings Dynamic walk
+[2025-01-04 10:45:44] Matchings - CX: 9, U3: 12, Depth: 16
+[2025-01-04 10:45:44] Computing Exact walk
+[2025-01-04 10:45:44] Exact - CX: 20, U3: 36, Depth: 41
+[2025-01-04 10:45:44] Computing Pauli decomposition
+[2025-01-04 10:45:44] Pauli - CX: 10, U3: 19, Depth: 20
+[2025-01-04 10:45:44] Successfully processed graph 6 - Category: win_both
+[2025-01-04 10:45:44] 
+Processing graph 7/100
+[2025-01-04 10:45:44] Graph 7 has 8 nodes and 13 edges
+[2025-01-04 10:45:44] Converted to 13 bitstring edges
+[2025-01-04 10:45:44] Computing Matchings Dynamic walk
+[2025-01-04 10:45:44] Matchings - CX: 15, U3: 24, Depth: 28
+[2025-01-04 10:45:44] Computing Exact walk
+[2025-01-04 10:45:45] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:45] Computing Pauli decomposition
+[2025-01-04 10:45:45] Pauli - CX: 18, U3: 35, Depth: 36
+[2025-01-04 10:45:45] Successfully processed graph 7 - Category: win_both
+[2025-01-04 10:45:45] 
+Processing graph 8/100
+[2025-01-04 10:45:45] Graph 8 has 8 nodes and 7 edges
+[2025-01-04 10:45:45] Converted to 7 bitstring edges
+[2025-01-04 10:45:45] Computing Matchings Dynamic walk
+[2025-01-04 10:45:45] Matchings - CX: 9, U3: 11, Depth: 16
+[2025-01-04 10:45:45] Computing Exact walk
+[2025-01-04 10:45:45] Exact - CX: 19, U3: 33, Depth: 38
+[2025-01-04 10:45:45] Computing Pauli decomposition
+[2025-01-04 10:45:45] Pauli - CX: 18, U3: 33, Depth: 35
+[2025-01-04 10:45:45] Successfully processed graph 8 - Category: win_both
+[2025-01-04 10:45:45] 
+Processing graph 9/100
+[2025-01-04 10:45:45] Graph 9 has 8 nodes and 14 edges
+[2025-01-04 10:45:45] Converted to 14 bitstring edges
+[2025-01-04 10:45:45] Computing Matchings Dynamic walk
+[2025-01-04 10:45:45] Matchings - CX: 19, U3: 22, Depth: 31
+[2025-01-04 10:45:45] Computing Exact walk
+[2025-01-04 10:45:46] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:46] Computing Pauli decomposition
+[2025-01-04 10:45:46] Pauli - CX: 23, U3: 39, Depth: 43
+[2025-01-04 10:45:46] Successfully processed graph 9 - Category: win_both
+[2025-01-04 10:45:46] 
+Processing graph 10/100
+[2025-01-04 10:45:46] Graph 10 has 8 nodes and 16 edges
+[2025-01-04 10:45:46] Converted to 16 bitstring edges
+[2025-01-04 10:45:46] Computing Matchings Dynamic walk
+[2025-01-04 10:45:46] Matchings - CX: 55, U3: 60, Depth: 86
+[2025-01-04 10:45:46] Computing Exact walk
+[2025-01-04 10:45:46] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:46] Computing Pauli decomposition
+[2025-01-04 10:45:47] Pauli - CX: 23, U3: 44, Depth: 46
+[2025-01-04 10:45:47] Successfully processed graph 10 - Category: lose_both
+[2025-01-04 10:45:47] 
+Processing graph 11/100
+[2025-01-04 10:45:47] Graph 11 has 8 nodes and 12 edges
+[2025-01-04 10:45:47] Converted to 12 bitstring edges
+[2025-01-04 10:45:47] Computing Matchings Dynamic walk
+[2025-01-04 10:45:47] Matchings - CX: 17, U3: 25, Depth: 30
+[2025-01-04 10:45:47] Computing Exact walk
+[2025-01-04 10:45:47] Exact - CX: 17, U3: 31, Depth: 33
+[2025-01-04 10:45:47] Computing Pauli decomposition
+[2025-01-04 10:45:47] Pauli - CX: 9, U3: 16, Depth: 18
+[2025-01-04 10:45:47] Successfully processed graph 11 - Category: draw_exact_lose_pauli
+[2025-01-04 10:45:47] 
+Processing graph 12/100
+[2025-01-04 10:45:47] Graph 12 has 8 nodes and 24 edges
+[2025-01-04 10:45:47] Converted to 24 bitstring edges
+[2025-01-04 10:45:47] Computing Matchings Dynamic walk
+[2025-01-04 10:45:47] Matchings - CX: 61, U3: 58, Depth: 94
+[2025-01-04 10:45:47] Computing Exact walk
+[2025-01-04 10:45:47] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:47] Computing Pauli decomposition
+[2025-01-04 10:45:48] Pauli - CX: 24, U3: 43, Depth: 45
+[2025-01-04 10:45:48] Successfully processed graph 12 - Category: lose_both
+[2025-01-04 10:45:48] 
+Processing graph 13/100
+[2025-01-04 10:45:48] Graph 13 has 8 nodes and 10 edges
+[2025-01-04 10:45:48] Converted to 10 bitstring edges
+[2025-01-04 10:45:48] Computing Matchings Dynamic walk
+[2025-01-04 10:45:48] Matchings - CX: 10, U3: 13, Depth: 17
+[2025-01-04 10:45:48] Computing Exact walk
+[2025-01-04 10:45:48] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:48] Computing Pauli decomposition
+[2025-01-04 10:45:48] Pauli - CX: 12, U3: 24, Depth: 24
+[2025-01-04 10:45:48] Successfully processed graph 13 - Category: win_both
+[2025-01-04 10:45:48] 
+Processing graph 14/100
+[2025-01-04 10:45:48] Graph 14 has 8 nodes and 14 edges
+[2025-01-04 10:45:48] Converted to 14 bitstring edges
+[2025-01-04 10:45:48] Computing Matchings Dynamic walk
+[2025-01-04 10:45:48] Matchings - CX: 10, U3: 14, Depth: 17
+[2025-01-04 10:45:48] Computing Exact walk
+[2025-01-04 10:45:48] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:48] Computing Pauli decomposition
+[2025-01-04 10:45:49] Pauli - CX: 18, U3: 31, Depth: 35
+[2025-01-04 10:45:49] Successfully processed graph 14 - Category: win_both
+[2025-01-04 10:45:49] 
+Processing graph 15/100
+[2025-01-04 10:45:49] Graph 15 has 8 nodes and 7 edges
+[2025-01-04 10:45:49] Converted to 7 bitstring edges
+[2025-01-04 10:45:49] Computing Matchings Dynamic walk
+[2025-01-04 10:45:49] Matchings - CX: 11, U3: 13, Depth: 19
+[2025-01-04 10:45:49] Computing Exact walk
+[2025-01-04 10:45:49] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:49] Computing Pauli decomposition
+[2025-01-04 10:45:49] Pauli - CX: 13, U3: 29, Depth: 27
+[2025-01-04 10:45:49] Successfully processed graph 15 - Category: win_both
+[2025-01-04 10:45:49] 
+Processing graph 16/100
+[2025-01-04 10:45:49] Graph 16 has 8 nodes and 21 edges
+[2025-01-04 10:45:49] Converted to 21 bitstring edges
+[2025-01-04 10:45:49] Computing Matchings Dynamic walk
+[2025-01-04 10:45:49] Matchings - CX: 26, U3: 30, Depth: 43
+[2025-01-04 10:45:49] Computing Exact walk
+[2025-01-04 10:45:49] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:49] Computing Pauli decomposition
+[2025-01-04 10:45:50] Pauli - CX: 25, U3: 46, Depth: 48
+[2025-01-04 10:45:50] Successfully processed graph 16 - Category: lose_both
+[2025-01-04 10:45:50] 
+Processing graph 17/100
+[2025-01-04 10:45:50] Graph 17 has 8 nodes and 10 edges
+[2025-01-04 10:45:50] Converted to 10 bitstring edges
+[2025-01-04 10:45:50] Computing Matchings Dynamic walk
+[2025-01-04 10:45:50] Matchings - CX: 28, U3: 33, Depth: 47
+[2025-01-04 10:45:50] Computing Exact walk
+[2025-01-04 10:45:50] Exact - CX: 20, U3: 36, Depth: 41
+[2025-01-04 10:45:50] Computing Pauli decomposition
+[2025-01-04 10:45:50] Pauli - CX: 24, U3: 43, Depth: 46
+[2025-01-04 10:45:50] Successfully processed graph 17 - Category: lose_both
+[2025-01-04 10:45:50] 
+Processing graph 18/100
+[2025-01-04 10:45:50] Graph 18 has 8 nodes and 11 edges
+[2025-01-04 10:45:50] Converted to 11 bitstring edges
+[2025-01-04 10:45:50] Computing Matchings Dynamic walk
+[2025-01-04 10:45:50] Matchings - CX: 24, U3: 30, Depth: 42
+[2025-01-04 10:45:50] Computing Exact walk
+[2025-01-04 10:45:50] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:50] Computing Pauli decomposition
+[2025-01-04 10:45:51] Pauli - CX: 28, U3: 49, Depth: 53
+[2025-01-04 10:45:51] Successfully processed graph 18 - Category: win_pauli_lose_exact
+[2025-01-04 10:45:51] 
+Processing graph 19/100
+[2025-01-04 10:45:51] Graph 19 has 8 nodes and 18 edges
+[2025-01-04 10:45:51] Converted to 18 bitstring edges
+[2025-01-04 10:45:51] Computing Matchings Dynamic walk
+[2025-01-04 10:45:51] Matchings - CX: 28, U3: 33, Depth: 46
+[2025-01-04 10:45:51] Computing Exact walk
+[2025-01-04 10:45:51] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:51] Computing Pauli decomposition
+[2025-01-04 10:45:51] Pauli - CX: 25, U3: 44, Depth: 48
+[2025-01-04 10:45:51] Successfully processed graph 19 - Category: lose_both
+[2025-01-04 10:45:51] 
+Processing graph 20/100
+[2025-01-04 10:45:51] Graph 20 has 8 nodes and 23 edges
+[2025-01-04 10:45:51] Converted to 23 bitstring edges
+[2025-01-04 10:45:51] Computing Matchings Dynamic walk
+[2025-01-04 10:45:52] Matchings - CX: 75, U3: 72, Depth: 114
+[2025-01-04 10:45:52] Computing Exact walk
+[2025-01-04 10:45:52] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:52] Computing Pauli decomposition
+[2025-01-04 10:45:52] Pauli - CX: 20, U3: 37, Depth: 40
+[2025-01-04 10:45:52] Successfully processed graph 20 - Category: lose_both
+[2025-01-04 10:45:52] 
+Processing graph 21/100
+[2025-01-04 10:45:52] Graph 21 has 8 nodes and 27 edges
+[2025-01-04 10:45:52] Converted to 27 bitstring edges
+[2025-01-04 10:45:52] Computing Matchings Dynamic walk
+[2025-01-04 10:45:52] Matchings - CX: 60, U3: 60, Depth: 93
+[2025-01-04 10:45:52] Computing Exact walk
+[2025-01-04 10:45:52] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:52] Computing Pauli decomposition
+[2025-01-04 10:45:53] Pauli - CX: 11, U3: 23, Depth: 23
+[2025-01-04 10:45:53] Successfully processed graph 21 - Category: lose_both
+[2025-01-04 10:45:53] 
+Processing graph 22/100
+[2025-01-04 10:45:53] Graph 22 has 8 nodes and 9 edges
+[2025-01-04 10:45:53] Converted to 9 bitstring edges
+[2025-01-04 10:45:53] Computing Matchings Dynamic walk
+[2025-01-04 10:45:53] Matchings - CX: 17, U3: 21, Depth: 29
+[2025-01-04 10:45:53] Computing Exact walk
+[2025-01-04 10:45:53] Exact - CX: 19, U3: 34, Depth: 38
+[2025-01-04 10:45:53] Computing Pauli decomposition
+[2025-01-04 10:45:53] Pauli - CX: 12, U3: 25, Depth: 25
+[2025-01-04 10:45:53] Successfully processed graph 22 - Category: win_exact_lose_pauli
+[2025-01-04 10:45:53] 
+Processing graph 23/100
+[2025-01-04 10:45:53] Graph 23 has 8 nodes and 17 edges
+[2025-01-04 10:45:53] Converted to 17 bitstring edges
+[2025-01-04 10:45:53] Computing Matchings Dynamic walk
+[2025-01-04 10:45:53] Matchings - CX: 36, U3: 37, Depth: 55
+[2025-01-04 10:45:53] Computing Exact walk
+[2025-01-04 10:45:53] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:53] Computing Pauli decomposition
+[2025-01-04 10:45:54] Pauli - CX: 25, U3: 45, Depth: 48
+[2025-01-04 10:45:54] Successfully processed graph 23 - Category: lose_both
+[2025-01-04 10:45:54] 
+Processing graph 24/100
+[2025-01-04 10:45:54] Graph 24 has 8 nodes and 8 edges
+[2025-01-04 10:45:54] Converted to 8 bitstring edges
+[2025-01-04 10:45:54] Computing Matchings Dynamic walk
+[2025-01-04 10:45:54] Matchings - CX: 7, U3: 10, Depth: 12
+[2025-01-04 10:45:54] Computing Exact walk
+[2025-01-04 10:45:54] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:54] Computing Pauli decomposition
+[2025-01-04 10:45:54] Pauli - CX: 10, U3: 21, Depth: 21
+[2025-01-04 10:45:54] Successfully processed graph 24 - Category: win_both
+[2025-01-04 10:45:54] 
+Processing graph 25/100
+[2025-01-04 10:45:54] Graph 25 has 8 nodes and 8 edges
+[2025-01-04 10:45:54] Converted to 8 bitstring edges
+[2025-01-04 10:45:54] Computing Matchings Dynamic walk
+[2025-01-04 10:45:54] Matchings - CX: 18, U3: 22, Depth: 31
+[2025-01-04 10:45:54] Computing Exact walk
+[2025-01-04 10:45:54] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:54] Computing Pauli decomposition
+[2025-01-04 10:45:55] Pauli - CX: 15, U3: 25, Depth: 29
+[2025-01-04 10:45:55] Successfully processed graph 25 - Category: win_exact_lose_pauli
+[2025-01-04 10:45:55] 
+Processing graph 26/100
+[2025-01-04 10:45:55] Graph 26 has 8 nodes and 10 edges
+[2025-01-04 10:45:55] Converted to 10 bitstring edges
+[2025-01-04 10:45:55] Computing Matchings Dynamic walk
+[2025-01-04 10:45:55] Matchings - CX: 14, U3: 19, Depth: 24
+[2025-01-04 10:45:55] Computing Exact walk
+[2025-01-04 10:45:55] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:55] Computing Pauli decomposition
+[2025-01-04 10:45:55] Pauli - CX: 18, U3: 32, Depth: 36
+[2025-01-04 10:45:55] Successfully processed graph 26 - Category: win_both
+[2025-01-04 10:45:55] 
+Processing graph 27/100
+[2025-01-04 10:45:55] Graph 27 has 8 nodes and 8 edges
+[2025-01-04 10:45:55] Converted to 8 bitstring edges
+[2025-01-04 10:45:55] Computing Matchings Dynamic walk
+[2025-01-04 10:45:55] Matchings - CX: 24, U3: 26, Depth: 38
+[2025-01-04 10:45:55] Computing Exact walk
+[2025-01-04 10:45:55] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:55] Computing Pauli decomposition
+[2025-01-04 10:45:56] Pauli - CX: 20, U3: 34, Depth: 39
+[2025-01-04 10:45:56] Successfully processed graph 27 - Category: lose_both
+[2025-01-04 10:45:56] 
+Processing graph 28/100
+[2025-01-04 10:45:56] Graph 28 has 8 nodes and 9 edges
+[2025-01-04 10:45:56] Converted to 9 bitstring edges
+[2025-01-04 10:45:56] Computing Matchings Dynamic walk
+[2025-01-04 10:45:56] Matchings - CX: 12, U3: 18, Depth: 22
+[2025-01-04 10:45:56] Computing Exact walk
+[2025-01-04 10:45:56] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:56] Computing Pauli decomposition
+[2025-01-04 10:45:56] Pauli - CX: 18, U3: 32, Depth: 35
+[2025-01-04 10:45:56] Successfully processed graph 28 - Category: win_both
+[2025-01-04 10:45:56] 
+Processing graph 29/100
+[2025-01-04 10:45:56] Graph 29 has 8 nodes and 8 edges
+[2025-01-04 10:45:56] Converted to 8 bitstring edges
+[2025-01-04 10:45:56] Computing Matchings Dynamic walk
+[2025-01-04 10:45:56] Matchings - CX: 6, U3: 6, Depth: 9
+[2025-01-04 10:45:56] Computing Exact walk
+[2025-01-04 10:45:56] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:56] Computing Pauli decomposition
+[2025-01-04 10:45:56] Pauli - CX: 12, U3: 22, Depth: 23
+[2025-01-04 10:45:56] Successfully processed graph 29 - Category: win_both
+[2025-01-04 10:45:56] 
+Processing graph 30/100
+[2025-01-04 10:45:56] Graph 30 has 8 nodes and 15 edges
+[2025-01-04 10:45:56] Converted to 15 bitstring edges
+[2025-01-04 10:45:56] Computing Matchings Dynamic walk
+[2025-01-04 10:45:57] Matchings - CX: 8, U3: 11, Depth: 14
+[2025-01-04 10:45:57] Computing Exact walk
+[2025-01-04 10:45:57] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:57] Computing Pauli decomposition
+[2025-01-04 10:45:57] Pauli - CX: 9, U3: 16, Depth: 18
+[2025-01-04 10:45:57] Successfully processed graph 30 - Category: win_both
+[2025-01-04 10:45:57] 
+Processing graph 31/100
+[2025-01-04 10:45:57] Graph 31 has 8 nodes and 27 edges
+[2025-01-04 10:45:57] Converted to 27 bitstring edges
+[2025-01-04 10:45:57] Computing Matchings Dynamic walk
+[2025-01-04 10:45:57] Matchings - CX: 69, U3: 70, Depth: 107
+[2025-01-04 10:45:57] Computing Exact walk
+[2025-01-04 10:45:57] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:57] Computing Pauli decomposition
+[2025-01-04 10:45:57] Pauli - CX: 11, U3: 19, Depth: 22
+[2025-01-04 10:45:57] Successfully processed graph 31 - Category: lose_both
+[2025-01-04 10:45:57] 
+Processing graph 32/100
+[2025-01-04 10:45:57] Graph 32 has 8 nodes and 12 edges
+[2025-01-04 10:45:57] Converted to 12 bitstring edges
+[2025-01-04 10:45:57] Computing Matchings Dynamic walk
+[2025-01-04 10:45:58] Matchings - CX: 8, U3: 5, Depth: 12
+[2025-01-04 10:45:58] Computing Exact walk
+[2025-01-04 10:45:58] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:58] Computing Pauli decomposition
+[2025-01-04 10:45:58] Pauli - CX: 17, U3: 31, Depth: 33
+[2025-01-04 10:45:58] Successfully processed graph 32 - Category: win_both
+[2025-01-04 10:45:58] 
+Processing graph 33/100
+[2025-01-04 10:45:58] Graph 33 has 8 nodes and 11 edges
+[2025-01-04 10:45:58] Converted to 11 bitstring edges
+[2025-01-04 10:45:58] Computing Matchings Dynamic walk
+[2025-01-04 10:45:58] Matchings - CX: 10, U3: 15, Depth: 18
+[2025-01-04 10:45:58] Computing Exact walk
+[2025-01-04 10:45:58] Exact - CX: 20, U3: 36, Depth: 40
+[2025-01-04 10:45:58] Computing Pauli decomposition
+[2025-01-04 10:45:58] Pauli - CX: 12, U3: 25, Depth: 25
+[2025-01-04 10:45:58] Successfully processed graph 33 - Category: win_both
+[2025-01-04 10:45:58] 
+Processing graph 34/100
+[2025-01-04 10:45:58] Graph 34 has 8 nodes and 7 edges
+[2025-01-04 10:45:58] Converted to 7 bitstring edges
+[2025-01-04 10:45:58] Computing Matchings Dynamic walk
+[2025-01-04 10:45:58] Matchings - CX: 7, U3: 8, Depth: 12
+[2025-01-04 10:45:58] Computing Exact walk
+[2025-01-04 10:45:59] Exact - CX: 20, U3: 36, Depth: 41
+[2025-01-04 10:45:59] Computing Pauli decomposition
+[2025-01-04 10:45:59] Pauli - CX: 18, U3: 34, Depth: 36
+[2025-01-04 10:45:59] Successfully processed graph 34 - Category: win_both
+[2025-01-04 10:45:59] 
+Processing graph 35/100
+[2025-01-04 10:45:59] Graph 35 has 8 nodes and 18 edges
+[2025-01-04 10:45:59] Converted to 18 bitstring edges
+[2025-01-04 10:45:59] Computing Matchings Dynamic walk
+[2025-01-04 10:45:59] Matchings - CX: 39, U3: 42, Depth: 62
+[2025-01-04 10:45:59] Computing Exact walk
+[2025-01-04 10:45:59] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:45:59] Computing Pauli decomposition
+[2025-01-04 10:45:59] Pauli - CX: 21, U3: 36, Depth: 39
+[2025-01-04 10:45:59] Successfully processed graph 35 - Category: lose_both
+[2025-01-04 10:45:59] 
+Processing graph 36/100
+[2025-01-04 10:45:59] Graph 36 has 8 nodes and 19 edges
+[2025-01-04 10:45:59] Converted to 19 bitstring edges
+[2025-01-04 10:45:59] Computing Matchings Dynamic walk
+[2025-01-04 10:46:00] Matchings - CX: 44, U3: 36, Depth: 64
+[2025-01-04 10:46:00] Computing Exact walk
+[2025-01-04 10:46:00] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:00] Computing Pauli decomposition
+[2025-01-04 10:46:00] Pauli - CX: 14, U3: 26, Depth: 28
+[2025-01-04 10:46:00] Successfully processed graph 36 - Category: lose_both
+[2025-01-04 10:46:00] 
+Processing graph 37/100
+[2025-01-04 10:46:00] Graph 37 has 8 nodes and 25 edges
+[2025-01-04 10:46:00] Converted to 25 bitstring edges
+[2025-01-04 10:46:00] Computing Matchings Dynamic walk
+[2025-01-04 10:46:00] Matchings - CX: 31, U3: 32, Depth: 50
+[2025-01-04 10:46:00] Computing Exact walk
+[2025-01-04 10:46:00] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:00] Computing Pauli decomposition
+[2025-01-04 10:46:01] Pauli - CX: 18, U3: 35, Depth: 37
+[2025-01-04 10:46:01] Successfully processed graph 37 - Category: lose_both
+[2025-01-04 10:46:01] 
+Processing graph 38/100
+[2025-01-04 10:46:01] Graph 38 has 8 nodes and 14 edges
+[2025-01-04 10:46:01] Converted to 14 bitstring edges
+[2025-01-04 10:46:01] Computing Matchings Dynamic walk
+[2025-01-04 10:46:01] Matchings - CX: 13, U3: 19, Depth: 22
+[2025-01-04 10:46:01] Computing Exact walk
+[2025-01-04 10:46:01] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:01] Computing Pauli decomposition
+[2025-01-04 10:46:01] Pauli - CX: 9, U3: 15, Depth: 18
+[2025-01-04 10:46:01] Successfully processed graph 38 - Category: win_exact_lose_pauli
+[2025-01-04 10:46:01] 
+Processing graph 39/100
+[2025-01-04 10:46:01] Graph 39 has 8 nodes and 21 edges
+[2025-01-04 10:46:01] Converted to 21 bitstring edges
+[2025-01-04 10:46:01] Computing Matchings Dynamic walk
+[2025-01-04 10:46:01] Matchings - CX: 42, U3: 46, Depth: 66
+[2025-01-04 10:46:01] Computing Exact walk
+[2025-01-04 10:46:02] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:02] Computing Pauli decomposition
+[2025-01-04 10:46:02] Pauli - CX: 14, U3: 30, Depth: 29
+[2025-01-04 10:46:02] Successfully processed graph 39 - Category: lose_both
+[2025-01-04 10:46:02] 
+Processing graph 40/100
+[2025-01-04 10:46:02] Graph 40 has 8 nodes and 14 edges
+[2025-01-04 10:46:02] Converted to 14 bitstring edges
+[2025-01-04 10:46:02] Computing Matchings Dynamic walk
+[2025-01-04 10:46:02] Matchings - CX: 12, U3: 11, Depth: 17
+[2025-01-04 10:46:02] Computing Exact walk
+[2025-01-04 10:46:02] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:02] Computing Pauli decomposition
+[2025-01-04 10:46:03] Pauli - CX: 13, U3: 27, Depth: 26
+[2025-01-04 10:46:03] Successfully processed graph 40 - Category: win_both
+[2025-01-04 10:46:03] 
+Processing graph 41/100
+[2025-01-04 10:46:03] Graph 41 has 8 nodes and 12 edges
+[2025-01-04 10:46:03] Converted to 12 bitstring edges
+[2025-01-04 10:46:03] Computing Matchings Dynamic walk
+[2025-01-04 10:46:03] Matchings - CX: 15, U3: 18, Depth: 25
+[2025-01-04 10:46:03] Computing Exact walk
+[2025-01-04 10:46:03] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:03] Computing Pauli decomposition
+[2025-01-04 10:46:03] Pauli - CX: 18, U3: 31, Depth: 35
+[2025-01-04 10:46:03] Successfully processed graph 41 - Category: win_both
+[2025-01-04 10:46:03] 
+Processing graph 42/100
+[2025-01-04 10:46:03] Graph 42 has 8 nodes and 14 edges
+[2025-01-04 10:46:03] Converted to 14 bitstring edges
+[2025-01-04 10:46:03] Computing Matchings Dynamic walk
+[2025-01-04 10:46:03] Matchings - CX: 4, U3: 2, Depth: 5
+[2025-01-04 10:46:03] Computing Exact walk
+[2025-01-04 10:46:03] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:03] Computing Pauli decomposition
+[2025-01-04 10:46:04] Pauli - CX: 9, U3: 20, Depth: 19
+[2025-01-04 10:46:04] Successfully processed graph 42 - Category: win_both
+[2025-01-04 10:46:04] 
+Processing graph 43/100
+[2025-01-04 10:46:04] Graph 43 has 8 nodes and 14 edges
+[2025-01-04 10:46:04] Converted to 14 bitstring edges
+[2025-01-04 10:46:04] Computing Matchings Dynamic walk
+[2025-01-04 10:46:04] Matchings - CX: 11, U3: 15, Depth: 20
+[2025-01-04 10:46:04] Computing Exact walk
+[2025-01-04 10:46:04] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:04] Computing Pauli decomposition
+[2025-01-04 10:46:04] Pauli - CX: 9, U3: 20, Depth: 19
+[2025-01-04 10:46:04] Successfully processed graph 43 - Category: win_exact_lose_pauli
+[2025-01-04 10:46:04] 
+Processing graph 44/100
+[2025-01-04 10:46:04] Graph 44 has 8 nodes and 19 edges
+[2025-01-04 10:46:04] Converted to 19 bitstring edges
+[2025-01-04 10:46:04] Computing Matchings Dynamic walk
+[2025-01-04 10:46:04] Matchings - CX: 58, U3: 60, Depth: 90
+[2025-01-04 10:46:04] Computing Exact walk
+[2025-01-04 10:46:05] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:05] Computing Pauli decomposition
+[2025-01-04 10:46:05] Pauli - CX: 20, U3: 35, Depth: 39
+[2025-01-04 10:46:05] Successfully processed graph 44 - Category: lose_both
+[2025-01-04 10:46:05] 
+Processing graph 45/100
+[2025-01-04 10:46:05] Graph 45 has 8 nodes and 12 edges
+[2025-01-04 10:46:05] Converted to 12 bitstring edges
+[2025-01-04 10:46:05] Computing Matchings Dynamic walk
+[2025-01-04 10:46:05] Matchings - CX: 13, U3: 22, Depth: 24
+[2025-01-04 10:46:05] Computing Exact walk
+[2025-01-04 10:46:05] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:05] Computing Pauli decomposition
+[2025-01-04 10:46:05] Pauli - CX: 18, U3: 35, Depth: 36
+[2025-01-04 10:46:05] Successfully processed graph 45 - Category: win_both
+[2025-01-04 10:46:05] 
+Processing graph 46/100
+[2025-01-04 10:46:05] Graph 46 has 8 nodes and 14 edges
+[2025-01-04 10:46:05] Converted to 14 bitstring edges
+[2025-01-04 10:46:05] Computing Matchings Dynamic walk
+[2025-01-04 10:46:06] Matchings - CX: 6, U3: 6, Depth: 9
+[2025-01-04 10:46:06] Computing Exact walk
+[2025-01-04 10:46:06] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:06] Computing Pauli decomposition
+[2025-01-04 10:46:06] Pauli - CX: 13, U3: 24, Depth: 26
+[2025-01-04 10:46:06] Successfully processed graph 46 - Category: win_both
+[2025-01-04 10:46:06] 
+Processing graph 47/100
+[2025-01-04 10:46:06] Graph 47 has 8 nodes and 15 edges
+[2025-01-04 10:46:06] Converted to 15 bitstring edges
+[2025-01-04 10:46:06] Computing Matchings Dynamic walk
+[2025-01-04 10:46:06] Matchings - CX: 4, U3: 2, Depth: 5
+[2025-01-04 10:46:06] Computing Exact walk
+[2025-01-04 10:46:06] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:06] Computing Pauli decomposition
+[2025-01-04 10:46:06] Pauli - CX: 9, U3: 20, Depth: 19
+[2025-01-04 10:46:06] Successfully processed graph 47 - Category: win_both
+[2025-01-04 10:46:06] 
+Processing graph 48/100
+[2025-01-04 10:46:06] Graph 48 has 8 nodes and 12 edges
+[2025-01-04 10:46:06] Converted to 12 bitstring edges
+[2025-01-04 10:46:06] Computing Matchings Dynamic walk
+[2025-01-04 10:46:07] Matchings - CX: 29, U3: 32, Depth: 47
+[2025-01-04 10:46:07] Computing Exact walk
+[2025-01-04 10:46:07] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:07] Computing Pauli decomposition
+[2025-01-04 10:46:07] Pauli - CX: 23, U3: 39, Depth: 43
+[2025-01-04 10:46:07] Successfully processed graph 48 - Category: lose_both
+[2025-01-04 10:46:07] 
+Processing graph 49/100
+[2025-01-04 10:46:07] Graph 49 has 8 nodes and 8 edges
+[2025-01-04 10:46:07] Converted to 8 bitstring edges
+[2025-01-04 10:46:07] Computing Matchings Dynamic walk
+[2025-01-04 10:46:07] Matchings - CX: 9, U3: 11, Depth: 16
+[2025-01-04 10:46:07] Computing Exact walk
+[2025-01-04 10:46:07] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:07] Computing Pauli decomposition
+[2025-01-04 10:46:08] Pauli - CX: 18, U3: 35, Depth: 36
+[2025-01-04 10:46:08] Successfully processed graph 49 - Category: win_both
+[2025-01-04 10:46:08] 
+Processing graph 50/100
+[2025-01-04 10:46:08] Graph 50 has 8 nodes and 14 edges
+[2025-01-04 10:46:08] Converted to 14 bitstring edges
+[2025-01-04 10:46:08] Computing Matchings Dynamic walk
+[2025-01-04 10:46:08] Matchings - CX: 6, U3: 6, Depth: 9
+[2025-01-04 10:46:08] Computing Exact walk
+[2025-01-04 10:46:08] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:08] Computing Pauli decomposition
+[2025-01-04 10:46:08] Pauli - CX: 15, U3: 25, Depth: 29
+[2025-01-04 10:46:08] Successfully processed graph 50 - Category: win_both
+[2025-01-04 10:46:08] 
+Processing graph 51/100
+[2025-01-04 10:46:08] Graph 51 has 8 nodes and 15 edges
+[2025-01-04 10:46:08] Converted to 15 bitstring edges
+[2025-01-04 10:46:08] Computing Matchings Dynamic walk
+[2025-01-04 10:46:08] Matchings - CX: 4, U3: 2, Depth: 5
+[2025-01-04 10:46:08] Computing Exact walk
+[2025-01-04 10:46:08] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:08] Computing Pauli decomposition
+[2025-01-04 10:46:09] Pauli - CX: 9, U3: 20, Depth: 19
+[2025-01-04 10:46:09] Successfully processed graph 51 - Category: win_both
+[2025-01-04 10:46:09] 
+Processing graph 52/100
+[2025-01-04 10:46:09] Graph 52 has 8 nodes and 7 edges
+[2025-01-04 10:46:09] Converted to 7 bitstring edges
+[2025-01-04 10:46:09] Computing Matchings Dynamic walk
+[2025-01-04 10:46:09] Matchings - CX: 15, U3: 20, Depth: 25
+[2025-01-04 10:46:09] Computing Exact walk
+[2025-01-04 10:46:09] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:09] Computing Pauli decomposition
+[2025-01-04 10:46:09] Pauli - CX: 18, U3: 34, Depth: 36
+[2025-01-04 10:46:09] Successfully processed graph 52 - Category: win_both
+[2025-01-04 10:46:09] 
+Processing graph 53/100
+[2025-01-04 10:46:09] Graph 53 has 8 nodes and 13 edges
+[2025-01-04 10:46:09] Converted to 13 bitstring edges
+[2025-01-04 10:46:09] Computing Matchings Dynamic walk
+[2025-01-04 10:46:09] Matchings - CX: 13, U3: 15, Depth: 20
+[2025-01-04 10:46:09] Computing Exact walk
+[2025-01-04 10:46:09] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:09] Computing Pauli decomposition
+[2025-01-04 10:46:10] Pauli - CX: 21, U3: 41, Depth: 42
+[2025-01-04 10:46:10] Successfully processed graph 53 - Category: win_both
+[2025-01-04 10:46:10] 
+Processing graph 54/100
+[2025-01-04 10:46:10] Graph 54 has 8 nodes and 8 edges
+[2025-01-04 10:46:10] Converted to 8 bitstring edges
+[2025-01-04 10:46:10] Computing Matchings Dynamic walk
+[2025-01-04 10:46:10] Matchings - CX: 14, U3: 15, Depth: 22
+[2025-01-04 10:46:10] Computing Exact walk
+[2025-01-04 10:46:10] Exact - CX: 20, U3: 36, Depth: 40
+[2025-01-04 10:46:10] Computing Pauli decomposition
+[2025-01-04 10:46:10] Pauli - CX: 18, U3: 32, Depth: 35
+[2025-01-04 10:46:10] Successfully processed graph 54 - Category: win_both
+[2025-01-04 10:46:10] 
+Processing graph 55/100
+[2025-01-04 10:46:10] Graph 55 has 8 nodes and 14 edges
+[2025-01-04 10:46:10] Converted to 14 bitstring edges
+[2025-01-04 10:46:10] Computing Matchings Dynamic walk
+[2025-01-04 10:46:10] Matchings - CX: 40, U3: 47, Depth: 63
+[2025-01-04 10:46:10] Computing Exact walk
+[2025-01-04 10:46:11] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:11] Computing Pauli decomposition
+[2025-01-04 10:46:11] Pauli - CX: 24, U3: 48, Depth: 49
+[2025-01-04 10:46:11] Successfully processed graph 55 - Category: lose_both
+[2025-01-04 10:46:11] 
+Processing graph 56/100
+[2025-01-04 10:46:11] Graph 56 has 8 nodes and 24 edges
+[2025-01-04 10:46:11] Converted to 24 bitstring edges
+[2025-01-04 10:46:11] Computing Matchings Dynamic walk
+[2025-01-04 10:46:11] Matchings - CX: 61, U3: 63, Depth: 95
+[2025-01-04 10:46:11] Computing Exact walk
+[2025-01-04 10:46:11] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:11] Computing Pauli decomposition
+[2025-01-04 10:46:12] Pauli - CX: 21, U3: 33, Depth: 40
+[2025-01-04 10:46:12] Successfully processed graph 56 - Category: lose_both
+[2025-01-04 10:46:12] 
+Processing graph 57/100
+[2025-01-04 10:46:12] Graph 57 has 8 nodes and 15 edges
+[2025-01-04 10:46:12] Converted to 15 bitstring edges
+[2025-01-04 10:46:12] Computing Matchings Dynamic walk
+[2025-01-04 10:46:12] Matchings - CX: 21, U3: 27, Depth: 35
+[2025-01-04 10:46:12] Computing Exact walk
+[2025-01-04 10:46:12] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:12] Computing Pauli decomposition
+[2025-01-04 10:46:12] Pauli - CX: 15, U3: 21, Depth: 28
+[2025-01-04 10:46:12] Successfully processed graph 57 - Category: lose_both
+[2025-01-04 10:46:12] 
+Processing graph 58/100
+[2025-01-04 10:46:12] Graph 58 has 8 nodes and 7 edges
+[2025-01-04 10:46:12] Converted to 7 bitstring edges
+[2025-01-04 10:46:12] Computing Matchings Dynamic walk
+[2025-01-04 10:46:12] Matchings - CX: 12, U3: 13, Depth: 18
+[2025-01-04 10:46:12] Computing Exact walk
+[2025-01-04 10:46:12] Exact - CX: 19, U3: 34, Depth: 39
+[2025-01-04 10:46:12] Computing Pauli decomposition
+[2025-01-04 10:46:13] Pauli - CX: 15, U3: 29, Depth: 30
+[2025-01-04 10:46:13] Successfully processed graph 58 - Category: win_both
+[2025-01-04 10:46:13] 
+Processing graph 59/100
+[2025-01-04 10:46:13] Graph 59 has 8 nodes and 21 edges
+[2025-01-04 10:46:13] Converted to 21 bitstring edges
+[2025-01-04 10:46:13] Computing Matchings Dynamic walk
+[2025-01-04 10:46:13] Matchings - CX: 61, U3: 66, Depth: 98
+[2025-01-04 10:46:13] Computing Exact walk
+[2025-01-04 10:46:13] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:13] Computing Pauli decomposition
+[2025-01-04 10:46:13] Pauli - CX: 29, U3: 50, Depth: 55
+[2025-01-04 10:46:13] Successfully processed graph 59 - Category: lose_both
+[2025-01-04 10:46:13] 
+Processing graph 60/100
+[2025-01-04 10:46:13] Graph 60 has 8 nodes and 7 edges
+[2025-01-04 10:46:13] Converted to 7 bitstring edges
+[2025-01-04 10:46:13] Computing Matchings Dynamic walk
+[2025-01-04 10:46:13] Matchings - CX: 6, U3: 3, Depth: 9
+[2025-01-04 10:46:13] Computing Exact walk
+[2025-01-04 10:46:14] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:14] Computing Pauli decomposition
+[2025-01-04 10:46:14] Pauli - CX: 12, U3: 23, Depth: 24
+[2025-01-04 10:46:14] Successfully processed graph 60 - Category: win_both
+[2025-01-04 10:46:14] 
+Processing graph 61/100
+[2025-01-04 10:46:14] Graph 61 has 8 nodes and 15 edges
+[2025-01-04 10:46:14] Converted to 15 bitstring edges
+[2025-01-04 10:46:14] Computing Matchings Dynamic walk
+[2025-01-04 10:46:14] Matchings - CX: 32, U3: 33, Depth: 52
+[2025-01-04 10:46:14] Computing Exact walk
+[2025-01-04 10:46:14] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:14] Computing Pauli decomposition
+[2025-01-04 10:46:14] Pauli - CX: 30, U3: 53, Depth: 57
+[2025-01-04 10:46:14] Successfully processed graph 61 - Category: lose_both
+[2025-01-04 10:46:14] 
+Processing graph 62/100
+[2025-01-04 10:46:14] Graph 62 has 8 nodes and 25 edges
+[2025-01-04 10:46:14] Converted to 25 bitstring edges
+[2025-01-04 10:46:14] Computing Matchings Dynamic walk
+[2025-01-04 10:46:15] Matchings - CX: 72, U3: 74, Depth: 111
+[2025-01-04 10:46:15] Computing Exact walk
+[2025-01-04 10:46:15] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:15] Computing Pauli decomposition
+[2025-01-04 10:46:15] Pauli - CX: 21, U3: 36, Depth: 41
+[2025-01-04 10:46:15] Successfully processed graph 62 - Category: lose_both
+[2025-01-04 10:46:15] 
+Processing graph 63/100
+[2025-01-04 10:46:15] Graph 63 has 8 nodes and 10 edges
+[2025-01-04 10:46:15] Converted to 10 bitstring edges
+[2025-01-04 10:46:15] Computing Matchings Dynamic walk
+[2025-01-04 10:46:15] Matchings - CX: 37, U3: 33, Depth: 54
+[2025-01-04 10:46:15] Computing Exact walk
+[2025-01-04 10:46:15] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:15] Computing Pauli decomposition
+[2025-01-04 10:46:16] Pauli - CX: 29, U3: 50, Depth: 55
+[2025-01-04 10:46:16] Successfully processed graph 63 - Category: lose_both
+[2025-01-04 10:46:16] 
+Processing graph 64/100
+[2025-01-04 10:46:16] Graph 64 has 8 nodes and 8 edges
+[2025-01-04 10:46:16] Converted to 8 bitstring edges
+[2025-01-04 10:46:16] Computing Matchings Dynamic walk
+[2025-01-04 10:46:16] Matchings - CX: 11, U3: 17, Depth: 19
+[2025-01-04 10:46:16] Computing Exact walk
+[2025-01-04 10:46:16] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:16] Computing Pauli decomposition
+[2025-01-04 10:46:16] Pauli - CX: 13, U3: 29, Depth: 27
+[2025-01-04 10:46:16] Successfully processed graph 64 - Category: win_both
+[2025-01-04 10:46:16] 
+Processing graph 65/100
+[2025-01-04 10:46:16] Graph 65 has 8 nodes and 12 edges
+[2025-01-04 10:46:16] Converted to 12 bitstring edges
+[2025-01-04 10:46:16] Computing Matchings Dynamic walk
+[2025-01-04 10:46:16] Matchings - CX: 12, U3: 14, Depth: 20
+[2025-01-04 10:46:16] Computing Exact walk
+[2025-01-04 10:46:16] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:16] Computing Pauli decomposition
+[2025-01-04 10:46:17] Pauli - CX: 20, U3: 37, Depth: 39
+[2025-01-04 10:46:17] Successfully processed graph 65 - Category: win_both
+[2025-01-04 10:46:17] 
+Processing graph 66/100
+[2025-01-04 10:46:17] Graph 66 has 8 nodes and 7 edges
+[2025-01-04 10:46:17] Converted to 7 bitstring edges
+[2025-01-04 10:46:17] Computing Matchings Dynamic walk
+[2025-01-04 10:46:17] Matchings - CX: 7, U3: 8, Depth: 12
+[2025-01-04 10:46:17] Computing Exact walk
+[2025-01-04 10:46:17] Exact - CX: 17, U3: 31, Depth: 33
+[2025-01-04 10:46:17] Computing Pauli decomposition
+[2025-01-04 10:46:17] Pauli - CX: 9, U3: 18, Depth: 18
+[2025-01-04 10:46:17] Successfully processed graph 66 - Category: win_both
+[2025-01-04 10:46:17] 
+Processing graph 67/100
+[2025-01-04 10:46:17] Graph 67 has 8 nodes and 7 edges
+[2025-01-04 10:46:17] Converted to 7 bitstring edges
+[2025-01-04 10:46:17] Computing Matchings Dynamic walk
+[2025-01-04 10:46:17] Matchings - CX: 10, U3: 10, Depth: 17
+[2025-01-04 10:46:17] Computing Exact walk
+[2025-01-04 10:46:17] Exact - CX: 19, U3: 35, Depth: 39
+[2025-01-04 10:46:17] Computing Pauli decomposition
+[2025-01-04 10:46:17] Pauli - CX: 13, U3: 26, Depth: 26
+[2025-01-04 10:46:17] Successfully processed graph 67 - Category: win_both
+[2025-01-04 10:46:17] 
+Processing graph 68/100
+[2025-01-04 10:46:17] Graph 68 has 8 nodes and 13 edges
+[2025-01-04 10:46:17] Converted to 13 bitstring edges
+[2025-01-04 10:46:17] Computing Matchings Dynamic walk
+[2025-01-04 10:46:18] Matchings - CX: 22, U3: 28, Depth: 39
+[2025-01-04 10:46:18] Computing Exact walk
+[2025-01-04 10:46:18] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:18] Computing Pauli decomposition
+[2025-01-04 10:46:18] Pauli - CX: 29, U3: 50, Depth: 55
+[2025-01-04 10:46:18] Successfully processed graph 68 - Category: win_pauli_lose_exact
+[2025-01-04 10:46:18] 
+Processing graph 69/100
+[2025-01-04 10:46:18] Graph 69 has 8 nodes and 8 edges
+[2025-01-04 10:46:18] Converted to 8 bitstring edges
+[2025-01-04 10:46:18] Computing Matchings Dynamic walk
+[2025-01-04 10:46:18] Matchings - CX: 9, U3: 11, Depth: 16
+[2025-01-04 10:46:18] Computing Exact walk
+[2025-01-04 10:46:18] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:18] Computing Pauli decomposition
+[2025-01-04 10:46:19] Pauli - CX: 16, U3: 28, Depth: 32
+[2025-01-04 10:46:19] Successfully processed graph 69 - Category: win_both
+[2025-01-04 10:46:19] 
+Processing graph 70/100
+[2025-01-04 10:46:19] Graph 70 has 8 nodes and 26 edges
+[2025-01-04 10:46:19] Converted to 26 bitstring edges
+[2025-01-04 10:46:19] Computing Matchings Dynamic walk
+[2025-01-04 10:46:19] Matchings - CX: 49, U3: 50, Depth: 78
+[2025-01-04 10:46:19] Computing Exact walk
+[2025-01-04 10:46:19] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:19] Computing Pauli decomposition
+[2025-01-04 10:46:19] Pauli - CX: 17, U3: 27, Depth: 31
+[2025-01-04 10:46:19] Successfully processed graph 70 - Category: lose_both
+[2025-01-04 10:46:19] 
+Processing graph 71/100
+[2025-01-04 10:46:19] Graph 71 has 8 nodes and 11 edges
+[2025-01-04 10:46:19] Converted to 11 bitstring edges
+[2025-01-04 10:46:19] Computing Matchings Dynamic walk
+[2025-01-04 10:46:19] Matchings - CX: 6, U3: 3, Depth: 9
+[2025-01-04 10:46:19] Computing Exact walk
+[2025-01-04 10:46:19] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:19] Computing Pauli decomposition
+[2025-01-04 10:46:20] Pauli - CX: 26, U3: 46, Depth: 50
+[2025-01-04 10:46:20] Successfully processed graph 71 - Category: win_both
+[2025-01-04 10:46:20] 
+Processing graph 72/100
+[2025-01-04 10:46:20] Graph 72 has 8 nodes and 25 edges
+[2025-01-04 10:46:20] Converted to 25 bitstring edges
+[2025-01-04 10:46:20] Computing Matchings Dynamic walk
+[2025-01-04 10:46:20] Matchings - CX: 48, U3: 49, Depth: 77
+[2025-01-04 10:46:20] Computing Exact walk
+[2025-01-04 10:46:20] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:20] Computing Pauli decomposition
+[2025-01-04 10:46:20] Pauli - CX: 14, U3: 21, Depth: 24
+[2025-01-04 10:46:20] Successfully processed graph 72 - Category: lose_both
+[2025-01-04 10:46:20] 
+Processing graph 73/100
+[2025-01-04 10:46:20] Graph 73 has 8 nodes and 12 edges
+[2025-01-04 10:46:20] Converted to 12 bitstring edges
+[2025-01-04 10:46:20] Computing Matchings Dynamic walk
+[2025-01-04 10:46:20] Matchings - CX: 8, U3: 11, Depth: 14
+[2025-01-04 10:46:20] Computing Exact walk
+[2025-01-04 10:46:21] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:21] Computing Pauli decomposition
+[2025-01-04 10:46:21] Pauli - CX: 13, U3: 27, Depth: 26
+[2025-01-04 10:46:21] Successfully processed graph 73 - Category: win_both
+[2025-01-04 10:46:21] 
+Processing graph 74/100
+[2025-01-04 10:46:21] Graph 74 has 8 nodes and 25 edges
+[2025-01-04 10:46:21] Converted to 25 bitstring edges
+[2025-01-04 10:46:21] Computing Matchings Dynamic walk
+[2025-01-04 10:46:21] Matchings - CX: 40, U3: 42, Depth: 63
+[2025-01-04 10:46:21] Computing Exact walk
+[2025-01-04 10:46:21] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:21] Computing Pauli decomposition
+[2025-01-04 10:46:21] Pauli - CX: 20, U3: 36, Depth: 39
+[2025-01-04 10:46:21] Successfully processed graph 74 - Category: lose_both
+[2025-01-04 10:46:21] 
+Processing graph 75/100
+[2025-01-04 10:46:21] Graph 75 has 8 nodes and 26 edges
+[2025-01-04 10:46:21] Converted to 26 bitstring edges
+[2025-01-04 10:46:21] Computing Matchings Dynamic walk
+[2025-01-04 10:46:22] Matchings - CX: 52, U3: 54, Depth: 83
+[2025-01-04 10:46:22] Computing Exact walk
+[2025-01-04 10:46:22] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:22] Computing Pauli decomposition
+[2025-01-04 10:46:22] Pauli - CX: 17, U3: 26, Depth: 30
+[2025-01-04 10:46:22] Successfully processed graph 75 - Category: lose_both
+[2025-01-04 10:46:22] 
+Processing graph 76/100
+[2025-01-04 10:46:22] Graph 76 has 8 nodes and 10 edges
+[2025-01-04 10:46:22] Converted to 10 bitstring edges
+[2025-01-04 10:46:22] Computing Matchings Dynamic walk
+[2025-01-04 10:46:22] Matchings - CX: 21, U3: 24, Depth: 34
+[2025-01-04 10:46:22] Computing Exact walk
+[2025-01-04 10:46:22] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:22] Computing Pauli decomposition
+[2025-01-04 10:46:23] Pauli - CX: 26, U3: 43, Depth: 48
+[2025-01-04 10:46:23] Successfully processed graph 76 - Category: win_pauli_lose_exact
+[2025-01-04 10:46:23] 
+Processing graph 77/100
+[2025-01-04 10:46:23] Graph 77 has 8 nodes and 7 edges
+[2025-01-04 10:46:23] Converted to 7 bitstring edges
+[2025-01-04 10:46:23] Computing Matchings Dynamic walk
+[2025-01-04 10:46:23] Matchings - CX: 19, U3: 22, Depth: 30
+[2025-01-04 10:46:23] Computing Exact walk
+[2025-01-04 10:46:23] Exact - CX: 19, U3: 35, Depth: 39
+[2025-01-04 10:46:23] Computing Pauli decomposition
+[2025-01-04 10:46:23] Pauli - CX: 18, U3: 33, Depth: 35
+[2025-01-04 10:46:23] Successfully processed graph 77 - Category: draw_exact_lose_pauli
+[2025-01-04 10:46:23] 
+Processing graph 78/100
+[2025-01-04 10:46:23] Graph 78 has 8 nodes and 20 edges
+[2025-01-04 10:46:23] Converted to 20 bitstring edges
+[2025-01-04 10:46:23] Computing Matchings Dynamic walk
+[2025-01-04 10:46:23] Matchings - CX: 45, U3: 55, Depth: 75
+[2025-01-04 10:46:23] Computing Exact walk
+[2025-01-04 10:46:23] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:23] Computing Pauli decomposition
+[2025-01-04 10:46:24] Pauli - CX: 18, U3: 37, Depth: 37
+[2025-01-04 10:46:24] Successfully processed graph 78 - Category: lose_both
+[2025-01-04 10:46:24] 
+Processing graph 79/100
+[2025-01-04 10:46:24] Graph 79 has 8 nodes and 11 edges
+[2025-01-04 10:46:24] Converted to 11 bitstring edges
+[2025-01-04 10:46:24] Computing Matchings Dynamic walk
+[2025-01-04 10:46:24] Matchings - CX: 4, U3: 6, Depth: 7
+[2025-01-04 10:46:24] Computing Exact walk
+[2025-01-04 10:46:24] Exact - CX: 20, U3: 36, Depth: 41
+[2025-01-04 10:46:24] Computing Pauli decomposition
+[2025-01-04 10:46:24] Pauli - CX: 13, U3: 29, Depth: 27
+[2025-01-04 10:46:24] Successfully processed graph 79 - Category: win_both
+[2025-01-04 10:46:24] 
+Processing graph 80/100
+[2025-01-04 10:46:24] Graph 80 has 8 nodes and 7 edges
+[2025-01-04 10:46:24] Converted to 7 bitstring edges
+[2025-01-04 10:46:24] Computing Matchings Dynamic walk
+[2025-01-04 10:46:24] Matchings - CX: 16, U3: 21, Depth: 28
+[2025-01-04 10:46:24] Computing Exact walk
+[2025-01-04 10:46:24] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:24] Computing Pauli decomposition
+[2025-01-04 10:46:25] Pauli - CX: 18, U3: 34, Depth: 36
+[2025-01-04 10:46:25] Successfully processed graph 80 - Category: win_both
+[2025-01-04 10:46:25] 
+Processing graph 81/100
+[2025-01-04 10:46:25] Graph 81 has 8 nodes and 7 edges
+[2025-01-04 10:46:25] Converted to 7 bitstring edges
+[2025-01-04 10:46:25] Computing Matchings Dynamic walk
+[2025-01-04 10:46:25] Matchings - CX: 15, U3: 16, Depth: 25
+[2025-01-04 10:46:25] Computing Exact walk
+[2025-01-04 10:46:25] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:25] Computing Pauli decomposition
+[2025-01-04 10:46:25] Pauli - CX: 16, U3: 30, Depth: 31
+[2025-01-04 10:46:25] Successfully processed graph 81 - Category: win_both
+[2025-01-04 10:46:25] 
+Processing graph 82/100
+[2025-01-04 10:46:25] Graph 82 has 8 nodes and 11 edges
+[2025-01-04 10:46:25] Converted to 11 bitstring edges
+[2025-01-04 10:46:25] Computing Matchings Dynamic walk
+[2025-01-04 10:46:25] Matchings - CX: 13, U3: 16, Depth: 23
+[2025-01-04 10:46:25] Computing Exact walk
+[2025-01-04 10:46:25] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:25] Computing Pauli decomposition
+[2025-01-04 10:46:26] Pauli - CX: 9, U3: 20, Depth: 19
+[2025-01-04 10:46:26] Successfully processed graph 82 - Category: win_exact_lose_pauli
+[2025-01-04 10:46:26] 
+Processing graph 83/100
+[2025-01-04 10:46:26] Graph 83 has 8 nodes and 11 edges
+[2025-01-04 10:46:26] Converted to 11 bitstring edges
+[2025-01-04 10:46:26] Computing Matchings Dynamic walk
+[2025-01-04 10:46:26] Matchings - CX: 11, U3: 12, Depth: 18
+[2025-01-04 10:46:26] Computing Exact walk
+[2025-01-04 10:46:26] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:26] Computing Pauli decomposition
+[2025-01-04 10:46:26] Pauli - CX: 18, U3: 35, Depth: 36
+[2025-01-04 10:46:26] Successfully processed graph 83 - Category: win_both
+[2025-01-04 10:46:26] 
+Processing graph 84/100
+[2025-01-04 10:46:26] Graph 84 has 8 nodes and 7 edges
+[2025-01-04 10:46:26] Converted to 7 bitstring edges
+[2025-01-04 10:46:26] Computing Matchings Dynamic walk
+[2025-01-04 10:46:26] Matchings - CX: 6, U3: 8, Depth: 10
+[2025-01-04 10:46:26] Computing Exact walk
+[2025-01-04 10:46:26] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:26] Computing Pauli decomposition
+[2025-01-04 10:46:27] Pauli - CX: 13, U3: 29, Depth: 27
+[2025-01-04 10:46:27] Successfully processed graph 84 - Category: win_both
+[2025-01-04 10:46:27] 
+Processing graph 85/100
+[2025-01-04 10:46:27] Graph 85 has 8 nodes and 15 edges
+[2025-01-04 10:46:27] Converted to 15 bitstring edges
+[2025-01-04 10:46:27] Computing Matchings Dynamic walk
+[2025-01-04 10:46:27] Matchings - CX: 11, U3: 15, Depth: 20
+[2025-01-04 10:46:27] Computing Exact walk
+[2025-01-04 10:46:27] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:27] Computing Pauli decomposition
+[2025-01-04 10:46:27] Pauli - CX: 25, U3: 45, Depth: 48
+[2025-01-04 10:46:27] Successfully processed graph 85 - Category: win_both
+[2025-01-04 10:46:27] 
+Processing graph 86/100
+[2025-01-04 10:46:27] Graph 86 has 8 nodes and 21 edges
+[2025-01-04 10:46:27] Converted to 21 bitstring edges
+[2025-01-04 10:46:27] Computing Matchings Dynamic walk
+[2025-01-04 10:46:27] Matchings - CX: 76, U3: 70, Depth: 114
+[2025-01-04 10:46:27] Computing Exact walk
+[2025-01-04 10:46:28] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:28] Computing Pauli decomposition
+[2025-01-04 10:46:28] Pauli - CX: 30, U3: 55, Depth: 58
+[2025-01-04 10:46:28] Successfully processed graph 86 - Category: lose_both
+[2025-01-04 10:46:28] 
+Processing graph 87/100
+[2025-01-04 10:46:28] Graph 87 has 8 nodes and 7 edges
+[2025-01-04 10:46:28] Converted to 7 bitstring edges
+[2025-01-04 10:46:28] Computing Matchings Dynamic walk
+[2025-01-04 10:46:28] Matchings - CX: 12, U3: 17, Depth: 20
+[2025-01-04 10:46:28] Computing Exact walk
+[2025-01-04 10:46:28] Exact - CX: 19, U3: 34, Depth: 39
+[2025-01-04 10:46:28] Computing Pauli decomposition
+[2025-01-04 10:46:28] Pauli - CX: 18, U3: 34, Depth: 36
+[2025-01-04 10:46:28] Successfully processed graph 87 - Category: win_both
+[2025-01-04 10:46:28] 
+Processing graph 88/100
+[2025-01-04 10:46:28] Graph 88 has 8 nodes and 12 edges
+[2025-01-04 10:46:28] Converted to 12 bitstring edges
+[2025-01-04 10:46:28] Computing Matchings Dynamic walk
+[2025-01-04 10:46:28] Matchings - CX: 13, U3: 22, Depth: 24
+[2025-01-04 10:46:28] Computing Exact walk
+[2025-01-04 10:46:29] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:29] Computing Pauli decomposition
+[2025-01-04 10:46:29] Pauli - CX: 18, U3: 35, Depth: 36
+[2025-01-04 10:46:29] Successfully processed graph 88 - Category: win_both
+[2025-01-04 10:46:29] 
+Processing graph 89/100
+[2025-01-04 10:46:29] Graph 89 has 8 nodes and 7 edges
+[2025-01-04 10:46:29] Converted to 7 bitstring edges
+[2025-01-04 10:46:29] Computing Matchings Dynamic walk
+[2025-01-04 10:46:29] Matchings - CX: 16, U3: 17, Depth: 27
+[2025-01-04 10:46:29] Computing Exact walk
+[2025-01-04 10:46:29] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:29] Computing Pauli decomposition
+[2025-01-04 10:46:29] Pauli - CX: 18, U3: 33, Depth: 36
+[2025-01-04 10:46:29] Successfully processed graph 89 - Category: win_both
+[2025-01-04 10:46:29] 
+Processing graph 90/100
+[2025-01-04 10:46:29] Graph 90 has 8 nodes and 8 edges
+[2025-01-04 10:46:29] Converted to 8 bitstring edges
+[2025-01-04 10:46:29] Computing Matchings Dynamic walk
+[2025-01-04 10:46:29] Matchings - CX: 21, U3: 27, Depth: 35
+[2025-01-04 10:46:29] Computing Exact walk
+[2025-01-04 10:46:30] Exact - CX: 13, U3: 28, Depth: 27
+[2025-01-04 10:46:30] Computing Pauli decomposition
+[2025-01-04 10:46:30] Pauli - CX: 6, U3: 10, Depth: 12
+[2025-01-04 10:46:30] Successfully processed graph 90 - Category: lose_both
+[2025-01-04 10:46:30] 
+Processing graph 91/100
+[2025-01-04 10:46:30] Graph 91 has 8 nodes and 7 edges
+[2025-01-04 10:46:30] Converted to 7 bitstring edges
+[2025-01-04 10:46:30] Computing Matchings Dynamic walk
+[2025-01-04 10:46:30] Matchings - CX: 21, U3: 22, Depth: 33
+[2025-01-04 10:46:30] Computing Exact walk
+[2025-01-04 10:46:30] Exact - CX: 19, U3: 33, Depth: 38
+[2025-01-04 10:46:30] Computing Pauli decomposition
+[2025-01-04 10:46:30] Pauli - CX: 9, U3: 21, Depth: 19
+[2025-01-04 10:46:30] Successfully processed graph 91 - Category: lose_both
+[2025-01-04 10:46:30] 
+Processing graph 92/100
+[2025-01-04 10:46:30] Graph 92 has 8 nodes and 7 edges
+[2025-01-04 10:46:30] Converted to 7 bitstring edges
+[2025-01-04 10:46:30] Computing Matchings Dynamic walk
+[2025-01-04 10:46:30] Matchings - CX: 9, U3: 11, Depth: 16
+[2025-01-04 10:46:30] Computing Exact walk
+[2025-01-04 10:46:30] Exact - CX: 20, U3: 35, Depth: 40
+[2025-01-04 10:46:30] Computing Pauli decomposition
+[2025-01-04 10:46:31] Pauli - CX: 9, U3: 21, Depth: 19
+[2025-01-04 10:46:31] Successfully processed graph 92 - Category: win_exact_draw_pauli
+[2025-01-04 10:46:31] 
+Processing graph 93/100
+[2025-01-04 10:46:31] Graph 93 has 8 nodes and 7 edges
+[2025-01-04 10:46:31] Converted to 7 bitstring edges
+[2025-01-04 10:46:31] Computing Matchings Dynamic walk
+[2025-01-04 10:46:31] Matchings - CX: 19, U3: 22, Depth: 31
+[2025-01-04 10:46:31] Computing Exact walk
+[2025-01-04 10:46:31] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:31] Computing Pauli decomposition
+[2025-01-04 10:46:31] Pauli - CX: 13, U3: 27, Depth: 26
+[2025-01-04 10:46:31] Successfully processed graph 93 - Category: win_exact_lose_pauli
+[2025-01-04 10:46:31] 
+Processing graph 94/100
+[2025-01-04 10:46:31] Graph 94 has 8 nodes and 7 edges
+[2025-01-04 10:46:31] Converted to 7 bitstring edges
+[2025-01-04 10:46:31] Computing Matchings Dynamic walk
+[2025-01-04 10:46:31] Matchings - CX: 12, U3: 14, Depth: 19
+[2025-01-04 10:46:31] Computing Exact walk
+[2025-01-04 10:46:31] Exact - CX: 20, U3: 36, Depth: 40
+[2025-01-04 10:46:31] Computing Pauli decomposition
+[2025-01-04 10:46:32] Pauli - CX: 12, U3: 23, Depth: 24
+[2025-01-04 10:46:32] Successfully processed graph 94 - Category: win_exact_draw_pauli
+[2025-01-04 10:46:32] 
+Processing graph 95/100
+[2025-01-04 10:46:32] Graph 95 has 8 nodes and 7 edges
+[2025-01-04 10:46:32] Converted to 7 bitstring edges
+[2025-01-04 10:46:32] Computing Matchings Dynamic walk
+[2025-01-04 10:46:32] Matchings - CX: 10, U3: 13, Depth: 17
+[2025-01-04 10:46:32] Computing Exact walk
+[2025-01-04 10:46:32] Exact - CX: 20, U3: 37, Depth: 41
+[2025-01-04 10:46:32] Computing Pauli decomposition
+[2025-01-04 10:46:32] Pauli - CX: 15, U3: 28, Depth: 30
+[2025-01-04 10:46:32] Successfully processed graph 95 - Category: win_both
+[2025-01-04 10:46:32] 
+Processing graph 96/100
+[2025-01-04 10:46:32] Graph 96 has 8 nodes and 7 edges
+[2025-01-04 10:46:32] Converted to 7 bitstring edges
+[2025-01-04 10:46:32] Computing Matchings Dynamic walk
+[2025-01-04 10:46:32] Matchings - CX: 15, U3: 20, Depth: 26
+[2025-01-04 10:46:32] Computing Exact walk
+[2025-01-04 10:46:32] Exact - CX: 20, U3: 36, Depth: 41
+[2025-01-04 10:46:32] Computing Pauli decomposition
+[2025-01-04 10:46:32] Pauli - CX: 13, U3: 27, Depth: 27
+[2025-01-04 10:46:32] Successfully processed graph 96 - Category: win_exact_lose_pauli
+[2025-01-04 10:46:32] 
+Processing graph 97/100
+[2025-01-04 10:46:32] Graph 97 has 8 nodes and 7 edges
+[2025-01-04 10:46:32] Converted to 7 bitstring edges
+[2025-01-04 10:46:32] Computing Matchings Dynamic walk
+[2025-01-04 10:46:33] Matchings - CX: 12, U3: 14, Depth: 20
+[2025-01-04 10:46:33] Computing Exact walk
+[2025-01-04 10:46:33] Exact - CX: 20, U3: 36, Depth: 41
+[2025-01-04 10:46:33] Computing Pauli decomposition
+[2025-01-04 10:46:33] Pauli - CX: 18, U3: 32, Depth: 35
+[2025-01-04 10:46:33] Successfully processed graph 97 - Category: win_both
+[2025-01-04 10:46:33] 
+Processing graph 98/100
+[2025-01-04 10:46:33] Graph 98 has 8 nodes and 7 edges
+[2025-01-04 10:46:33] Converted to 7 bitstring edges
+[2025-01-04 10:46:33] Computing Matchings Dynamic walk
+[2025-01-04 10:46:33] Matchings - CX: 12, U3: 14, Depth: 20
+[2025-01-04 10:46:33] Computing Exact walk
+[2025-01-04 10:46:33] Exact - CX: 20, U3: 35, Depth: 40
+[2025-01-04 10:46:33] Computing Pauli decomposition
+[2025-01-04 10:46:33] Pauli - CX: 18, U3: 32, Depth: 35
+[2025-01-04 10:46:33] Successfully processed graph 98 - Category: win_both
+[2025-01-04 10:46:33] 
+Processing graph 99/100
+[2025-01-04 10:46:33] Graph 99 has 8 nodes and 7 edges
+[2025-01-04 10:46:33] Converted to 7 bitstring edges
+[2025-01-04 10:46:33] Computing Matchings Dynamic walk
+[2025-01-04 10:46:34] Matchings - CX: 11, U3: 13, Depth: 19
+[2025-01-04 10:46:34] Computing Exact walk
+[2025-01-04 10:46:34] Exact - CX: 20, U3: 36, Depth: 40
+[2025-01-04 10:46:34] Computing Pauli decomposition
+[2025-01-04 10:46:34] Pauli - CX: 13, U3: 25, Depth: 26
+[2025-01-04 10:46:34] Successfully processed graph 99 - Category: win_both
+[2025-01-04 10:46:34] 
+Final Results Summary:
+[2025-01-04 10:46:34] Total graphs in file: 100
+[2025-01-04 10:46:34] Successfully processed: 100
+[2025-01-04 10:46:34] win_both: 50 (50.0%)
+[2025-01-04 10:46:34] lose_both: 33 (33.0%)
+[2025-01-04 10:46:34] draw_both: 0 (0.0%)
+[2025-01-04 10:46:34] win_exact_lose_pauli: 9 (9.0%)
+[2025-01-04 10:46:34] win_pauli_lose_exact: 3 (3.0%)
+[2025-01-04 10:46:34] draw_exact_win_pauli: 0 (0.0%)
+[2025-01-04 10:46:34] draw_exact_lose_pauli: 3 (3.0%)
+[2025-01-04 10:46:34] win_exact_draw_pauli: 2 (2.0%)
+[2025-01-04 10:46:34] lose_exact_draw_pauli: 0 (0.0%)
+[2025-01-04 10:46:34] undefined: 0 (0.0%)
+[2025-01-04 10:46:34] 
+Average Gate Counts by Category:
+[2025-01-04 10:46:34] win_both_matching_cx: 10.14
+[2025-01-04 10:46:34] win_both_matching_u3: 12.38
+[2025-01-04 10:46:34] win_both_exact_cx: 19.86
+[2025-01-04 10:46:34] win_both_exact_u3: 36.46
+[2025-01-04 10:46:34] win_both_pauli_cx: 15.56
+[2025-01-04 10:46:34] win_both_pauli_u3: 29.44
+[2025-01-04 10:46:34] win_both_matching_depth: 17.00
+[2025-01-04 10:46:34] win_both_exact_depth: 40.58
+[2025-01-04 10:46:34] win_both_pauli_depth: 30.88
+[2025-01-04 10:46:34] lose_both_matching_cx: 44.36
+[2025-01-04 10:46:34] lose_both_matching_u3: 46.21
+[2025-01-04 10:46:34] lose_both_exact_cx: 19.76
+[2025-01-04 10:46:34] lose_both_exact_u3: 36.58
+[2025-01-04 10:46:34] lose_both_pauli_cx: 19.97
+[2025-01-04 10:46:34] lose_both_pauli_u3: 35.45
+[2025-01-04 10:46:34] lose_both_matching_depth: 69.61
+[2025-01-04 10:46:34] lose_both_exact_depth: 40.48
+[2025-01-04 10:46:34] lose_both_pauli_depth: 38.55
+[2025-01-04 10:46:34] win_exact_lose_pauli_matching_cx: 14.89
+[2025-01-04 10:46:34] win_exact_lose_pauli_matching_u3: 18.89
+[2025-01-04 10:46:34] win_exact_lose_pauli_exact_cx: 19.78
+[2025-01-04 10:46:34] win_exact_lose_pauli_exact_u3: 35.89
+[2025-01-04 10:46:34] win_exact_lose_pauli_pauli_cx: 10.89
+[2025-01-04 10:46:34] win_exact_lose_pauli_pauli_u3: 21.44
+[2025-01-04 10:46:34] win_exact_lose_pauli_matching_depth: 25.44
+[2025-01-04 10:46:34] win_exact_lose_pauli_exact_depth: 40.11
+[2025-01-04 10:46:34] win_exact_lose_pauli_pauli_depth: 22.22
+[2025-01-04 10:46:34] win_pauli_lose_exact_matching_cx: 22.33
+[2025-01-04 10:46:34] win_pauli_lose_exact_matching_u3: 27.33
+[2025-01-04 10:46:34] win_pauli_lose_exact_exact_cx: 20.00
+[2025-01-04 10:46:34] win_pauli_lose_exact_exact_u3: 37.00
+[2025-01-04 10:46:34] win_pauli_lose_exact_pauli_cx: 27.67
+[2025-01-04 10:46:34] win_pauli_lose_exact_pauli_u3: 47.33
+[2025-01-04 10:46:34] win_pauli_lose_exact_matching_depth: 38.33
+[2025-01-04 10:46:34] win_pauli_lose_exact_exact_depth: 41.00
+[2025-01-04 10:46:34] win_pauli_lose_exact_pauli_depth: 52.00
+[2025-01-04 10:46:34] draw_exact_lose_pauli_matching_cx: 18.67
+[2025-01-04 10:46:34] draw_exact_lose_pauli_matching_u3: 23.00
+[2025-01-04 10:46:34] draw_exact_lose_pauli_exact_cx: 18.67
+[2025-01-04 10:46:34] draw_exact_lose_pauli_exact_u3: 34.00
+[2025-01-04 10:46:34] draw_exact_lose_pauli_pauli_cx: 13.00
+[2025-01-04 10:46:34] draw_exact_lose_pauli_pauli_u3: 24.67
+[2025-01-04 10:46:34] draw_exact_lose_pauli_matching_depth: 31.00
+[2025-01-04 10:46:34] draw_exact_lose_pauli_exact_depth: 37.33
+[2025-01-04 10:46:34] draw_exact_lose_pauli_pauli_depth: 26.00
+[2025-01-04 10:46:34] win_exact_draw_pauli_matching_cx: 10.50
+[2025-01-04 10:46:34] win_exact_draw_pauli_matching_u3: 12.50
+[2025-01-04 10:46:34] win_exact_draw_pauli_exact_cx: 20.00
+[2025-01-04 10:46:34] win_exact_draw_pauli_exact_u3: 35.50
+[2025-01-04 10:46:34] win_exact_draw_pauli_pauli_cx: 10.50
+[2025-01-04 10:46:34] win_exact_draw_pauli_pauli_u3: 22.00
+[2025-01-04 10:46:34] win_exact_draw_pauli_matching_depth: 17.50
+[2025-01-04 10:46:34] win_exact_draw_pauli_exact_depth: 40.00
+[2025-01-04 10:46:34] win_exact_draw_pauli_pauli_depth: 21.50

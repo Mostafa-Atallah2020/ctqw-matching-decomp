@@ -1,5 +1,6 @@
 import itertools
 
+import networkx as nx
 from qiskit.circuit.library import RXGate
 
 
@@ -76,7 +77,7 @@ def lists_to_sets(*lists):
 
 
 def graph_matchings(edges):
-    subgraphs = []  
+    subgraphs = []
     for edge in edges:
         placed = False
         for subgraph in subgraphs:
@@ -84,15 +85,56 @@ def graph_matchings(edges):
                 subgraph.add(edge)
                 placed = True
                 break
-        
+
         if not placed:
             subgraphs.append({edge})
 
     return subgraphs
 
+
 def graph_to_bitstring_edges(graph):
     num_nodes = len(graph.nodes)
     num_bits = len(bin(num_nodes - 1)) - 2  # bin(x) gives '0bxxx', so we subtract 2
-    node_to_bitstring = {node: format(node, f'0{num_bits}b') for node in graph.nodes}
+    node_to_bitstring = {node: format(node, f"0{num_bits}b") for node in graph.nodes}
     edges_bitstring = {(node_to_bitstring[u], node_to_bitstring[v]) for u, v in graph.edges}
     return edges_bitstring
+
+
+def count_edges(G):
+    return nx.number_of_edges(G)
+
+
+def calculate_edge_density(G):
+    # Can use nx.density(G) directly instead of this function
+    return nx.density(G)
+
+
+def is_bipartite(G):
+    return nx.is_bipartite(G)
+
+
+def find_diameter(G):
+    if not nx.is_connected(G):
+        return float("inf")
+    return nx.diameter(G)
+
+
+def find_max_clique(G):
+    return len(max(nx.find_cliques(G), key=len, default=[]))
+
+
+def average_clustering(G):
+    return nx.average_clustering(G)
+
+
+def estimate_group_size(G):
+    # This is a custom metric - NetworkX doesn't have direct equivalent
+    # Could use automorphism groups but would be much slower
+    degree_sequence = [d for _, d in G.degree()]
+    return max(degree_sequence.count(x) for x in set(degree_sequence))
+
+
+def estimate_orbit_count(G):
+    # Similar to above, NetworkX doesn't have direct equivalent
+    # Could use nx.vf2pp_isomorphism but would be much slower
+    return len(set(d for _, d in G.degree()))

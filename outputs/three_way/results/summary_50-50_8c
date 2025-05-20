@@ -1,0 +1,10 @@
+win_both: 50
+lose_both: 33
+draw_both: 0
+win_exact_lose_pauli: 9
+win_pauli_lose_exact: 3
+draw_exact_win_pauli: 0
+draw_exact_lose_pauli: 3
+win_exact_draw_pauli: 2
+lose_exact_draw_pauli: 0
+undefined: 0
