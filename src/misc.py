@@ -1,9 +1,11 @@
 import itertools
+from typing import Dict, Union
 
 import networkx as nx
+import numpy as np
 from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import RXGate
-from qiskit.quantum_info import Statevector
+from qiskit.quantum_info import Statevector, state_fidelity
 
 
 def multi_crx(angle, ctrl_state):
@@ -205,3 +207,191 @@ def count_gates(circuit, optimization_level=3):
     u3_count = op_counts.get("u3", 0)
 
     return cx_count, u3_count
+
+
+def compare_quantum_states(
+    state1: Union[Statevector, np.ndarray],
+    state2: Union[Statevector, np.ndarray],
+    tolerance: float = 1e-10,
+    verbose: bool = True,
+) -> Dict:
+    """
+    Compare two quantum states by calculating fidelity and checking amplitude differences.
+
+    Args:
+        state1: First quantum state (Statevector or numpy array)
+        state2: Second quantum state (Statevector or numpy array)
+        tolerance: Numerical tolerance for amplitude comparison (default: 1e-10)
+        verbose: Whether to print detailed comparison results (default: True)
+
+    Returns:
+        dict: Dictionary containing:
+            - 'fidelity': State fidelity between the two states
+            - 'amplitudes_match': Boolean indicating if amplitudes match within tolerance
+            - 'max_amplitude_diff': Maximum absolute difference between corresponding amplitudes
+            - 'mismatched_indices': List of indices where amplitudes don't match
+            - 'amplitude_differences': Array of all amplitude differences
+            - 'relative_errors': Array of relative errors for non-zero amplitudes
+    """
+
+    # Convert to numpy arrays if they're Statevector objects
+    if hasattr(state1, "data"):
+        amp1 = state1.data
+    else:
+        amp1 = np.array(state1)
+
+    if hasattr(state2, "data"):
+        amp2 = state2.data
+    else:
+        amp2 = np.array(state2)
+
+    # Ensure arrays have the same length
+    if len(amp1) != len(amp2):
+        raise ValueError(f"States must have the same dimension. Got {len(amp1)} and {len(amp2)}")
+
+    # Calculate fidelity
+    fidelity = state_fidelity(state1, state2)
+
+    # Calculate amplitude differences
+    amplitude_diffs = np.abs(amp1 - amp2)
+    max_amplitude_diff = np.max(amplitude_diffs)
+
+    # Find mismatched indices
+    mismatched_indices = np.where(amplitude_diffs > tolerance)[0].tolist()
+    amplitudes_match = len(mismatched_indices) == 0
+
+    # Calculate relative errors for non-zero amplitudes
+    relative_errors = np.zeros_like(amplitude_diffs)
+    non_zero_mask = np.abs(amp1) > tolerance
+    relative_errors[non_zero_mask] = amplitude_diffs[non_zero_mask] / np.abs(amp1[non_zero_mask])
+
+    # Create results dictionary
+    results = {
+        "fidelity": fidelity,
+        "amplitudes_match": amplitudes_match,
+        "max_amplitude_diff": max_amplitude_diff,
+        "mismatched_indices": mismatched_indices,
+        "amplitude_differences": amplitude_diffs,
+        "relative_errors": relative_errors,
+    }
+
+    if verbose:
+        print(f"State Comparison Results:")
+        print(f"========================")
+        print(f"Fidelity: {fidelity:.10f}")
+        print(f"Amplitudes match (tolerance={tolerance}): {amplitudes_match}")
+        print(f"Maximum amplitude difference: {max_amplitude_diff:.2e}")
+
+        if not amplitudes_match:
+            print(f"Number of mismatched amplitudes: {len(mismatched_indices)}")
+            print(f"Mismatched indices: {mismatched_indices}")
+
+            # Show detailed mismatches for first few indices
+            max_show = min(5, len(mismatched_indices))
+            print(f"\nDetailed mismatches (showing first {max_show}):")
+            for i, idx in enumerate(mismatched_indices[:max_show]):
+                state_label = format(idx, f"0{int(np.log2(len(amp1)))}b")
+                print(
+                    f"  |{state_label}⟩: {amp1[idx]:.6f} vs {amp2[idx]:.6f} "
+                    f"(diff: {amplitude_diffs[idx]:.2e}, rel_err: {relative_errors[idx]:.2e})"
+                )
+
+            if len(mismatched_indices) > max_show:
+                print(f"  ... and {len(mismatched_indices) - max_show} more mismatches")
+        else:
+            print("All amplitudes match within tolerance!")
+
+    return results
+
+
+def detailed_state_analysis(
+    state1: Union[Statevector, np.ndarray],
+    state2: Union[Statevector, np.ndarray],
+    tolerance: float = 1e-10,
+) -> None:
+    """
+    Perform detailed analysis of two quantum states, showing all non-zero amplitudes.
+
+    Args:
+        state1: First quantum state
+        state2: Second quantum state
+        tolerance: Threshold for considering amplitudes as non-zero
+    """
+
+    # Get comparison results
+    results = compare_quantum_states(state1, state2, tolerance, verbose=False)
+
+    # Convert to numpy arrays
+    if hasattr(state1, "data"):
+        amp1 = state1.data
+    else:
+        amp1 = np.array(state1)
+
+    if hasattr(state2, "data"):
+        amp2 = state2.data
+    else:
+        amp2 = np.array(state2)
+
+    # Find non-zero amplitudes in either state
+    non_zero_mask = (np.abs(amp1) > tolerance) | (np.abs(amp2) > tolerance)
+    non_zero_indices = np.where(non_zero_mask)[0]
+
+    n_qubits = int(np.log2(len(amp1)))
+
+    print(f"Detailed State Analysis:")
+    print(f"=======================")
+    print(f"Fidelity: {results['fidelity']:.10f}")
+    print(f"Number of qubits: {n_qubits}")
+    print(f"Non-zero amplitudes (tolerance={tolerance}):")
+    print(
+        f"{'State':<{n_qubits+2}} {'Amplitude 1':<15} {'Amplitude 2':<15} {'Difference':<12} {'Match'}"
+    )
+    print("-" * (n_qubits + 50))
+
+    for idx in non_zero_indices:
+        state_label = format(idx, f"0{n_qubits}b")
+        diff = np.abs(amp1[idx] - amp2[idx])
+        match = "✓" if diff <= tolerance else "✗"
+        print(f"|{state_label}⟩ {amp1[idx]:>14.6f} {amp2[idx]:>14.6f} {diff:>11.2e} {match:>5}")
+
+
+# Example usage function that works with your existing code structure
+def analyze_circuit_comparison(qc_original, qc_simplified, tolerance=1e-10):
+    """
+    Analyze the comparison between original and simplified circuits.
+    This function integrates with your existing code structure.
+
+    Args:
+        qc_original: Original quantum circuit
+        qc_simplified: Simplified quantum circuit
+        tolerance: Numerical tolerance for comparison
+    """
+    from src.misc import count_gates, get_state  # Import your functions
+
+    # Get states
+    state_original = get_state(qc_original)
+    state_simplified = get_state(qc_simplified)
+
+    # Get gate counts
+    cx_count, u3_count = count_gates(qc_original)
+    cx_count_simplified, u3_count_simplified = count_gates(qc_simplified)
+
+    print(f"Circuit Comparison Analysis:")
+    print(f"===========================")
+    print(f"Original circuit - CX: {cx_count}, U3: {u3_count}")
+    print(f"Simplified circuit - CX: {cx_count_simplified}, U3: {u3_count_simplified}")
+
+    gate_diff_cx = cx_count - cx_count_simplified
+    gate_diff_u3 = u3_count - u3_count_simplified
+    print(
+        f"CX gate reduction: {gate_diff_cx} ({gate_diff_cx / cx_count * 100 if cx_count > 0 else 0:.2f}%)"
+    )
+    print(
+        f"U3 gate reduction: {gate_diff_u3} ({gate_diff_u3 / u3_count * 100 if u3_count > 0 else 0:.2f}%)"
+    )
+    print()
+
+    # Detailed state comparison
+    results = compare_quantum_states(state_original, state_simplified, tolerance, verbose=False)
+
+    return results
