@@ -1,8 +1,7 @@
 matplotlib
 networkx
 scipy
-qiskit==1.2.0
-pylatexenc
+qiskit[visualization]==2.0.2
 black[jupyter]
 pyzx
 pytest
