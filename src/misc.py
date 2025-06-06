@@ -354,6 +354,8 @@ def detailed_state_analysis(
         match = "✓" if diff <= tolerance else "✗"
         print(f"|{state_label}⟩ {amp1[idx]:>14.6f} {amp2[idx]:>14.6f} {diff:>11.2e} {match:>5}")
 
+    print("")
+
 
 # Example usage function that works with your existing code structure
 def analyze_circuit_comparison(qc_original, qc_simplified, tolerance=1e-10):
