@@ -1,18 +1,22 @@
 # File: src/mcrx_simplifier.py
 """
-MCRX cascade simplification using the complete theoretical framework.
-Implements the general optimization algorithm with integrated Boolean function optimization
-and quantum circuit synthesis.
-
-CORRECTED VERSION: Fixed pattern interpretation to match multi_crx convention and TeX file examples.
+MCRX cascade simplification implementing the algorithm from the tex file.
+Uses SymPy for boolean algebra as described in the paper.
 """
 
 import numpy as np
-from typing import List, Dict, Tuple, Optional, Set, Union
-from collections import defaultdict, Counter
+from typing import List, Dict, Tuple, Optional, Set, Any
+from collections import defaultdict
+import re
 from qiskit import QuantumCircuit
+from qiskit.circuit import Instruction
+import sympy as sp
+from sympy.logic import simplify_logic
+from sympy.logic.boolalg import And, Or, Not, Xor
+from sympy import symbols
 
-from .pattern_analyzer import ControlPatternAnalyzer, PatternRelationship, BooleanFunction
+from .pattern_analyzer import ControlPatternAnalyzer, PatternRelationship
+from .misc import multi_crx
 
 
 class MCRXGateInfo:
@@ -24,599 +28,565 @@ class MCRXGateInfo:
         self.ctrl_qubits = ctrl_qubits
         self.ctrl_state = ctrl_state
         self.pattern = ctrl_state
+        self.n_controls = len(ctrl_qubits)
     
     def __repr__(self):
-        return f"MCRXGateInfo(θ={self.theta:.3f}, target={self.target}, pattern='{self.pattern}')"
+        return f"MCRXGateInfo(θ={self.theta:.3f}, target={self.target}, ctrl={self.ctrl_qubits}, pattern='{self.pattern}')"
 
 
-class QuantumCircuitSynthesizer:
-    """
-    Quantum circuit synthesis for optimized Boolean functions.
-    
-    CORRECTED VERSION: Fixed variable-to-qubit mapping to match TeX file examples.
-    """
+class BooleanOptimizer:
+    """Boolean algebra optimization using SymPy for the algorithm from tex file."""
     
     def __init__(self):
-        pass
+        self.symbol_cache = {}
     
-    def synthesize_circuit(self, optimization_result: Dict, base_angle: float, 
-                          ctrl_qubits: List[int], target: int, n_qubits: int) -> QuantumCircuit:
+    def get_symbols(self, n_bits: int) -> List[sp.Symbol]:
+        """Get SymPy symbols for n bits."""
+        if n_bits not in self.symbol_cache:
+            self.symbol_cache[n_bits] = [sp.Symbol(f'x{i}') for i in range(n_bits)]
+        return self.symbol_cache[n_bits]
+    
+    def state_to_expr(self, state: int, n_bits: int, symbols: List[sp.Symbol]) -> sp.Basic:
         """
-        Synthesize quantum circuit for optimized Boolean function.
+        Convert computational basis state to SymPy boolean expression.
+        From tex: Each state corresponds to a conjunctive term.
         
         Args:
-            optimization_result: Result from Boolean function optimization
-            base_angle: Base rotation angle
-            ctrl_qubits: Control qubit indices (ordered: [x0_qubit, x1_qubit, x2_qubit, ...])
-            target: Target qubit index
-            n_qubits: Total number of qubits in circuit
+            state: Computational basis state (integer)
+            n_bits: Number of bits
+            symbols: SymPy symbols for variables
             
         Returns:
-            Optimized quantum circuit implementing the Boolean function
+            Boolean expression for this state
+        """
+        state_pattern = format(state, f'0{n_bits}b')
+        expr_terms = []
+        
+        for i, bit in enumerate(state_pattern):
+            if bit == '1':
+                expr_terms.append(symbols[i])
+            else:  # bit == '0'
+                expr_terms.append(Not(symbols[i]))
+        
+        if not expr_terms:
+            return sp.true
+        elif len(expr_terms) == 1:
+            return expr_terms[0]
+        else:
+            return And(*expr_terms)
+    
+    def states_to_or_expr(self, states: List[int], n_bits: int) -> Tuple[sp.Basic, List[sp.Symbol]]:
+        """
+        Convert list of computational basis states to OR expression.
+        From tex: Create boolean function for states with same rotation coefficient.
+        
+        Args:
+            states: List of computational basis states
+            n_bits: Number of control bits
+            
+        Returns:
+            Tuple of (OR expression, symbols)
+        """
+        if not states:
+            return sp.false, []
+        
+        symbols = self.get_symbols(n_bits)
+        
+        if len(states) == 1:
+            return self.state_to_expr(states[0], n_bits, symbols), symbols
+        
+        # Multiple states - create OR of all state expressions
+        state_exprs = []
+        for state in states:
+            state_expr = self.state_to_expr(state, n_bits, symbols)
+            state_exprs.append(state_expr)
+        
+        or_expr = Or(*state_exprs)
+        return or_expr, symbols
+    
+    def simplify_boolean_expr(self, expr: sp.Basic) -> sp.Basic:
+        """
+        Simplify boolean expression using SymPy.
+        From tex: Apply boolean algebra simplification.
+        """
+        try:
+            simplified = simplify_logic(expr)
+            return simplified
+        except Exception:
+            return expr
+    
+    def analyze_expr_complexity(self, expr: sp.Basic) -> Dict[str, int]:
+        """Analyze complexity of boolean expression."""
+        expr_str = str(expr)
+        
+        return {
+            'and_ops': expr_str.count('&'),
+            'or_ops': expr_str.count('|'),
+            'not_ops': expr_str.count('~'),
+            'xor_ops': expr_str.count('Xor'),
+            'variables': len(expr.free_symbols),
+            'total_length': len(expr_str)
+        }
+    
+    def expr_to_logical_circuit(self, expr: sp.Basic, symbols: List[sp.Symbol], 
+                               angle: float, target: int, ctrl_qubits: List[int], 
+                               n_qubits: int) -> QuantumCircuit:
+        """
+        Convert simplified boolean expression to logical circuit.
+        From tex: Implement optimized boolean function as quantum circuit.
         """
         circuit = QuantumCircuit(n_qubits)
-        implementation = optimization_result['implementation']
         
-        print(f"      Synthesizing: {implementation['description']}")
+        if expr == sp.true:
+            # Always true - unconditional rotation
+            circuit.rx(angle, target)
+            return circuit
+        elif expr == sp.false:
+            # Never true - no rotation
+            return circuit
         
-        if implementation['type'] == 'none':
-            # No gate needed
-            pass
-            
-        elif implementation['type'] == 'constant':
-            # Unconditional rotation
-            circuit.rx(base_angle, target)
-            print(f"        → RX({base_angle:.4f}, {target})")
-            
-        elif implementation['type'] == 'single_control':
-            # Single controlled gate
-            var_index = implementation['control_qubit']  # This is the variable index (x0, x1, etc.)
+        # Analyze expression structure and create logical circuit
+        self._implement_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
+        return circuit
+    
+    def _implement_expression(self, expr: sp.Basic, symbols: List[sp.Symbol],
+                             angle: float, target: int, ctrl_qubits: List[int],
+                             circuit: QuantumCircuit):
+        """Implement boolean expression as quantum circuit."""
+        
+        if expr.is_Symbol:
+            # Single variable: x_i → CRX(ctrl[i], target)
+            var_index = self._get_symbol_index(expr, symbols)
             if var_index < len(ctrl_qubits):
-                control_qubit = ctrl_qubits[var_index]  # Map to actual qubit
-                circuit.crx(base_angle, control_qubit, target)
-                print(f"        → CRX({base_angle:.4f}, {control_qubit}, {target}) [variable x{var_index}]")
+                circuit.crx(angle, ctrl_qubits[var_index], target)
+            
+        elif isinstance(expr, Not) and expr.args[0].is_Symbol:
+            # Negated variable: ~x_i → X + CRX + X
+            var_index = self._get_symbol_index(expr.args[0], symbols)
+            if var_index < len(ctrl_qubits):
+                circuit.x(ctrl_qubits[var_index])
+                circuit.crx(angle, ctrl_qubits[var_index], target)
+                circuit.x(ctrl_qubits[var_index])
+            
+        elif isinstance(expr, And):
+            # AND expression: implement as multi-controlled gate
+            self._implement_and_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
+            
+        elif isinstance(expr, Or):
+            # OR expression: check for known patterns
+            if self._is_xor_pattern(expr, symbols):
+                self._implement_xor_pattern(expr, symbols, angle, target, ctrl_qubits, circuit)
             else:
-                print(f"        → Error: Variable x{var_index} not available in ctrl_qubits {ctrl_qubits}")
+                # General OR: implement each term
+                for term in expr.args:
+                    self._implement_expression(term, symbols, angle, target, ctrl_qubits, circuit)
             
-        elif implementation['type'] == 'negated_control':
-            # Negated control: X + CRX + X
-            var_index = implementation['control_qubit']
-            if var_index < len(ctrl_qubits):
-                control_qubit = ctrl_qubits[var_index]
-                circuit.x(control_qubit)
-                circuit.crx(base_angle, control_qubit, target)
-                circuit.x(control_qubit)
-                print(f"        → X({control_qubit}) + CRX({base_angle:.4f}, {control_qubit}, {target}) + X({control_qubit}) [variable ¬x{var_index}]")
-            
-        elif implementation['type'] == 'xor_control':
-            # XOR logical form: CNOT + CRX + CNOT
-            # For x0 ⊕ x1, we compute x0 XOR x1 and use result as control
-            if len(ctrl_qubits) >= 2:
-                q0, q1 = ctrl_qubits[0], ctrl_qubits[1]  # x0 and x1
-                circuit.cx(q0, q1)  # Compute x0 ⊕ x1 in q1
-                circuit.crx(base_angle, q1, target)  # Controlled rotation
-                circuit.cx(q0, q1)  # Restore q1
-                print(f"        → XOR form: CX({q0},{q1}) + CRX({base_angle:.4f},{q1},{target}) + CX({q0},{q1}) [x0 ⊕ x1]")
-            
-        elif implementation['type'] == 'xnor_control':
-            # XNOR logical form: CNOT + X + CRX + X + CNOT
-            if len(ctrl_qubits) >= 2:
-                q0, q1 = ctrl_qubits[0], ctrl_qubits[1]
-                circuit.cx(q0, q1)  # Compute XOR
-                circuit.x(q1)       # NOT to get XNOR
-                circuit.crx(base_angle, q1, target)  # Controlled rotation
-                circuit.x(q1)       # Restore NOT
-                circuit.cx(q0, q1)  # Restore XOR
-                print(f"        → XNOR form: CX + X + CRX + X + CX [x0 ⊙ x1]")
-            
-        elif implementation['type'] == 'complex_overlap':
-            # Complex overlapping form: x0 ∧ (x1 ⊕ x2) 
-            if len(ctrl_qubits) >= 3:
-                expr = optimization_result['simplified_expression']
-                if 'x0 ∧ (x1 ⊕ x2)' in expr:
-                    q0, q1, q2 = ctrl_qubits[0], ctrl_qubits[1], ctrl_qubits[2]
-                    circuit.cx(q1, q2)  # Compute x1 ⊕ x2 in q2
-                    from .misc import multi_crx
-                    mcrx_gate = multi_crx(base_angle, '11')
-                    circuit.append(mcrx_gate, [q0, q2, target])  # x0 ∧ (x1 ⊕ x2)
-                    circuit.cx(q1, q2)  # Restore q2
-                    print(f"        → Complex form: CX({q1},{q2}) + MCRX('11',[{q0},{q2},{target}]) + CX({q1},{q2}) [x0 ∧ (x1 ⊕ x2)]")
-            
-        elif implementation['type'] == 'multi_control':
-            # Multi-controlled gate
-            from .misc import multi_crx
-            control_pattern = '1' * len(ctrl_qubits)  # All-ones control
-            mcrx_gate = multi_crx(base_angle, control_pattern)
-            circuit.append(mcrx_gate, ctrl_qubits + [target])
-            print(f"        → Multi-control: MCRX({base_angle:.4f}, '{control_pattern}') on {ctrl_qubits + [target]}")
-            
-        elif implementation['type'] == 'multi_term':
-            # Multi-term OR implementation (general case)
-            circuit = self._synthesize_multi_term(optimization_result, base_angle, ctrl_qubits, target, n_qubits)
-            print(f"        → Multi-term OR implementation")
-            
+        elif isinstance(expr, Xor):
+            # XOR expression: implement using logical form
+            self._implement_xor_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
+        
         else:
-            # General case - implement each state separately
-            circuit = self._synthesize_general_case(optimization_result, base_angle, ctrl_qubits, target, n_qubits)
-            print(f"        → General case implementation")
-        
-        return circuit
+            # Complex expression: convert to DNF and implement
+            try:
+                dnf_expr = sp.to_dnf(expr)
+                if isinstance(dnf_expr, Or):
+                    for term in dnf_expr.args:
+                        self._implement_expression(term, symbols, angle, target, ctrl_qubits, circuit)
+                else:
+                    self._implement_expression(dnf_expr, symbols, angle, target, ctrl_qubits, circuit)
+            except Exception:
+                # Fallback: implement directly
+                self._implement_general_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
     
-    def _synthesize_multi_term(self, optimization_result: Dict, base_angle: float,
-                              ctrl_qubits: List[int], target: int, n_qubits: int) -> QuantumCircuit:
-        """Synthesize circuit for multi-term Boolean expressions."""
-        circuit = QuantumCircuit(n_qubits)
-        
-        # This is a placeholder for more sophisticated multi-term synthesis
-        # In practice, this would implement each term separately and combine them
-        # For now, we'll use a simplified approach
-        
-        expr = optimization_result['simplified_expression']
-        if '∨' in expr:
-            # Split into terms and implement each
-            terms = expr.split(' ∨ ')
-            for i, term in enumerate(terms):
-                # Create a subcircuit for each term
-                # This is simplified - in practice you'd optimize the combination
-                term_circuit = self._synthesize_single_term(term.strip(), base_angle / len(terms), ctrl_qubits, target, n_qubits)
-                circuit = circuit.compose(term_circuit)
-        
-        return circuit
+    def _get_symbol_index(self, symbol: sp.Symbol, symbols: List[sp.Symbol]) -> int:
+        """Get index of symbol in symbol list."""
+        try:
+            return symbols.index(symbol)
+        except ValueError:
+            # Extract from symbol name (e.g., 'x2' -> 2)
+            symbol_name = str(symbol)
+            if symbol_name.startswith('x'):
+                return int(symbol_name[1:])
+            return 0
     
-    def _synthesize_single_term(self, term: str, angle: float, ctrl_qubits: List[int], 
-                               target: int, n_qubits: int) -> QuantumCircuit:
-        """Synthesize circuit for a single Boolean term."""
-        circuit = QuantumCircuit(n_qubits)
+    def _implement_and_expression(self, expr: And, symbols: List[sp.Symbol],
+                                 angle: float, target: int, ctrl_qubits: List[int],
+                                 circuit: QuantumCircuit):
+        """Implement AND expression as multi-controlled gate."""
+        controls = []
+        control_states = []
         
-        # Parse the term and create appropriate controls
-        # This is a simplified implementation
-        if '∧' in term:
-            # AND term - create multi-controlled gate
-            # Extract variables and their polarities
-            variables = []
-            if 'x0' in term:
-                variables.append(ctrl_qubits[0])
-            if 'x1' in term:
-                variables.append(ctrl_qubits[1])
+        for arg in expr.args:
+            if arg.is_Symbol:
+                var_index = self._get_symbol_index(arg, symbols)
+                if var_index < len(ctrl_qubits):
+                    controls.append(ctrl_qubits[var_index])
+                    control_states.append('1')
+            elif isinstance(arg, Not) and arg.args[0].is_Symbol:
+                var_index = self._get_symbol_index(arg.args[0], symbols)
+                if var_index < len(ctrl_qubits):
+                    controls.append(ctrl_qubits[var_index])
+                    control_states.append('0')
+        
+        if controls:
+            ctrl_state = ''.join(control_states)
+            mcrx_gate = multi_crx(angle, ctrl_state)
+            circuit.append(mcrx_gate, controls + [target])
+    
+    def _is_xor_pattern(self, expr: Or, symbols: List[sp.Symbol]) -> bool:
+        """
+        Check if OR expression represents XOR pattern.
+        From tex: Detect (x0 & ~x1) | (~x0 & x1) = x0 ⊕ x1
+        """
+        if len(expr.args) != 2:
+            return False
+        
+        arg1, arg2 = expr.args
+        
+        # Both should be AND expressions with 2 terms
+        if not (isinstance(arg1, And) and isinstance(arg2, And) and 
+                len(arg1.args) == 2 and len(arg2.args) == 2):
+            return False
+        
+        try:
+            # Check if it simplifies to XOR
+            simplified = simplify_logic(expr)
+            return isinstance(simplified, Xor) or 'Xor' in str(simplified)
+        except Exception:
+            return False
+    
+    def _implement_xor_pattern(self, expr: Or, symbols: List[sp.Symbol],
+                              angle: float, target: int, ctrl_qubits: List[int],
+                              circuit: QuantumCircuit):
+        """
+        Implement XOR pattern using logical form.
+        From tex: XOR logical form = CNOT + CRX + CNOT
+        """
+        if len(ctrl_qubits) >= 2:
+            # XOR logical form for first two qubits
+            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
+            circuit.crx(angle, ctrl_qubits[1], target)
+            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
+    
+    def _implement_xor_expression(self, expr: Xor, symbols: List[sp.Symbol],
+                                 angle: float, target: int, ctrl_qubits: List[int],
+                                 circuit: QuantumCircuit):
+        """Implement XOR expression using logical form."""
+        if len(expr.args) == 2 and len(ctrl_qubits) >= 2:
+            # Two-way XOR: implement as CNOT + CRX + CNOT
+            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
+            circuit.crx(angle, ctrl_qubits[1], target)
+            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
+        else:
+            # Multi-way XOR: convert to OR of AND terms
+            expanded = sp.to_dnf(expr)
+            self._implement_expression(expanded, symbols, angle, target, ctrl_qubits, circuit)
+    
+    def _implement_general_expression(self, expr: sp.Basic, symbols: List[sp.Symbol],
+                                    angle: float, target: int, ctrl_qubits: List[int],
+                                    circuit: QuantumCircuit):
+        """Fallback implementation for complex expressions."""
+        # For general expressions, evaluate for all possible states
+        n_vars = len(symbols)
+        
+        for i in range(2**n_vars):
+            assignment = {symbols[j]: bool((i >> j) & 1) for j in range(n_vars)}
             
-            if len(variables) == 1:
-                circuit.crx(angle, variables[0], target)
-            elif len(variables) == 2:
-                from .misc import multi_crx
-                mcrx_gate = multi_crx(angle, '11')
-                circuit.append(mcrx_gate, variables + [target])
-        
-        return circuit
-    
-    def _synthesize_general_case(self, optimization_result: Dict, base_angle: float,
-                                ctrl_qubits: List[int], target: int, n_qubits: int) -> QuantumCircuit:
-        """Synthesize circuit for general case."""
-        circuit = QuantumCircuit(n_qubits)
-        
-        # Get the Boolean function and implement state by state
-        # This is the fallback implementation
-        
-        # For now, create a single multi-controlled gate as fallback
-        if len(ctrl_qubits) > 0:
-            from .misc import multi_crx
-            control_pattern = '1' * len(ctrl_qubits)
-            mcrx_gate = multi_crx(base_angle, control_pattern)
-            circuit.append(mcrx_gate, ctrl_qubits + [target])
-        
-        return circuit
+            try:
+                if expr.subs(assignment):
+                    # This state satisfies the expression
+                    state_pattern = format(i, f'0{n_vars}b')
+                    
+                    # Create multi-controlled gate for this state
+                    controls = ctrl_qubits[:n_vars]
+                    mcrx_gate = multi_crx(angle, state_pattern)
+                    circuit.append(mcrx_gate, controls + [target])
+            except Exception:
+                continue
 
 
 class MCRXCascadeSimplifier:
     """
-    MCRX cascade simplification using the complete theoretical framework.
-    
-    CORRECTED VERSION: Fixed pattern interpretation to match multi_crx convention.
+    MCRX cascade simplification implementing Algorithm 1 from the tex file.
     """
     
     def __init__(self, tolerance: float = 1e-10):
         self.tolerance = tolerance
         self.pattern_analyzer = ControlPatternAnalyzer()
-        self.circuit_synthesizer = QuantumCircuitSynthesizer()
+        self.boolean_optimizer = BooleanOptimizer()
     
     def simplify(self, circuit: QuantumCircuit) -> QuantumCircuit:
         """
-        Main simplification method implementing the complete theoretical framework.
+        Main simplification method implementing Algorithm 1 from the tex file.
         
-        Algorithm from theory:
-        1. Extract MCRX gates and group by target qubit and angle
-        2. For each group, apply the general optimization algorithm:
-           a. Initialize rotation coefficient array r[2^n] = 0
-           b. For each computational basis state, count satisfied patterns
-           c. Group states by rotation coefficient
-           d. Optimize Boolean function for each coefficient group
-           e. Synthesize optimal quantum circuit
-        3. Combine optimized subcircuits
-        """
-        print("\n" + "="*80)
-        print("MCRX CASCADE SIMPLIFICATION - CORRECTED THEORETICAL FRAMEWORK")
-        print("="*80)
-        
-        # Extract MCRX gates from circuit
-        mcrx_gates = self._extract_mcrx_gates(circuit)
-        
-        if not mcrx_gates:
-            print("No MCRX gates found - returning original circuit")
-            return circuit.copy()
-        
-        print(f"Extracted {len(mcrx_gates)} MCRX gates")
-        
-        # Group by target qubit and angle
-        groups = self._group_by_target_and_angle(mcrx_gates)
-        print(f"Organized into {len(groups)} optimization groups")
-        
-        # Create optimized circuit
-        optimized_circuit = QuantumCircuit(circuit.num_qubits)
-        
-        # Process each group using the general algorithm
-        total_original_gates = 0
-        total_optimized_gates = 0
-        
-        for group_id, ((target, angle), gates) in enumerate(groups.items()):
-            print(f"\n--- Group {group_id + 1}: Target={target}, Angle={angle:.4f} ---")
+        Args:
+            circuit: Input quantum circuit containing only MCRX gates
             
-            if len(gates) == 1:
-                print("Single gate - no optimization possible")
-                self._add_single_gate(optimized_circuit, gates[0])
-                total_original_gates += 1
-                total_optimized_gates += 1
-            else:
-                print(f"Optimizing {len(gates)} gates with patterns: {[g.pattern for g in gates]}")
-                optimized_subcircuit, optimization_stats = self._apply_general_algorithm(gates)
-                optimized_circuit = optimized_circuit.compose(optimized_subcircuit)
-                
-                total_original_gates += len(gates)
-                total_optimized_gates += optimization_stats['gates_created']
+        Returns:
+            Optimized quantum circuit
+            
+        Raises:
+            ValueError: If circuit contains non-MCRX gates, mixed targets, or mixed angles
+            RuntimeError: If circuit is empty or invalid
+        """
+        # Validate input
+        if circuit.num_qubits == 0:
+            raise RuntimeError("Cannot simplify empty circuit (0 qubits)")
         
-        print(f"\n--- Optimization Summary ---")
-        print(f"Original gates: {total_original_gates}")
-        print(f"Optimized gates: {total_optimized_gates}")
-        if total_original_gates > 0:
-            reduction_pct = ((total_original_gates - total_optimized_gates) / total_original_gates) * 100
-            print(f"Gate reduction: {total_original_gates - total_optimized_gates} ({reduction_pct:.1f}%)")
+        if len(circuit.data) == 0:
+            raise RuntimeError("Cannot simplify circuit with no gates")
         
-        print("="*80)
-        return optimized_circuit
+        # Extract and validate MCRX gates
+        mcrx_gates = self._validate_and_extract_mcrx_gates(circuit)
+        self._validate_same_target_and_angle(mcrx_gates)
+        
+        # Apply Algorithm 1 from tex file
+        return self._apply_algorithm_1(mcrx_gates, circuit.num_qubits)
     
-    def _extract_mcrx_gates(self, circuit: QuantumCircuit) -> List[MCRXGateInfo]:
-        """Extract MCRX gates from quantum circuit with comprehensive pattern decoding."""
+    def _validate_and_extract_mcrx_gates(self, circuit: QuantumCircuit) -> List[MCRXGateInfo]:
+        """Extract and validate MCRX gates from circuit."""
+        if not circuit.data:
+            raise ValueError("Circuit contains no gates")
+        
         mcrx_gates = []
         
-        print("\n--- MCRX Gate Extraction ---")
-        
         for i, instruction in enumerate(circuit.data):
-            op_name = instruction.operation.name.lower()
-            
-            # Recognize MCRX gate patterns
-            if any(pattern in op_name for pattern in ['mcrx', 'multi_crx', 'ccrx', 'controlled_rx']):
-                print(f"Processing gate {i}: {op_name}")
-                
-                # Extract gate information
-                qubits = [circuit.find_bit(q).index for q in instruction.qubits]
-                target = qubits[-1]
-                ctrl_qubits = qubits[:-1]
-                
-                # Get rotation angle
-                if hasattr(instruction.operation, 'params') and instruction.operation.params:
-                    theta = float(instruction.operation.params[0])
-                else:
-                    theta = np.pi
-                
-                # Decode control state pattern
-                ctrl_state = self._decode_control_pattern(instruction, op_name, len(ctrl_qubits))
-                
-                gate_info = MCRXGateInfo(theta, target, ctrl_qubits, ctrl_state)
-                mcrx_gates.append(gate_info)
-                
-                print(f"  → {gate_info}")
+            gate_info = self._extract_gate_info(instruction, circuit)
+            if gate_info is None:
+                raise ValueError(
+                    f"Gate {i+1} is not an MCRX gate: '{instruction.operation.name}'. "
+                    f"All gates must be multi-controlled RX gates"
+                )
+            mcrx_gates.append(gate_info)
         
         return mcrx_gates
     
-    def _decode_control_pattern(self, instruction, op_name: str, n_ctrl: int) -> str:
-        """
-        Decode control pattern from gate instruction.
+    def _extract_gate_info(self, instruction: Instruction, circuit: QuantumCircuit) -> Optional[MCRXGateInfo]:
+        """Extract gate information from circuit instruction."""
+        op_name = instruction.operation.name.lower()
         
-        CORRECTED VERSION: Handle multi_crx pattern interpretation correctly.
-        """
+        # Check if it's an MCRX gate
+        mcrx_patterns = ['mcrx', 'ccrx', 'multi_crx', 'mcx_rotation']
+        if not any(pattern in op_name for pattern in mcrx_patterns):
+            return None
         
-        # Method 1: Check ctrl_state attribute (most reliable)
+        # Get qubits
+        qubits = [circuit.find_bit(q).index for q in instruction.qubits]
+        target = qubits[-1]
+        ctrl_qubits = qubits[:-1]
+        
+        # Get rotation angle
+        if hasattr(instruction.operation, 'params') and instruction.operation.params:
+            theta = float(instruction.operation.params[0])
+        else:
+            raise ValueError(f"Gate '{instruction.operation.name}' has no rotation angle parameter")
+        
+        # Extract control state
+        ctrl_state = self._extract_control_state(instruction, len(ctrl_qubits))
+        
+        return MCRXGateInfo(theta, target, ctrl_qubits, ctrl_state)
+    
+    def _extract_control_state(self, instruction: Instruction, n_controls: int) -> str:
+        """Extract control state pattern from gate instruction."""
+        op_name = instruction.operation.name
+        
+        # Try to extract from operation attributes
         if hasattr(instruction.operation, 'ctrl_state'):
-            if isinstance(instruction.operation.ctrl_state, str):
-                return instruction.operation.ctrl_state
-            else:
-                ctrl_state_int = instruction.operation.ctrl_state
-                # Direct binary conversion
-                pattern = format(ctrl_state_int, f'0{n_ctrl}b')
-                print(f"    Decoded ctrl_state {ctrl_state_int} → '{pattern}' (binary)")
-                return pattern
+            ctrl_state = instruction.operation.ctrl_state
+            if isinstance(ctrl_state, str):
+                return ctrl_state
+            elif isinstance(ctrl_state, int):
+                return format(ctrl_state, f'0{n_controls}b')
         
-        # Method 2: Parse from gate name
-        elif 'ccrx_o' in op_name:
-            parts = op_name.split('_o')
-            if len(parts) > 1:
-                try:
-                    pattern_num = int(parts[1])
-                    pattern = format(pattern_num, f'0{n_ctrl}b')
-                    print(f"    Decoded gate name {op_name} → '{pattern}' (binary)")
-                    return pattern
-                except ValueError:
-                    pass
+        # Try to extract from gate name (e.g., 'mcrx_o10' -> '10')
+        pattern_match = re.search(r'_o(\d+)', op_name)
+        if pattern_match:
+            binary_str = pattern_match.group(1)
+            if len(binary_str) <= n_controls:
+                return binary_str.zfill(n_controls)
         
-        # Method 3: Check for other naming patterns
-        elif 'rx_' in op_name:
-            # Look for patterns like 'rx_10', 'rx_01', etc.
-            parts = op_name.split('_')
-            for part in parts:
-                if len(part) == n_ctrl and all(c in '01' for c in part):
-                    print(f"    Decoded from name pattern: '{part}'")
-                    return part
-        
-        # Default: all-ones pattern
-        print(f"    Using default all-ones pattern for {op_name}")
-        return '1' * n_ctrl
+        # Default to all-ones control
+        return '1' * n_controls
     
-    def _group_by_target_and_angle(self, gates: List[MCRXGateInfo]) -> Dict[Tuple[int, float], List[MCRXGateInfo]]:
-        """Group gates by target qubit and rotation angle."""
-        groups = defaultdict(list)
+    def _validate_same_target_and_angle(self, mcrx_gates: List[MCRXGateInfo]) -> None:
+        """Validate all gates have same target and angle."""
+        if len(mcrx_gates) <= 1:
+            return
         
-        for gate in gates:
-            # Round angle to handle floating point precision
-            rounded_angle = round(gate.theta / self.tolerance) * self.tolerance
-            key = (gate.target, rounded_angle)
-            groups[key].append(gate)
+        reference_target = mcrx_gates[0].target
+        reference_angle = mcrx_gates[0].theta
         
-        return dict(groups)
+        for i, gate in enumerate(mcrx_gates[1:], 1):
+            if gate.target != reference_target:
+                raise ValueError(
+                    f"MCRX gates must all have the same target qubit. "
+                    f"Gate {i+1} targets qubit {gate.target}, but gate 1 targets qubit {reference_target}."
+                )
+            
+            if abs(gate.theta - reference_angle) > self.tolerance:
+                raise ValueError(
+                    f"MCRX gates must all have the same rotation angle. "
+                    f"Gate {i+1} has angle {gate.theta:.6f}, but gate 1 has angle {reference_angle:.6f}."
+                )
     
-    def _apply_general_algorithm(self, gates: List[MCRXGateInfo]) -> Tuple[QuantumCircuit, Dict]:
+    def _apply_algorithm_1(self, mcrx_gates: List[MCRXGateInfo], n_qubits: int) -> QuantumCircuit:
         """
-        Apply the general optimization algorithm from theoretical framework.
+        Apply Algorithm 1 from tex file: SimplifySameTargetMCRXCascade.
         
-        CORRECTED VERSION: Fixed pattern matching to use direct conversion.
+        From tex:
+        1. Initialize rotation coefficient array r[2^n] = 0
+        2. For each computational basis state S ∈ {0,1,...,2^n-1}:
+           For each control pattern C_i:
+               If state S satisfies control pattern C_i:
+                   r[S] ← r[S] + 1
+        3. Group states by rotation coefficient
+        4. For each unique coefficient k:
+           Create control condition for OR of states in S_k
+           Add gate: CRX_{∨_{S∈S_k} S, t}(kθ)
         """
-        if not gates:
-            return QuantumCircuit(0), {'gates_created': 0}
+        if len(mcrx_gates) == 1:
+            # Single gate - no optimization needed
+            circuit = QuantumCircuit(n_qubits)
+            gate = mcrx_gates[0]
+            mcrx_gate = multi_crx(gate.theta, gate.pattern)
+            circuit.append(mcrx_gate, gate.ctrl_qubits + [gate.target])
+            return circuit
         
-        # Get basic information
-        first_gate = gates[0]
-        base_theta = first_gate.theta
-        target = first_gate.target
-        ctrl_qubits = first_gate.ctrl_qubits
-        n_ctrl = len(ctrl_qubits)
-        n_qubits = max(max([gate.target] + gate.ctrl_qubits) for gate in gates) + 1
-        
-        print(f"  Applying General Algorithm:")
-        print(f"    Target: {target}, Controls: {ctrl_qubits}")
-        print(f"    Base angle: {base_theta:.4f}")
-        print(f"    Patterns: {[g.pattern for g in gates]}")
-        
-        # Step 1: Initialize rotation coefficient array r[2^n] = 0
-        n_states = 2 ** n_ctrl
+        # Step 1: Initialize rotation coefficient array
+        n_controls = max(gate.n_controls for gate in mcrx_gates)
+        n_states = 2 ** n_controls
         rotation_coefficients = [0] * n_states
         
-        # Step 2: For each computational basis state, count pattern satisfaction
-        print(f"    Step 2: Analyzing {n_states} computational basis states")
-        
-        for state_int in range(n_states):
-            state_pattern = format(state_int, f'0{n_ctrl}b')
-            
-            for gate in gates:
-                # CORRECTED: Direct pattern matching (no bit reversal)
-                if state_pattern == gate.pattern:
-                    rotation_coefficients[state_int] += 1
-            
-            if rotation_coefficients[state_int] > 0:
-                print(f"      State |{state_pattern}⟩ (#{state_int}): {rotation_coefficients[state_int]} rotation(s)")
+        # Step 2: Calculate rotation coefficients for each state
+        for state in range(n_states):
+            state_bits = format(state, f'0{n_controls}b')
+            for gate in mcrx_gates:
+                if self._state_satisfies_pattern(state_bits, gate, n_controls):
+                    rotation_coefficients[state] += 1
         
         # Step 3: Group states by rotation coefficient
-        print(f"    Step 3: Grouping states by rotation coefficient")
-        coefficient_groups = defaultdict(list)
-        for state_int in range(n_states):
-            if rotation_coefficients[state_int] > 0:
-                coefficient_groups[rotation_coefficients[state_int]].append(state_int)
+        coeff_groups = defaultdict(list)
+        for state, coeff in enumerate(rotation_coefficients):
+            if coeff > 0:
+                coeff_groups[coeff].append(state)
         
-        print(f"      Coefficient groups: {dict(coefficient_groups)}")
-        
-        # Step 4: Optimize and synthesize for each coefficient group
-        print(f"    Step 4: Boolean optimization and circuit synthesis")
+        # Step 4: Create optimized gates using boolean algebra
         circuit = QuantumCircuit(n_qubits)
-        gates_created = 0
+        theta = mcrx_gates[0].theta
+        target = mcrx_gates[0].target
+        ctrl_qubits = mcrx_gates[0].ctrl_qubits
         
-        for coefficient, states in coefficient_groups.items():
-            if coefficient > 0:
-                print(f"      Processing coefficient {coefficient}:")
-                print(f"        States: {[format(s, f'0{n_ctrl}b') for s in states]} (integers: {states})")
+        for coeff, states in coeff_groups.items():
+            if not states:
+                continue
+            
+            total_angle = coeff * theta
+            
+            if len(states) == 1:
+                # Single state - direct implementation
+                state_pattern = format(states[0], f'0{n_controls}b')
+                mcrx_gate = multi_crx(total_angle, state_pattern)
+                circuit.append(mcrx_gate, ctrl_qubits + [target])
+            
+            else:
+                # Multiple states - use boolean algebra
+                or_expr, symbols = self.boolean_optimizer.states_to_or_expr(states, n_controls)
+                simplified_expr = self.boolean_optimizer.simplify_boolean_expr(or_expr)
                 
-                # Calculate rotation angle for this group
-                rotation_angle = coefficient * base_theta
-                print(f"        Rotation angle: {coefficient} × {base_theta:.4f} = {rotation_angle:.4f}")
-                
-                # Step 4a: Optimize Boolean function for these states
-                # Create a direct Boolean function from states (no pattern conversion)
-                from .pattern_analyzer import BooleanFunction
-                boolean_func = BooleanFunction(states, n_ctrl)
-                optimization_result = self.pattern_analyzer.boolean_optimizer.optimize_function(boolean_func)
-                
-                print(f"        Boolean function: {optimization_result['simplified_expression']}")
-                print(f"        Optimization method: {optimization_result['simplification_method']}")
-                print(f"        Implementation: {optimization_result['implementation']['description']}")
-                print(f"        Quantum cost: {optimization_result['quantum_cost']}")
-                
-                # Step 4b: Synthesize optimal quantum circuit
-                optimized_gate_circuit = self.circuit_synthesizer.synthesize_circuit(
-                    optimization_result, rotation_angle, ctrl_qubits, target, n_qubits
+                # Convert to logical circuit
+                logical_circuit = self.boolean_optimizer.expr_to_logical_circuit(
+                    simplified_expr, symbols, total_angle, target, ctrl_qubits, n_qubits
                 )
                 
-                circuit = circuit.compose(optimized_gate_circuit)
-                gates_created += len(optimized_gate_circuit.data)
+                # Compose with main circuit
+                circuit = circuit.compose(logical_circuit)
         
-        optimization_stats = {
-            'gates_created': gates_created,
-            'coefficient_groups': len(coefficient_groups),
-            'total_states_processed': sum(len(states) for states in coefficient_groups.values())
-        }
-        
-        return circuit, optimization_stats
+        return circuit
     
-    def _add_single_gate(self, circuit: QuantumCircuit, gate: MCRXGateInfo):
-        """Add a single MCRX gate to the circuit."""
-        from .misc import multi_crx
-        mcrx_gate = multi_crx(gate.theta, gate.pattern)
-        circuit.append(mcrx_gate, gate.ctrl_qubits + [gate.target])
+    def _state_satisfies_pattern(self, state_bits: str, gate: MCRXGateInfo, n_controls: int) -> bool:
+        """Check if computational basis state satisfies gate's control pattern."""
+        if len(state_bits) < gate.n_controls:
+            return False
+        
+        # Align pattern with state bits (use rightmost bits to match pattern)
+        if gate.n_controls < n_controls:
+            # Pattern is shorter - pad with don't cares or align appropriately
+            # For now, use leftmost bits
+            relevant_bits = state_bits[:gate.n_controls]
+        else:
+            relevant_bits = state_bits
+        
+        return relevant_bits == gate.pattern
     
-    def analyze_optimization_potential(self, circuit: QuantumCircuit) -> Dict[str, any]:
-        """
-        Comprehensive analysis of optimization potential using theoretical framework.
+    def analyze_optimization_potential(self, circuit: QuantumCircuit) -> Dict[str, Any]:
+        """Analyze optimization potential using the algorithm."""
+        if circuit.num_qubits == 0:
+            raise RuntimeError("Cannot analyze empty circuit (0 qubits)")
         
-        Returns detailed analysis including Boolean function optimization potential,
-        estimated gate reductions, and quantum cost improvements.
-        """
-        print("\n--- Optimization Potential Analysis ---")
+        if len(circuit.data) == 0:
+            raise RuntimeError("Cannot analyze circuit with no gates")
         
-        mcrx_gates = self._extract_mcrx_gates(circuit)
+        mcrx_gates = self._validate_and_extract_mcrx_gates(circuit)
+        self._validate_same_target_and_angle(mcrx_gates)
         
-        if not mcrx_gates:
-            return {
-                'total_mcrx_gates': 0,
-                'optimizable_groups': 0,
-                'potential_gate_reduction': 0,
-                'potential_quantum_cost_reduction': 0,
-                'optimization_potential': 'NONE',
-                'group_details': [],
-                'notes': 'No MCRX gates found in circuit'
-            }
+        # Apply algorithm analysis
+        patterns = [gate.pattern for gate in mcrx_gates]
+        n_controls = max(gate.n_controls for gate in mcrx_gates)
+        n_states = 2 ** n_controls
+        rotation_coefficients = [0] * n_states
         
-        groups = self._group_by_target_and_angle(mcrx_gates)
+        # Calculate rotation coefficients
+        for state in range(n_states):
+            state_bits = format(state, f'0{n_controls}b')
+            for gate in mcrx_gates:
+                if self._state_satisfies_pattern(state_bits, gate, n_controls):
+                    rotation_coefficients[state] += 1
         
-        analysis = {
-            'total_mcrx_gates': len(mcrx_gates),
-            'optimizable_groups': 0,
-            'potential_gate_reduction': 0,
-            'potential_quantum_cost_reduction': 0,
-            'group_details': [],
-            'optimization_potential': 'MINIMAL',
-            'theoretical_framework_analysis': True
-        }
+        # Group by coefficients
+        coeff_groups = defaultdict(list)
+        for state, coeff in enumerate(rotation_coefficients):
+            if coeff > 0:
+                coeff_groups[coeff].append(state)
         
-        for (target, angle), group_gates in groups.items():
-            if len(group_gates) > 1:
-                analysis['optimizable_groups'] += 1
+        # Estimate gates after optimization
+        estimated_gates = 0
+        boolean_functions = []
+        
+        for coeff, states in coeff_groups.items():
+            if len(states) == 1:
+                estimated_gates += 1
+                state_pattern = format(states[0], f'0{n_controls}b')
+                boolean_functions.append(f"State: {state_pattern}")
+            else:
+                # Use SymPy to get actual boolean function
+                or_expr, symbols = self.boolean_optimizer.states_to_or_expr(states, n_controls)
+                simplified_expr = self.boolean_optimizer.simplify_boolean_expr(or_expr)
                 
-                print(f"  Analyzing group: target={target}, gates={len(group_gates)}")
-                
-                # Apply theoretical analysis
-                patterns = [g.pattern for g in group_gates]
-                optimization_analysis = self.pattern_analyzer.analyze_patterns_for_optimization(patterns)
-                optimization_result = optimization_analysis['optimization_result']
-                
-                # Estimate gate reduction
-                original_quantum_cost = len(group_gates) * 10  # Rough estimate for multi-controlled gates
-                optimized_quantum_cost = optimization_result['quantum_cost']
-                potential_cost_reduction = max(0, original_quantum_cost - optimized_quantum_cost)
-                
-                # Estimate gate count reduction based on Boolean optimization
-                complexity_reduction = optimization_result['complexity_reduction']
-                potential_gate_reduction = max(0, len(group_gates) - 1)
-                
-                analysis['potential_gate_reduction'] += potential_gate_reduction
-                analysis['potential_quantum_cost_reduction'] += potential_cost_reduction
-                
-                group_detail = {
-                    'target': target,
-                    'angle': angle,
-                    'gate_count': len(group_gates),
-                    'patterns': patterns,
-                    'boolean_function': optimization_result['simplified_expression'],
-                    'optimization_method': optimization_result['simplification_method'],
-                    'implementation_type': optimization_result['implementation']['type'],
-                    'estimated_gate_reduction': potential_gate_reduction,
-                    'estimated_cost_reduction': potential_cost_reduction,
-                    'optimization_quality': optimization_result['optimization_quality']
-                }
-                
-                analysis['group_details'].append(group_detail)
-                
-                print(f"    Boolean function: {optimization_result['simplified_expression']}")
-                print(f"    Implementation: {optimization_result['implementation']['type']}")
-                print(f"    Estimated reduction: {potential_gate_reduction} gates, {potential_cost_reduction} quantum cost")
-        
-        # Overall assessment based on theoretical analysis
-        total_reduction_ratio = analysis['potential_gate_reduction'] / max(analysis['total_mcrx_gates'], 1)
-        
-        if total_reduction_ratio >= 0.6:
-            analysis['optimization_potential'] = 'HIGH'
-        elif total_reduction_ratio >= 0.3:
-            analysis['optimization_potential'] = 'MEDIUM'
-        elif total_reduction_ratio > 0:
-            analysis['optimization_potential'] = 'LOW'
-        
-        analysis['notes'] = (
-            "Analysis based on complete theoretical framework including Boolean function optimization. "
-            "Actual results depend on specific circuit structure and pattern complexity."
-        )
-        
-        return analysis
-    
-    def get_optimization_statistics(self, original_circuit: QuantumCircuit, 
-                                   optimized_circuit: QuantumCircuit) -> Dict[str, any]:
-        """
-        Compute detailed optimization statistics comparing original and optimized circuits.
-        """
-        def count_gate_types(circuit):
-            gate_counts = defaultdict(int)
-            for instruction in circuit.data:
-                gate_name = instruction.operation.name.lower()
-                if any(pattern in gate_name for pattern in ['mcrx', 'multi_crx', 'ccrx']):
-                    gate_counts['MCRX'] += 1
-                elif gate_name in ['cx', 'cnot']:
-                    gate_counts['CX'] += 1
-                elif gate_name in ['u3', 'u', 'rx', 'ry', 'rz'] or 'rx' in gate_name:
-                    gate_counts['U3'] += 1
-                elif gate_name in ['x', 'y', 'z']:
-                    gate_counts['Pauli'] += 1
+                # Estimate gates based on simplified expression
+                if simplified_expr.is_Symbol:
+                    estimated_gates += 1
+                elif isinstance(simplified_expr, Xor) or 'Xor' in str(simplified_expr):
+                    estimated_gates += 3  # CNOT + CRX + CNOT
+                elif isinstance(simplified_expr, And):
+                    estimated_gates += 1  # Multi-controlled gate
                 else:
-                    gate_counts['Other'] += 1
-            return dict(gate_counts)
+                    # Conservative estimate
+                    complexity = self.boolean_optimizer.analyze_expr_complexity(simplified_expr)
+                    estimated_gates += max(1, complexity['and_ops'] + complexity['or_ops'])
+                
+                boolean_functions.append(str(simplified_expr))
         
-        orig_gates = count_gate_types(original_circuit)
-        opt_gates = count_gate_types(optimized_circuit)
-        
-        statistics = {
-            'original_gates': orig_gates,
-            'optimized_gates': opt_gates,
-            'original_depth': original_circuit.depth(),
-            'optimized_depth': optimized_circuit.depth(),
-            'reductions': {},
-            'improvement_ratios': {}
+        return {
+            'status': 'valid',
+            'original_gates': len(mcrx_gates),
+            'estimated_optimized': estimated_gates,
+            'potential_reduction': max(0, len(mcrx_gates) - estimated_gates),
+            'reduction_percentage': max(0, (len(mcrx_gates) - estimated_gates) / len(mcrx_gates) * 100),
+            'patterns': patterns,
+            'unique_patterns': len(set(patterns)),
+            'boolean_functions': boolean_functions,
+            'rotation_coefficients': {i: coeff for i, coeff in enumerate(rotation_coefficients) if coeff > 0},
+            'coefficient_groups': {k: v for k, v in coeff_groups.items()},
+            'target_qubit': mcrx_gates[0].target,
+            'rotation_angle': mcrx_gates[0].theta
         }
-        
-        # Calculate reductions
-        all_gate_types = set(orig_gates.keys()) | set(opt_gates.keys())
-        for gate_type in all_gate_types:
-            orig_count = orig_gates.get(gate_type, 0)
-            opt_count = opt_gates.get(gate_type, 0)
-            reduction = orig_count - opt_count
-            statistics['reductions'][gate_type] = {
-                'absolute': reduction,
-                'percentage': (reduction / max(orig_count, 1)) * 100
-            }
-        
-        # Overall improvements
-        orig_total = sum(orig_gates.values())
-        opt_total = sum(opt_gates.values())
-        
-        statistics['total_gate_reduction'] = {
-            'absolute': orig_total - opt_total,
-            'percentage': ((orig_total - opt_total) / max(orig_total, 1)) * 100
-        }
-        
-        statistics['depth_reduction'] = {
-            'absolute': statistics['original_depth'] - statistics['optimized_depth'],
-            'percentage': ((statistics['original_depth'] - statistics['optimized_depth']) / 
-                          max(statistics['original_depth'], 1)) * 100
-        }
-        
-        return statistics
