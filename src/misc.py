@@ -8,30 +8,22 @@ from qiskit.circuit.library import RXGate
 from qiskit.quantum_info import Statevector, state_fidelity
 from qiskit.circuit import Gate
 
-
-class MultiControlledRXGate(Gate):
-    """Multi-controlled RX gate implementation."""
+def multi_crx(angle, ctrl_state):
+    """
+    Create a multi-controlled RX gate based on the control pattern.
     
-    def __init__(self, theta: float, ctrl_state: str):
-        self.theta = theta
-        self.ctrl_state = ctrl_state
-        n_controls = len(ctrl_state)
-        super().__init__('mcrx', n_controls + 1, [theta])
+    Args:
+        angle: Rotation angle in radians
+        ctrl_state: Binary string specifying control states (e.g., '10')
     
-    def _define(self):
-        """Define the gate in terms of elementary gates."""
-        # This would contain the actual decomposition
-        # For now, we'll use a placeholder
-        qc = QuantumCircuit(self.num_qubits)
-        # Add actual implementation here
-        self.definition = qc.to_instruction()
-
-
-def multi_crx(theta: float, ctrl_state: str) -> MultiControlledRXGate:
-    """Create a multi-controlled RX gate."""
-    return MultiControlledRXGate(theta, ctrl_state)
-
-
+    Returns:
+        Controlled RX gate
+    """
+    n_ctrls = len(ctrl_state)
+    if n_ctrls == 0:
+        return RXGate(angle)
+    gate = RXGate(angle).control(n_ctrls, ctrl_state=ctrl_state[::-1])
+    return gate
 
 def binary_tuple_to_int_tuple(binary_tuple):
     # Convert each binary string in the tuple to an integer
