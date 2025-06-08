@@ -8,14 +8,15 @@ from qiskit.circuit.library import RXGate
 from qiskit.quantum_info import Statevector, state_fidelity
 from qiskit.circuit import Gate
 
+
 def multi_crx(angle, ctrl_state):
     """
     Create a multi-controlled RX gate based on the control pattern.
-    
+
     Args:
         angle: Rotation angle in radians
         ctrl_state: Binary string specifying control states (e.g., '10')
-    
+
     Returns:
         Controlled RX gate
     """
@@ -24,6 +25,7 @@ def multi_crx(angle, ctrl_state):
         return RXGate(angle)
     gate = RXGate(angle).control(n_ctrls, ctrl_state=ctrl_state[::-1])
     return gate
+
 
 def binary_tuple_to_int_tuple(binary_tuple):
     # Convert each binary string in the tuple to an integer
