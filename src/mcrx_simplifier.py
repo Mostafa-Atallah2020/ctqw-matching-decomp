@@ -1,7 +1,7 @@
 # File: src/mcrx_simplifier.py
 """
-MCRX cascade simplification implementing the algorithm from the tex file.
-Uses SymPy for boolean algebra as described in the paper.
+MCRX cascade simplification implementing logical forms with CNOT optimization tricks.
+Uses SymPy for boolean algebra and implements specific logical forms from tex file.
 """
 
 import numpy as np
@@ -34,8 +34,10 @@ class MCRXGateInfo:
         return f"MCRXGateInfo(θ={self.theta:.3f}, target={self.target}, ctrl={self.ctrl_qubits}, pattern='{self.pattern}')"
 
 
-class BooleanOptimizer:
-    """Boolean algebra optimization using SymPy for the algorithm from tex file."""
+class LogicalFormOptimizer:
+    """
+    Implement specific logical forms from tex file using CNOT optimization tricks.
+    """
     
     def __init__(self):
         self.symbol_cache = {}
@@ -47,25 +49,14 @@ class BooleanOptimizer:
         return self.symbol_cache[n_bits]
     
     def state_to_expr(self, state: int, n_bits: int, symbols: List[sp.Symbol]) -> sp.Basic:
-        """
-        Convert computational basis state to SymPy boolean expression.
-        From tex: Each state corresponds to a conjunctive term.
-        
-        Args:
-            state: Computational basis state (integer)
-            n_bits: Number of bits
-            symbols: SymPy symbols for variables
-            
-        Returns:
-            Boolean expression for this state
-        """
+        """Convert computational basis state to SymPy boolean expression."""
         state_pattern = format(state, f'0{n_bits}b')
         expr_terms = []
         
         for i, bit in enumerate(state_pattern):
             if bit == '1':
                 expr_terms.append(symbols[i])
-            else:  # bit == '0'
+            else:
                 expr_terms.append(Not(symbols[i]))
         
         if not expr_terms:
@@ -76,17 +67,7 @@ class BooleanOptimizer:
             return And(*expr_terms)
     
     def states_to_or_expr(self, states: List[int], n_bits: int) -> Tuple[sp.Basic, List[sp.Symbol]]:
-        """
-        Convert list of computational basis states to OR expression.
-        From tex: Create boolean function for states with same rotation coefficient.
-        
-        Args:
-            states: List of computational basis states
-            n_bits: Number of control bits
-            
-        Returns:
-            Tuple of (OR expression, symbols)
-        """
+        """Convert list of computational basis states to OR expression."""
         if not states:
             return sp.false, []
         
@@ -95,7 +76,6 @@ class BooleanOptimizer:
         if len(states) == 1:
             return self.state_to_expr(states[0], n_bits, symbols), symbols
         
-        # Multiple states - create OR of all state expressions
         state_exprs = []
         for state in states:
             state_expr = self.state_to_expr(state, n_bits, symbols)
@@ -105,113 +85,199 @@ class BooleanOptimizer:
         return or_expr, symbols
     
     def simplify_boolean_expr(self, expr: sp.Basic) -> sp.Basic:
-        """
-        Simplify boolean expression using SymPy.
-        From tex: Apply boolean algebra simplification.
-        """
+        """Simplify boolean expression using SymPy."""
         try:
             simplified = simplify_logic(expr)
             return simplified
         except Exception:
             return expr
     
-    def analyze_expr_complexity(self, expr: sp.Basic) -> Dict[str, int]:
-        """Analyze complexity of boolean expression."""
-        expr_str = str(expr)
-        
-        return {
-            'and_ops': expr_str.count('&'),
-            'or_ops': expr_str.count('|'),
-            'not_ops': expr_str.count('~'),
-            'xor_ops': expr_str.count('Xor'),
-            'variables': len(expr.free_symbols),
-            'total_length': len(expr_str)
-        }
-    
-    def expr_to_logical_circuit(self, expr: sp.Basic, symbols: List[sp.Symbol], 
-                               angle: float, target: int, ctrl_qubits: List[int], 
-                               n_qubits: int) -> QuantumCircuit:
+    def implement_logical_form(self, expr: sp.Basic, symbols: List[sp.Symbol], 
+                              angle: float, target: int, ctrl_qubits: List[int], 
+                              n_qubits: int) -> QuantumCircuit:
         """
-        Convert simplified boolean expression to logical circuit.
-        From tex: Implement optimized boolean function as quantum circuit.
+        Implement logical form using CNOT optimization tricks from tex file.
         """
         circuit = QuantumCircuit(n_qubits)
         
         if expr == sp.true:
-            # Always true - unconditional rotation
             circuit.rx(angle, target)
             return circuit
         elif expr == sp.false:
-            # Never true - no rotation
             return circuit
         
-        # Analyze expression structure and create logical circuit
-        self._implement_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
+        # Check for specific logical forms from tex file
+        if self._is_two_qubit_xor_form(expr, symbols):
+            # Implement: ['10', '01'] → x₀ ⊕ x₁ using CNOT trick
+            self._implement_two_qubit_xor_form(circuit, angle, target, ctrl_qubits)
+            
+        elif self._is_three_qubit_complex_form(expr, symbols):
+            # Implement: ['110', '101'] → x₀ ∧ (x₁ ⊕ x₂) using CNOT trick
+            self._implement_three_qubit_complex_form(circuit, angle, target, ctrl_qubits)
+            
+        elif self._is_maximal_simplification_form(expr, symbols):
+            # Implement: ['11', '10'] → x₀ (single control)
+            self._implement_maximal_simplification_form(circuit, expr, symbols, angle, target, ctrl_qubits)
+            
+        else:
+            # General implementation
+            self._implement_general_form(circuit, expr, symbols, angle, target, ctrl_qubits)
+        
         return circuit
     
-    def _implement_expression(self, expr: sp.Basic, symbols: List[sp.Symbol],
-                             angle: float, target: int, ctrl_qubits: List[int],
-                             circuit: QuantumCircuit):
-        """Implement boolean expression as quantum circuit."""
+    def _is_two_qubit_xor_form(self, expr: sp.Basic, symbols: List[sp.Symbol]) -> bool:
+        """
+        Check if expression matches x₀ ⊕ x₁ pattern from tex file.
+        This corresponds to patterns ['10', '01'].
+        """
+        if len(symbols) != 2:
+            return False
         
+        try:
+            # Check if expression is equivalent to x0 XOR x1
+            x0, x1 = symbols[0], symbols[1]
+            xor_expr = Xor(x0, x1)
+            
+            # Also check expanded form: (x0 & ~x1) | (~x0 & x1)
+            expanded_xor = Or(And(x0, Not(x1)), And(Not(x0), x1))
+            
+            simplified = simplify_logic(expr)
+            
+            return (simplified == xor_expr or 
+                   simplified == expanded_xor or
+                   str(simplified) == str(xor_expr) or
+                   'Xor' in str(simplified))
+        except Exception:
+            return False
+    
+    def _is_three_qubit_complex_form(self, expr: sp.Basic, symbols: List[sp.Symbol]) -> bool:
+        """
+        Check if expression matches x₀ ∧ (x₁ ⊕ x₂) pattern from tex file.
+        This corresponds to patterns ['110', '101'].
+        """
+        if len(symbols) != 3:
+            return False
+        
+        try:
+            x0, x1, x2 = symbols[0], symbols[1], symbols[2]
+            # Pattern: x₀ ∧ (x₁ ⊕ x₂)
+            target_expr = And(x0, Xor(x1, x2))
+            
+            # Also check expanded form
+            expanded = And(x0, Or(And(x1, Not(x2)), And(Not(x1), x2)))
+            
+            simplified = simplify_logic(expr)
+            
+            return (simplified == target_expr or 
+                   simplified == expanded or
+                   str(simplified) == str(target_expr))
+        except Exception:
+            return False
+    
+    def _is_maximal_simplification_form(self, expr: sp.Basic, symbols: List[sp.Symbol]) -> bool:
+        """
+        Check if expression simplifies to single variable.
+        This corresponds to patterns like ['11', '10'] → x₀.
+        """
+        try:
+            simplified = simplify_logic(expr)
+            return simplified.is_Symbol
+        except Exception:
+            return False
+    
+    def _implement_two_qubit_xor_form(self, circuit: QuantumCircuit, angle: float, 
+                                     target: int, ctrl_qubits: List[int]):
+        """
+        Implement XOR logical form from tex file:
+        1. CNOT from qubit 0 to qubit 1 (compute x₀ ⊕ x₁ in qubit 1)
+        2. Controlled RX on target controlled by qubit 1  
+        3. CNOT from qubit 0 to qubit 1 (restore qubit 1)
+        """
+        if len(ctrl_qubits) >= 2:
+            q0, q1 = ctrl_qubits[0], ctrl_qubits[1]
+            
+            # Step 1: Compute XOR
+            circuit.cx(q0, q1)
+            
+            # Step 2: Apply controlled rotation
+            circuit.crx(angle, q1, target)
+            
+            # Step 3: Restore
+            circuit.cx(q0, q1)
+    
+    def _implement_three_qubit_complex_form(self, circuit: QuantumCircuit, angle: float,
+                                          target: int, ctrl_qubits: List[int]):
+        """
+        Implement complex 3-qubit logical form from tex file:
+        1. CNOT from qubit 1 to qubit 2 (compute x₁ ⊕ x₂ in qubit 2)
+        2. Multi-controlled RX with pattern '11' (qubits 0,2)
+        3. CNOT from qubit 1 to qubit 2 (restore qubit 2)
+        """
+        if len(ctrl_qubits) >= 3:
+            q0, q1, q2 = ctrl_qubits[0], ctrl_qubits[1], ctrl_qubits[2]
+            
+            # Step 1: Compute x₁ ⊕ x₂ in qubit 2
+            circuit.cx(q1, q2)
+            
+            # Step 2: Apply 2-controlled RX with qubits 0,2
+            mcrx_gate = multi_crx(angle, '11')
+            circuit.append(mcrx_gate, [q0, q2, target])
+            
+            # Step 3: Restore qubit 2
+            circuit.cx(q1, q2)
+    
+    def _implement_maximal_simplification_form(self, circuit: QuantumCircuit, expr: sp.Basic,
+                                             symbols: List[sp.Symbol], angle: float,
+                                             target: int, ctrl_qubits: List[int]):
+        """
+        Implement maximal simplification: single variable control.
+        """
+        simplified = simplify_logic(expr)
+        if simplified.is_Symbol:
+            # Find which variable it simplified to
+            var_index = symbols.index(simplified)
+            if var_index < len(ctrl_qubits):
+                circuit.crx(angle, ctrl_qubits[var_index], target)
+    
+    def _implement_general_form(self, circuit: QuantumCircuit, expr: sp.Basic,
+                               symbols: List[sp.Symbol], angle: float,
+                               target: int, ctrl_qubits: List[int]):
+        """
+        General implementation for other boolean expressions.
+        """
         if expr.is_Symbol:
-            # Single variable: x_i → CRX(ctrl[i], target)
             var_index = self._get_symbol_index(expr, symbols)
             if var_index < len(ctrl_qubits):
                 circuit.crx(angle, ctrl_qubits[var_index], target)
-            
+                
         elif isinstance(expr, Not) and expr.args[0].is_Symbol:
-            # Negated variable: ~x_i → X + CRX + X
             var_index = self._get_symbol_index(expr.args[0], symbols)
             if var_index < len(ctrl_qubits):
                 circuit.x(ctrl_qubits[var_index])
                 circuit.crx(angle, ctrl_qubits[var_index], target)
                 circuit.x(ctrl_qubits[var_index])
-            
+                
         elif isinstance(expr, And):
-            # AND expression: implement as multi-controlled gate
-            self._implement_and_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
+            self._implement_and_expression(circuit, expr, symbols, angle, target, ctrl_qubits)
             
         elif isinstance(expr, Or):
-            # OR expression: check for known patterns
-            if self._is_xor_pattern(expr, symbols):
-                self._implement_xor_pattern(expr, symbols, angle, target, ctrl_qubits, circuit)
-            else:
-                # General OR: implement each term
-                for term in expr.args:
-                    self._implement_expression(term, symbols, angle, target, ctrl_qubits, circuit)
-            
-        elif isinstance(expr, Xor):
-            # XOR expression: implement using logical form
-            self._implement_xor_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
-        
-        else:
-            # Complex expression: convert to DNF and implement
-            try:
-                dnf_expr = sp.to_dnf(expr)
-                if isinstance(dnf_expr, Or):
-                    for term in dnf_expr.args:
-                        self._implement_expression(term, symbols, angle, target, ctrl_qubits, circuit)
-                else:
-                    self._implement_expression(dnf_expr, symbols, angle, target, ctrl_qubits, circuit)
-            except Exception:
-                # Fallback: implement directly
-                self._implement_general_expression(expr, symbols, angle, target, ctrl_qubits, circuit)
+            # For general OR, implement each term
+            for term in expr.args:
+                self._implement_general_form(circuit, term, symbols, angle, target, ctrl_qubits)
     
     def _get_symbol_index(self, symbol: sp.Symbol, symbols: List[sp.Symbol]) -> int:
         """Get index of symbol in symbol list."""
         try:
             return symbols.index(symbol)
         except ValueError:
-            # Extract from symbol name (e.g., 'x2' -> 2)
             symbol_name = str(symbol)
             if symbol_name.startswith('x'):
                 return int(symbol_name[1:])
             return 0
     
-    def _implement_and_expression(self, expr: And, symbols: List[sp.Symbol],
-                                 angle: float, target: int, ctrl_qubits: List[int],
-                                 circuit: QuantumCircuit):
+    def _implement_and_expression(self, circuit: QuantumCircuit, expr: And,
+                                 symbols: List[sp.Symbol], angle: float,
+                                 target: int, ctrl_qubits: List[int]):
         """Implement AND expression as multi-controlled gate."""
         controls = []
         control_states = []
@@ -232,116 +298,30 @@ class BooleanOptimizer:
             ctrl_state = ''.join(control_states)
             mcrx_gate = multi_crx(angle, ctrl_state)
             circuit.append(mcrx_gate, controls + [target])
-    
-    def _is_xor_pattern(self, expr: Or, symbols: List[sp.Symbol]) -> bool:
-        """
-        Check if OR expression represents XOR pattern.
-        From tex: Detect (x0 & ~x1) | (~x0 & x1) = x0 ⊕ x1
-        """
-        if len(expr.args) != 2:
-            return False
-        
-        arg1, arg2 = expr.args
-        
-        # Both should be AND expressions with 2 terms
-        if not (isinstance(arg1, And) and isinstance(arg2, And) and 
-                len(arg1.args) == 2 and len(arg2.args) == 2):
-            return False
-        
-        try:
-            # Check if it simplifies to XOR
-            simplified = simplify_logic(expr)
-            return isinstance(simplified, Xor) or 'Xor' in str(simplified)
-        except Exception:
-            return False
-    
-    def _implement_xor_pattern(self, expr: Or, symbols: List[sp.Symbol],
-                              angle: float, target: int, ctrl_qubits: List[int],
-                              circuit: QuantumCircuit):
-        """
-        Implement XOR pattern using logical form.
-        From tex: XOR logical form = CNOT + CRX + CNOT
-        """
-        if len(ctrl_qubits) >= 2:
-            # XOR logical form for first two qubits
-            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
-            circuit.crx(angle, ctrl_qubits[1], target)
-            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
-    
-    def _implement_xor_expression(self, expr: Xor, symbols: List[sp.Symbol],
-                                 angle: float, target: int, ctrl_qubits: List[int],
-                                 circuit: QuantumCircuit):
-        """Implement XOR expression using logical form."""
-        if len(expr.args) == 2 and len(ctrl_qubits) >= 2:
-            # Two-way XOR: implement as CNOT + CRX + CNOT
-            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
-            circuit.crx(angle, ctrl_qubits[1], target)
-            circuit.cx(ctrl_qubits[0], ctrl_qubits[1])
-        else:
-            # Multi-way XOR: convert to OR of AND terms
-            expanded = sp.to_dnf(expr)
-            self._implement_expression(expanded, symbols, angle, target, ctrl_qubits, circuit)
-    
-    def _implement_general_expression(self, expr: sp.Basic, symbols: List[sp.Symbol],
-                                    angle: float, target: int, ctrl_qubits: List[int],
-                                    circuit: QuantumCircuit):
-        """Fallback implementation for complex expressions."""
-        # For general expressions, evaluate for all possible states
-        n_vars = len(symbols)
-        
-        for i in range(2**n_vars):
-            assignment = {symbols[j]: bool((i >> j) & 1) for j in range(n_vars)}
-            
-            try:
-                if expr.subs(assignment):
-                    # This state satisfies the expression
-                    state_pattern = format(i, f'0{n_vars}b')
-                    
-                    # Create multi-controlled gate for this state
-                    controls = ctrl_qubits[:n_vars]
-                    mcrx_gate = multi_crx(angle, state_pattern)
-                    circuit.append(mcrx_gate, controls + [target])
-            except Exception:
-                continue
 
 
 class MCRXCascadeSimplifier:
     """
-    MCRX cascade simplification implementing Algorithm 1 from the tex file.
+    MCRX cascade simplification implementing Algorithm 1 with logical form optimizations.
     """
     
     def __init__(self, tolerance: float = 1e-10):
         self.tolerance = tolerance
         self.pattern_analyzer = ControlPatternAnalyzer()
-        self.boolean_optimizer = BooleanOptimizer()
+        self.logical_optimizer = LogicalFormOptimizer()
     
     def simplify(self, circuit: QuantumCircuit) -> QuantumCircuit:
-        """
-        Main simplification method implementing Algorithm 1 from the tex file.
-        
-        Args:
-            circuit: Input quantum circuit containing only MCRX gates
-            
-        Returns:
-            Optimized quantum circuit
-            
-        Raises:
-            ValueError: If circuit contains non-MCRX gates, mixed targets, or mixed angles
-            RuntimeError: If circuit is empty or invalid
-        """
-        # Validate input
+        """Main simplification method implementing Algorithm 1 with logical forms."""
         if circuit.num_qubits == 0:
             raise RuntimeError("Cannot simplify empty circuit (0 qubits)")
         
         if len(circuit.data) == 0:
             raise RuntimeError("Cannot simplify circuit with no gates")
         
-        # Extract and validate MCRX gates
         mcrx_gates = self._validate_and_extract_mcrx_gates(circuit)
         self._validate_same_target_and_angle(mcrx_gates)
         
-        # Apply Algorithm 1 from tex file
-        return self._apply_algorithm_1(mcrx_gates, circuit.num_qubits)
+        return self._apply_algorithm_1_with_logical_forms(mcrx_gates, circuit.num_qubits)
     
     def _validate_and_extract_mcrx_gates(self, circuit: QuantumCircuit) -> List[MCRXGateInfo]:
         """Extract and validate MCRX gates from circuit."""
@@ -365,23 +345,19 @@ class MCRXCascadeSimplifier:
         """Extract gate information from circuit instruction."""
         op_name = instruction.operation.name.lower()
         
-        # Check if it's an MCRX gate
         mcrx_patterns = ['mcrx', 'ccrx', 'multi_crx', 'mcx_rotation']
         if not any(pattern in op_name for pattern in mcrx_patterns):
             return None
         
-        # Get qubits
         qubits = [circuit.find_bit(q).index for q in instruction.qubits]
         target = qubits[-1]
         ctrl_qubits = qubits[:-1]
         
-        # Get rotation angle
         if hasattr(instruction.operation, 'params') and instruction.operation.params:
             theta = float(instruction.operation.params[0])
         else:
             raise ValueError(f"Gate '{instruction.operation.name}' has no rotation angle parameter")
         
-        # Extract control state
         ctrl_state = self._extract_control_state(instruction, len(ctrl_qubits))
         
         return MCRXGateInfo(theta, target, ctrl_qubits, ctrl_state)
@@ -390,7 +366,6 @@ class MCRXCascadeSimplifier:
         """Extract control state pattern from gate instruction."""
         op_name = instruction.operation.name
         
-        # Try to extract from operation attributes
         if hasattr(instruction.operation, 'ctrl_state'):
             ctrl_state = instruction.operation.ctrl_state
             if isinstance(ctrl_state, str):
@@ -398,14 +373,12 @@ class MCRXCascadeSimplifier:
             elif isinstance(ctrl_state, int):
                 return format(ctrl_state, f'0{n_controls}b')
         
-        # Try to extract from gate name (e.g., 'mcrx_o10' -> '10')
         pattern_match = re.search(r'_o(\d+)', op_name)
         if pattern_match:
             binary_str = pattern_match.group(1)
             if len(binary_str) <= n_controls:
                 return binary_str.zfill(n_controls)
         
-        # Default to all-ones control
         return '1' * n_controls
     
     def _validate_same_target_and_angle(self, mcrx_gates: List[MCRXGateInfo]) -> None:
@@ -429,23 +402,11 @@ class MCRXCascadeSimplifier:
                     f"Gate {i+1} has angle {gate.theta:.6f}, but gate 1 has angle {reference_angle:.6f}."
                 )
     
-    def _apply_algorithm_1(self, mcrx_gates: List[MCRXGateInfo], n_qubits: int) -> QuantumCircuit:
+    def _apply_algorithm_1_with_logical_forms(self, mcrx_gates: List[MCRXGateInfo], n_qubits: int) -> QuantumCircuit:
         """
-        Apply Algorithm 1 from tex file: SimplifySameTargetMCRXCascade.
-        
-        From tex:
-        1. Initialize rotation coefficient array r[2^n] = 0
-        2. For each computational basis state S ∈ {0,1,...,2^n-1}:
-           For each control pattern C_i:
-               If state S satisfies control pattern C_i:
-                   r[S] ← r[S] + 1
-        3. Group states by rotation coefficient
-        4. For each unique coefficient k:
-           Create control condition for OR of states in S_k
-           Add gate: CRX_{∨_{S∈S_k} S, t}(kθ)
+        Apply Algorithm 1 from tex file with logical form optimizations.
         """
         if len(mcrx_gates) == 1:
-            # Single gate - no optimization needed
             circuit = QuantumCircuit(n_qubits)
             gate = mcrx_gates[0]
             mcrx_gate = multi_crx(gate.theta, gate.pattern)
@@ -470,7 +431,7 @@ class MCRXCascadeSimplifier:
             if coeff > 0:
                 coeff_groups[coeff].append(state)
         
-        # Step 4: Create optimized gates using boolean algebra
+        # Step 4: Create optimized gates using logical forms
         circuit = QuantumCircuit(n_qubits)
         theta = mcrx_gates[0].theta
         target = mcrx_gates[0].target
@@ -489,16 +450,15 @@ class MCRXCascadeSimplifier:
                 circuit.append(mcrx_gate, ctrl_qubits + [target])
             
             else:
-                # Multiple states - use boolean algebra
-                or_expr, symbols = self.boolean_optimizer.states_to_or_expr(states, n_controls)
-                simplified_expr = self.boolean_optimizer.simplify_boolean_expr(or_expr)
+                # Multiple states - use logical form optimization
+                or_expr, symbols = self.logical_optimizer.states_to_or_expr(states, n_controls)
+                simplified_expr = self.logical_optimizer.simplify_boolean_expr(or_expr)
                 
-                # Convert to logical circuit
-                logical_circuit = self.boolean_optimizer.expr_to_logical_circuit(
+                # Use logical form implementation with CNOT tricks
+                logical_circuit = self.logical_optimizer.implement_logical_form(
                     simplified_expr, symbols, total_angle, target, ctrl_qubits, n_qubits
                 )
                 
-                # Compose with main circuit
                 circuit = circuit.compose(logical_circuit)
         
         return circuit
@@ -508,10 +468,7 @@ class MCRXCascadeSimplifier:
         if len(state_bits) < gate.n_controls:
             return False
         
-        # Align pattern with state bits (use rightmost bits to match pattern)
         if gate.n_controls < n_controls:
-            # Pattern is shorter - pad with don't cares or align appropriately
-            # For now, use leftmost bits
             relevant_bits = state_bits[:gate.n_controls]
         else:
             relevant_bits = state_bits
@@ -519,7 +476,7 @@ class MCRXCascadeSimplifier:
         return relevant_bits == gate.pattern
     
     def analyze_optimization_potential(self, circuit: QuantumCircuit) -> Dict[str, Any]:
-        """Analyze optimization potential using the algorithm."""
+        """Analyze optimization potential using the algorithm with logical form detection."""
         if circuit.num_qubits == 0:
             raise RuntimeError("Cannot analyze empty circuit (0 qubits)")
         
@@ -548,31 +505,37 @@ class MCRXCascadeSimplifier:
             if coeff > 0:
                 coeff_groups[coeff].append(state)
         
-        # Estimate gates after optimization
+        # Analyze logical forms and estimate gates
         estimated_gates = 0
         boolean_functions = []
+        logical_forms = []
         
         for coeff, states in coeff_groups.items():
             if len(states) == 1:
                 estimated_gates += 1
                 state_pattern = format(states[0], f'0{n_controls}b')
                 boolean_functions.append(f"State: {state_pattern}")
+                logical_forms.append("Direct implementation")
             else:
-                # Use SymPy to get actual boolean function
-                or_expr, symbols = self.boolean_optimizer.states_to_or_expr(states, n_controls)
-                simplified_expr = self.boolean_optimizer.simplify_boolean_expr(or_expr)
+                # Analyze with logical form optimizer
+                or_expr, symbols = self.logical_optimizer.states_to_or_expr(states, n_controls)
+                simplified_expr = self.logical_optimizer.simplify_boolean_expr(or_expr)
                 
-                # Estimate gates based on simplified expression
-                if simplified_expr.is_Symbol:
-                    estimated_gates += 1
-                elif isinstance(simplified_expr, Xor) or 'Xor' in str(simplified_expr):
+                # Detect specific logical forms
+                if self.logical_optimizer._is_two_qubit_xor_form(simplified_expr, symbols):
                     estimated_gates += 3  # CNOT + CRX + CNOT
-                elif isinstance(simplified_expr, And):
-                    estimated_gates += 1  # Multi-controlled gate
+                    logical_forms.append("Two-qubit XOR logical form")
+                elif self.logical_optimizer._is_three_qubit_complex_form(simplified_expr, symbols):
+                    estimated_gates += 3  # CNOT + CCRX + CNOT  
+                    logical_forms.append("Three-qubit complex logical form")
+                elif self.logical_optimizer._is_maximal_simplification_form(simplified_expr, symbols):
+                    estimated_gates += 1  # Single control
+                    logical_forms.append("Maximal simplification")
                 else:
-                    # Conservative estimate
-                    complexity = self.boolean_optimizer.analyze_expr_complexity(simplified_expr)
-                    estimated_gates += max(1, complexity['and_ops'] + complexity['or_ops'])
+                    # General case
+                    complexity = len(str(simplified_expr))
+                    estimated_gates += max(1, complexity // 10)
+                    logical_forms.append("General boolean form")
                 
                 boolean_functions.append(str(simplified_expr))
         
@@ -585,6 +548,7 @@ class MCRXCascadeSimplifier:
             'patterns': patterns,
             'unique_patterns': len(set(patterns)),
             'boolean_functions': boolean_functions,
+            'logical_forms': logical_forms,
             'rotation_coefficients': {i: coeff for i, coeff in enumerate(rotation_coefficients) if coeff > 0},
             'coefficient_groups': {k: v for k, v in coeff_groups.items()},
             'target_qubit': mcrx_gates[0].target,
