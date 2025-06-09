@@ -69,21 +69,29 @@ class ControlPattern:
 class BooleanExpressionAnalyzer:
     """Analyzes Boolean expressions for control patterns."""
 
-    def __init__(self, n_controls: int):
-        self.n_controls = n_controls
-        self.symbols = [sp.Symbol(f"x{i}") for i in range(n_controls)]
+    def __init__(self, all_ctrl_qubits: List[int]):
+        """
+        Initialize with ALL control qubits that appear in patterns.
+
+        Args:
+            all_ctrl_qubits: List of all control qubit indices (e.g., [0, 1, 2])
+        """
+        self.all_ctrl_qubits = sorted(all_ctrl_qubits)
+        self.qubit_to_symbol = {qubit: sp.Symbol(f"x{qubit}") for qubit in self.all_ctrl_qubits}
+        self.symbols = [self.qubit_to_symbol[qubit] for qubit in self.all_ctrl_qubits]
 
     def pattern_to_boolean_expr(self, pattern: ControlPattern) -> sp.Basic:
-        """Convert control pattern to Boolean expression."""
+        """Convert control pattern to Boolean expression with qubit mapping."""
         terms = []
 
+        # Map pattern positions to actual qubits
         for i, qubit_idx in enumerate(pattern.active_qubits):
-            if qubit_idx < len(self.symbols):
+            if qubit_idx in self.qubit_to_symbol:
                 bit = pattern.pattern[i]
                 if bit == "1":
-                    terms.append(self.symbols[qubit_idx])
+                    terms.append(self.qubit_to_symbol[qubit_idx])
                 elif bit == "0":
-                    terms.append(sp.Not(self.symbols[qubit_idx]))
+                    terms.append(sp.Not(self.qubit_to_symbol[qubit_idx]))
 
         if not terms:
             return sp.true
@@ -199,7 +207,7 @@ class XORPatternDetector:
 
 class MCRXCascadeSimplifier:
     """
-    MCRX cascade simplifier with correct pattern reading.
+    MCRX cascade simplifier with pattern reading.
     """
 
     def __init__(self, tolerance: float = 1e-10, verbose: bool = False):
@@ -207,9 +215,9 @@ class MCRXCascadeSimplifier:
         self.verbose = verbose
 
     def simplify(self, circuit: QuantumCircuit) -> Tuple[QuantumCircuit, Dict[str, Any]]:
-        """Main simplification method with  pattern extraction."""
+        """Main simplification method with FIXED pattern extraction."""
         if self.verbose:
-            print("🔬 Starting  pattern reading MCRX simplification...")
+            print("🔬 Starting FIXED pattern reading MCRX simplification...")
 
         # Step 1: Validate and extract circuit information
         target_qubit, rotation_angle, all_ctrl_qubits = self._validate_circuit(circuit)
@@ -220,16 +228,22 @@ class MCRXCascadeSimplifier:
                 f"✓ Circuit validated: target={target_qubit}, angle={rotation_angle:.4f}, controls={n_controls}"
             )
 
-        # Step 2:  pattern extraction
-        patterns = self._extract_patterns(circuit, target_qubit, rotation_angle, all_ctrl_qubits)
+        # Step 2: FIXED pattern extraction
+        patterns = self._extract_patterns_fixed(
+            circuit, target_qubit, rotation_angle, all_ctrl_qubits
+        )
 
         if self.verbose:
             print(f"✓ Extracted {len(patterns)} patterns:")
             for p in patterns:
                 print(f"  {p}")
 
-        # Step 3: Boolean expression analysis
-        bool_analyzer = BooleanExpressionAnalyzer(n_controls)
+        # Step 3: Boolean expression analysis (FIXED)
+        all_ctrl_qubits_in_patterns = set()
+        for pattern in patterns:
+            all_ctrl_qubits_in_patterns.update(pattern.active_qubits)
+
+        bool_analyzer = BooleanExpressionAnalyzer(list(all_ctrl_qubits_in_patterns))
         original_expr = bool_analyzer.patterns_to_combined_expr(patterns)
         simplified_expr = bool_analyzer.simplify_expression(original_expr)
         expr_analysis = bool_analyzer.analyze_expression(simplified_expr)
@@ -259,14 +273,14 @@ class MCRXCascadeSimplifier:
             optimized_circuit = circuit.copy()
             optimization_method = "no_optimization_different_controls"
         elif xor_pairs and self._should_apply_cx_trick(xor_pairs[0], expr_analysis):
-            optimized_circuit = self._apply_cx_trick(
+            optimized_circuit = self._apply_cx_trick_fixed(
                 xor_pairs[0], target_qubit, all_ctrl_qubits, circuit.num_qubits, rotation_angle
             )
             optimization_method = "CX_trick"
         elif expr_analysis["is_single_variable"] or expr_analysis["is_negated_variable"]:
             # Only apply if all patterns have same control set
             if self._all_patterns_same_control_set(patterns):
-                optimized_circuit = self._apply_single_control(
+                optimized_circuit = self._apply_single_control_fixed(
                     simplified_expr,
                     target_qubit,
                     all_ctrl_qubits,
@@ -279,7 +293,7 @@ class MCRXCascadeSimplifier:
                 optimized_circuit = circuit.copy()
                 optimization_method = "no_optimization_mixed_controls"
         elif len(patterns) == 1:  # Only one unique pattern (may have coefficient > 1)
-            optimized_circuit = self._apply_identical_pattern(
+            optimized_circuit = self._apply_identical_pattern_fixed(
                 patterns[0], target_qubit, all_ctrl_qubits, circuit.num_qubits, rotation_angle
             )
             optimization_method = "identical_patterns"
@@ -355,22 +369,24 @@ class MCRXCascadeSimplifier:
 
         return target_qubit, first_angle, ctrl_qubits
 
-    def _extract_patterns(
+    def _extract_patterns_fixed(
         self,
         circuit: QuantumCircuit,
         target_qubit: int,
         rotation_angle: float,
         all_ctrl_qubits: List[int],
     ) -> List[ControlPattern]:
-        """Extract patterns with correct left-to-right reading."""
+        """Extract patterns with left-to-right reading."""
         pattern_data = defaultdict(int)
 
         for instruction in circuit.data:
             qubits = [circuit.find_bit(q).index for q in instruction.qubits]
             gate_ctrl_qubits = qubits[:-1]  # All except target
 
-            # Extract pattern correctly
-            pattern_str, active_qubits = self._extract_pattern_string(instruction, gate_ctrl_qubits)
+            # Extract pattern
+            pattern_str, active_qubits = self._extract_pattern_string_fixed(
+                instruction, gate_ctrl_qubits
+            )
 
             # Create key for grouping
             key = (pattern_str, tuple(active_qubits))
@@ -383,10 +399,10 @@ class MCRXCascadeSimplifier:
 
         return patterns
 
-    def _extract_pattern_string(
+    def _extract_pattern_string_fixed(
         self, instruction, gate_ctrl_qubits: List[int]
     ) -> Tuple[str, List[int]]:
-        """Extract pattern string reading LEFT-TO-RIGHT."""
+        """FIXED: Extract pattern string reading LEFT-TO-RIGHT."""
         op_name = instruction.operation.name
         n_gate_controls = len(gate_ctrl_qubits)
 
@@ -399,7 +415,7 @@ class MCRXCascadeSimplifier:
         if hasattr(instruction.operation, "ctrl_state"):
             ctrl_state = instruction.operation.ctrl_state
             if isinstance(ctrl_state, str):
-                # Reverse Qiskit's ctrl_state to get our left-to-right convention
+                # FIXED: Reverse Qiskit's ctrl_state to get our left-to-right convention
                 ctrl_state_str = ctrl_state[::-1]
             elif isinstance(ctrl_state, int):
                 # Convert int to binary and reverse
@@ -414,7 +430,7 @@ class MCRXCascadeSimplifier:
                 state_number = int(pattern_match.group(1))
                 ctrl_state_str = format(state_number, f"0{n_gate_controls}b")[::-1]
 
-        # Return pattern and active qubits in TOP-TO-BOTTOM order
+        # FIXED: Return pattern and active qubits in TOP-TO-BOTTOM order
         active_qubits = sorted(gate_ctrl_qubits)  # Sort to ensure top-to-bottom
 
         # Map ctrl_state_str to the sorted qubit order
@@ -478,7 +494,7 @@ class MCRXCascadeSimplifier:
             and not expr_analysis["is_negated_variable"]
         )
 
-    def _apply_cx_trick(
+    def _apply_cx_trick_fixed(
         self,
         xor_pair_info: Tuple,
         target_qubit: int,
@@ -486,7 +502,7 @@ class MCRXCascadeSimplifier:
         n_qubits: int,
         rotation_angle: float,
     ) -> QuantumCircuit:
-        """Apply CX trick with correct qubit mapping."""
+        """Apply CX trick with qubit mapping."""
         pattern1, pattern2, diff_positions = xor_pair_info
         circuit = QuantumCircuit(n_qubits)
 
@@ -528,7 +544,7 @@ class MCRXCascadeSimplifier:
 
         return circuit
 
-    def _apply_single_control(
+    def _apply_single_control_fixed(
         self,
         simplified_expr: sp.Basic,
         target_qubit: int,
@@ -537,7 +553,7 @@ class MCRXCascadeSimplifier:
         rotation_angle: float,
         bool_analyzer: BooleanExpressionAnalyzer,
     ) -> QuantumCircuit:
-        """Apply single control optimization."""
+        """FIXED: Apply single control optimization."""
         circuit = QuantumCircuit(n_qubits)
 
         # Find which control qubit
@@ -555,7 +571,7 @@ class MCRXCascadeSimplifier:
 
         return circuit
 
-    def _apply_identical_pattern(
+    def _apply_identical_pattern_fixed(
         self,
         pattern: ControlPattern,
         target_qubit: int,
@@ -563,7 +579,7 @@ class MCRXCascadeSimplifier:
         n_qubits: int,
         rotation_angle: float,
     ) -> QuantumCircuit:
-        """Apply identical pattern optimization."""
+        """FIXED: Apply identical pattern optimization."""
         circuit = QuantumCircuit(n_qubits)
 
         # Single gate with multiplied angle
@@ -577,7 +593,7 @@ class MCRXCascadeSimplifier:
         """Analyze patterns with FIXED extraction."""
         try:
             target_qubit, rotation_angle, all_ctrl_qubits = self._validate_circuit(circuit)
-            patterns = self._extract_patterns(
+            patterns = self._extract_patterns_fixed(
                 circuit, target_qubit, rotation_angle, all_ctrl_qubits
             )
 
