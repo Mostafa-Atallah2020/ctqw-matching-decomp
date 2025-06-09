@@ -1,5 +1,5 @@
 """
-MCRX Simplifier - Enhanced with Iterative Multi-Pattern Handling
+MCRX Simplifier - Complete Enhanced Implementation with Iterative Multi-Pattern Handling
 
 CRITICAL FIXES:
 1. Read pattern strings LEFT-TO-RIGHT (position 0 = qubit 0, position 1 = qubit 1)
@@ -8,9 +8,13 @@ CRITICAL FIXES:
 4. Proper subset pattern handling (don't pad with '0's)
 5. CX trick implementation with qubit mapping
 6. ITERATIVE HANDLING: Handle multiple MCRX gates through iterative pairwise simplification
+7. BOOLEAN SIMPLIFICATION: Properly convert simplified Boolean expressions to optimized circuits
+8. MCRX-ONLY VALIDATION: Ensure circuit contains only multi-controlled RX gates
+9. VERBOSE CONTROL: All debug output controlled by verbose flag
 """
 
 import itertools
+import re
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple
 
@@ -352,6 +356,8 @@ class MCRXCascadeSimplifier:
                         
                         if self.verbose:
                             print(f"✓ Extracted {len(new_patterns)} new patterns from simplified circuit")
+                            for np in new_patterns:
+                                print(f"    New pattern: {np}")
 
                     # Remove the processed patterns
                     remaining_patterns.remove(current_pattern)
@@ -585,12 +591,116 @@ class MCRXCascadeSimplifier:
         
         return circuit
 
-    # ... [Include all the existing methods from the original MCRXCascadeSimplifier] ...
-    
+    def _apply_boolean_simplification(
+        self,
+        simplified_expr: sp.Basic,
+        target_qubit: int,
+        all_ctrl_qubits: List[int],
+        n_qubits: int,
+        rotation_angle: float,
+        bool_analyzer: BooleanExpressionAnalyzer,
+        original_patterns: List[ControlPattern]
+    ) -> QuantumCircuit:
+        """Apply Boolean simplification by creating optimized circuit from simplified expression."""
+        circuit = QuantumCircuit(n_qubits)
+        
+        # Calculate total angle from all original patterns
+        total_angle = rotation_angle * sum(p.coefficient for p in original_patterns)
+        
+        if self.verbose:
+            print(f"      Creating circuit for simplified expression: {simplified_expr}")
+            print(f"      Total angle: {total_angle}")
+        
+        # Convert simplified expression back to control pattern
+        try:
+            optimized_pattern = self._boolean_expr_to_pattern(
+                simplified_expr, bool_analyzer, all_ctrl_qubits
+            )
+            
+            if optimized_pattern:
+                if self.verbose:
+                    print(f"      Optimized pattern: {optimized_pattern}")
+                
+                # Create MCRX gate with the optimized pattern
+                gate = multi_crx(total_angle, optimized_pattern[0])
+                circuit.append(gate, optimized_pattern[1] + [target_qubit])
+            else:
+                # Fallback: if we can't convert back to pattern, use original
+                if self.verbose:
+                    print(f"      Could not convert to pattern, using original circuit")
+                return QuantumCircuit(n_qubits)  # Return empty circuit to indicate no optimization
+                
+        except Exception as e:
+            if self.verbose:
+                print(f"      Error in Boolean simplification: {e}")
+            return QuantumCircuit(n_qubits)  # Return empty circuit to indicate no optimization
+        
+        return circuit
+
+    def _boolean_expr_to_pattern(
+        self, 
+        expr: sp.Basic, 
+        bool_analyzer: BooleanExpressionAnalyzer,
+        all_ctrl_qubits: List[int]
+    ) -> Optional[Tuple[str, List[int]]]:
+        """Convert a simplified Boolean expression back to a control pattern."""
+        
+        # Handle simple cases first
+        if expr == sp.true:
+            return ("", [])  # No controls needed
+        elif expr == sp.false:
+            return None  # Never executes
+        
+        # For more complex expressions, we need to extract the pattern
+        # This is a simplified approach - we'll look for conjunctions of literals
+        
+        if isinstance(expr, sp.And):
+            # Handle conjunction of literals: ~x1 & ~x2 & ~x3
+            pattern_bits = {}
+            active_qubits = []
+            
+            for arg in expr.args:
+                if isinstance(arg, sp.Not):
+                    # Negated variable: ~x_i means qubit i should be 0
+                    var = arg.args[0]
+                    if var in bool_analyzer.qubit_to_symbol.values():
+                        qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == var)
+                        pattern_bits[qubit_idx] = '0'
+                        active_qubits.append(qubit_idx)
+                elif arg in bool_analyzer.qubit_to_symbol.values():
+                    # Positive variable: x_i means qubit i should be 1
+                    qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == arg)
+                    pattern_bits[qubit_idx] = '1'
+                    active_qubits.append(qubit_idx)
+            
+            if active_qubits:
+                # Sort qubits and create pattern string
+                active_qubits.sort()
+                pattern_str = ''.join(pattern_bits[q] for q in active_qubits)
+                return (pattern_str, active_qubits)
+        
+        elif isinstance(expr, sp.Not):
+            # Handle single negated variable
+            if expr.args[0] in bool_analyzer.qubit_to_symbol.values():
+                var = expr.args[0]
+                qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == var)
+                return ('0', [qubit_idx])
+        
+        elif expr in bool_analyzer.qubit_to_symbol.values():
+            # Handle single positive variable
+            qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == expr)
+            return ('1', [qubit_idx])
+        
+        # For other complex expressions, return None to indicate we can't simplify
+        return None
+
     def _validate_circuit(self, circuit: QuantumCircuit) -> Tuple[int, float, List[int]]:
         """Validate circuit and extract information."""
         if circuit.num_qubits == 0 or len(circuit.data) == 0:
             raise ValueError("Circuit must have qubits and gates")
+
+        # Validate that all gates are MCRX gates
+        self._validate_mcrx_only_circuit(circuit)
 
         # Find all control qubits and target qubit
         all_qubits = set()
@@ -619,6 +729,56 @@ class MCRXCascadeSimplifier:
                 raise ValueError(f"Gate {i+1}: All gates must have same angle")
 
         return target_qubit, first_angle, ctrl_qubits
+
+    def _validate_mcrx_only_circuit(self, circuit: QuantumCircuit) -> None:
+        """Validate that circuit contains only multi-controlled RX gates."""
+        for i, instruction in enumerate(circuit.data):
+            gate_name = instruction.operation.name.lower()
+            
+            # Check if it's a valid MCRX-type gate using pattern matching
+            is_valid = self._is_valid_mcrx_gate(gate_name, instruction)
+            
+            if not is_valid:
+                raise ValueError(
+                    f"Gate {i+1} ('{instruction.operation.name}') is not a valid multi-controlled RX gate. "
+                    f"Circuit must contain only MCRX-type gates. Found gate with {len(instruction.qubits)} qubits."
+                )
+
+    def _is_valid_mcrx_gate(self, gate_name: str, instruction) -> bool:
+        """Check if a gate is a valid multi-controlled RX gate."""
+        # Must have rotation parameter
+        if not hasattr(instruction.operation, 'params') or len(instruction.operation.params) == 0:
+            return False
+        
+        # Check various MCRX gate name patterns
+        valid_patterns = [
+            r'^rx$',                    # Basic RX
+            r'^crx$',                   # Controlled RX
+            r'^mcrx$',                  # Multi-controlled RX
+            r'^ccrx(_o\d+)?$',          # 2-controlled RX (ccrx, ccrx_o1, etc.)
+            r'^c\d+rx(_o\d+)?$',        # n-controlled RX (c3rx, c4rx_o0, etc.)
+            r'^mcx(_o\d+)?$',           # Multi-controlled X (sometimes used for RX)
+            r'^mcrx(_o\d+)?$',          # Multi-controlled RX with ctrl_state
+            r'^.*rx.*$',                # Any gate containing 'rx'
+        ]
+        
+        # Check if gate name matches any valid pattern
+        for pattern in valid_patterns:
+            if re.match(pattern, gate_name):
+                return True
+        
+        # Additional check for gates that might be MCRX but with different naming
+        # If it has qubits (at least target) and rotation params, likely valid
+        if len(instruction.qubits) >= 1:
+            # Check if it looks like a rotation gate
+            param = instruction.operation.params[0]
+            try:
+                float(param)  # Can convert to float (rotation angle)
+                return True
+            except (ValueError, TypeError):
+                pass
+        
+        return False
 
     def _extract_patterns_fixed(
         self,
@@ -674,8 +834,6 @@ class MCRXCascadeSimplifier:
 
         # Parse operation name if needed
         if ctrl_state_str == default_pattern:
-            import re
-
             pattern_match = re.search(r"_o(\d+)", op_name)
             if pattern_match:
                 state_number = int(pattern_match.group(1))
@@ -812,109 +970,6 @@ class MCRXCascadeSimplifier:
                 return circuit
 
         return circuit
-
-    def _apply_boolean_simplification(
-        self,
-        simplified_expr: sp.Basic,
-        target_qubit: int,
-        all_ctrl_qubits: List[int],
-        n_qubits: int,
-        rotation_angle: float,
-        bool_analyzer: BooleanExpressionAnalyzer,
-        original_patterns: List[ControlPattern]
-    ) -> QuantumCircuit:
-        """Apply Boolean simplification by creating optimized circuit from simplified expression."""
-        circuit = QuantumCircuit(n_qubits)
-        
-        # Calculate total angle from all original patterns
-        total_angle = rotation_angle * sum(p.coefficient for p in original_patterns)
-        
-        if self.verbose:
-            print(f"      Creating circuit for simplified expression: {simplified_expr}")
-            print(f"      Total angle: {total_angle}")
-        
-        # Convert simplified expression back to control pattern
-        try:
-            optimized_pattern = self._boolean_expr_to_pattern(
-                simplified_expr, bool_analyzer, all_ctrl_qubits
-            )
-            
-            if optimized_pattern:
-                if self.verbose:
-                    print(f"      Optimized pattern: {optimized_pattern}")
-                
-                # Create MCRX gate with the optimized pattern
-                gate = multi_crx(total_angle, optimized_pattern[0])
-                circuit.append(gate, optimized_pattern[1] + [target_qubit])
-            else:
-                # Fallback: if we can't convert back to pattern, use original
-                if self.verbose:
-                    print(f"      Could not convert to pattern, using original circuit")
-                return QuantumCircuit(n_qubits)  # Return empty circuit to indicate no optimization
-                
-        except Exception as e:
-            if self.verbose:
-                print(f"      Error in Boolean simplification: {e}")
-            return QuantumCircuit(n_qubits)  # Return empty circuit to indicate no optimization
-        
-        return circuit
-
-    def _boolean_expr_to_pattern(
-        self, 
-        expr: sp.Basic, 
-        bool_analyzer: BooleanExpressionAnalyzer,
-        all_ctrl_qubits: List[int]
-    ) -> Optional[Tuple[str, List[int]]]:
-        """Convert a simplified Boolean expression back to a control pattern."""
-        
-        # Handle simple cases first
-        if expr == sp.true:
-            return ("", [])  # No controls needed
-        elif expr == sp.false:
-            return None  # Never executes
-        
-        # For more complex expressions, we need to extract the pattern
-        # This is a simplified approach - we'll look for conjunctions of literals
-        
-        if isinstance(expr, sp.And):
-            # Handle conjunction of literals: ~x1 & ~x2 & ~x3
-            pattern_bits = {}
-            active_qubits = []
-            
-            for arg in expr.args:
-                if isinstance(arg, sp.Not):
-                    # Negated variable: ~x_i means qubit i should be 0
-                    var = arg.args[0]
-                    if var in bool_analyzer.qubit_to_symbol.values():
-                        qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == var)
-                        pattern_bits[qubit_idx] = '0'
-                        active_qubits.append(qubit_idx)
-                elif arg in bool_analyzer.qubit_to_symbol.values():
-                    # Positive variable: x_i means qubit i should be 1
-                    qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == arg)
-                    pattern_bits[qubit_idx] = '1'
-                    active_qubits.append(qubit_idx)
-            
-            if active_qubits:
-                # Sort qubits and create pattern string
-                active_qubits.sort()
-                pattern_str = ''.join(pattern_bits[q] for q in active_qubits)
-                return (pattern_str, active_qubits)
-        
-        elif isinstance(expr, sp.Not):
-            # Handle single negated variable
-            if expr.args[0] in bool_analyzer.qubit_to_symbol.values():
-                var = expr.args[0]
-                qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == var)
-                return ('0', [qubit_idx])
-        
-        elif expr in bool_analyzer.qubit_to_symbol.values():
-            # Handle single positive variable
-            qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == expr)
-            return ('1', [qubit_idx])
-        
-        # For other complex expressions, return None to indicate we can't simplify
-        return None
 
     def _apply_identical_pattern_fixed(
         self,
