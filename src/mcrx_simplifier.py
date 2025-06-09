@@ -320,8 +320,8 @@ class MCRXCascadeSimplifier:
                     print(f"  Simplification result: {simplify_info['optimization_method']}")
                     print(f"  Gate reduction: {simplify_info['gate_reduction']}")
 
-                if simplify_info["gate_reduction"] > 0:
-                    # Simplification found!
+                if simplify_info["gate_reduction"] > 0 or simplify_info["uses_cnot_tricks"]:
+                    # Simplification found! (Either gate reduction OR CX trick)
                     if self.verbose:
                         print(f"✓ Simplification found! Method: {simplify_info['optimization_method']}")
 
@@ -343,7 +343,7 @@ class MCRXCascadeSimplifier:
                             print("✓ CX trick applied - added to final circuit")
 
                     else:
-                        # No CX trick - extract new pattern(s) from simplified circuit
+                        # Boolean or other simplification - extract new pattern(s) from simplified circuit
                         new_patterns = self._extract_patterns_fixed(
                             simplified_circuit, target_qubit, rotation_angle, all_ctrl_qubits
                         )
