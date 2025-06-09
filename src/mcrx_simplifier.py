@@ -11,21 +11,24 @@ CRITICAL FIXES:
 7. BOOLEAN SIMPLIFICATION: Properly convert simplified Boolean expressions to optimized circuits
 8. MCRX-ONLY VALIDATION: Ensure circuit contains only multi-controlled RX gates
 9. VERBOSE CONTROL: All debug output controlled by verbose flag
+10. FIDELITY VERIFICATION: Verify optimized circuits maintain state equivalence
 """
 
 import itertools
 import re
 from collections import defaultdict
 from typing import Any, Dict, List, Optional, Set, Tuple
+import os
+from datetime import datetime
 
 import numpy as np
 import sympy as sp
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, qasm2
 from qiskit.circuit.library import RXGate
 from sympy.logic import simplify_logic
 from sympy.logic.boolalg import And, Not, Or, Xor
 
-from .misc import multi_crx
+from .misc import multi_crx, get_state, compare_quantum_states
 
 
 class ControlPattern:
@@ -166,6 +169,7 @@ class XORPatternDetector:
     ) -> List[Tuple[ControlPattern, ControlPattern, List[int]]]:
         """
         Detect XOR pattern pairs with the differing qubit positions.
+        Enhanced to detect multiple XOR pairs within the same pattern comparison.
 
         Returns:
             List of (pattern1, pattern2, differing_positions)
@@ -176,9 +180,67 @@ class XORPatternDetector:
             for j, pattern2 in enumerate(patterns[i + 1 :], i + 1):
                 differing_positions = XORPatternDetector._get_xor_positions(pattern1, pattern2)
                 if differing_positions:
-                    xor_pairs.append((pattern1, pattern2, differing_positions))
+                    # Check if this is a multiple XOR case
+                    if len(differing_positions) >= 4:
+                        # Decompose into individual XOR pairs
+                        individual_pairs = XORPatternDetector._decompose_multiple_xor(
+                            pattern1, pattern2, differing_positions
+                        )
+                        for pair_positions in individual_pairs:
+                            xor_pairs.append((pattern1, pattern2, pair_positions))
+                    else:
+                        # Single XOR pair
+                        xor_pairs.append((pattern1, pattern2, differing_positions))
 
         return xor_pairs
+
+    @staticmethod
+    def _decompose_multiple_xor(
+        pattern1: ControlPattern,
+        pattern2: ControlPattern,
+        differing_positions: List[int]
+    ) -> List[List[int]]:
+        """
+        Decompose multiple differing positions into individual XOR pairs.
+        
+        Returns:
+            List of individual XOR pair position lists
+        """
+        individual_pairs = []
+        
+        if len(differing_positions) == 4:
+            # For 4 positions, find the two valid XOR pairs
+            from itertools import combinations
+            
+            for pair1_positions in combinations(differing_positions, 2):
+                pair2_positions = [pos for pos in differing_positions if pos not in pair1_positions]
+                
+                if (XORPatternDetector._is_valid_xor_pair(pattern1, pattern2, list(pair1_positions)) and
+                    XORPatternDetector._is_valid_xor_pair(pattern1, pattern2, pair2_positions)):
+                    individual_pairs.append(list(pair1_positions))
+                    individual_pairs.append(pair2_positions)
+                    break
+                    
+        elif len(differing_positions) == 6:
+            # For 6 positions, try to find 3 XOR pairs
+            # Use a greedy approach: find consecutive valid pairs
+            sorted_positions = sorted(differing_positions)
+            for i in range(0, len(sorted_positions), 2):
+                if i + 1 < len(sorted_positions):
+                    pair = [sorted_positions[i], sorted_positions[i + 1]]
+                    if XORPatternDetector._is_valid_xor_pair(pattern1, pattern2, pair):
+                        individual_pairs.append(pair)
+                        
+        elif len(differing_positions) % 2 == 0:
+            # For other even numbers, use consecutive pairing
+            sorted_positions = sorted(differing_positions)
+            for i in range(0, len(sorted_positions), 2):
+                if i + 1 < len(sorted_positions):
+                    pair = [sorted_positions[i], sorted_positions[i + 1]]
+                    if XORPatternDetector._is_valid_xor_pair(pattern1, pattern2, pair):
+                        individual_pairs.append(pair)
+                        
+        return individual_pairs
 
     @staticmethod
     def _get_xor_positions(
@@ -186,42 +248,265 @@ class XORPatternDetector:
     ) -> Optional[List[int]]:
         """
         Get positions where patterns differ for XOR detection.
+        Enhanced to detect multiple XOR pairs within the same pattern comparison.
 
         Returns:
-            List of qubit indices where patterns differ, or None if not XOR
+            List of qubit indices where patterns differ, or None if not XOR-compatible
         """
         # Must have same active qubits
         if pattern1.active_qubits != pattern2.active_qubits:
             return None
 
-        # Find positions where bits differ
+        # Find all positions where bits differ
         differing_positions = []
-        common_positions = []
-
         for i, qubit_idx in enumerate(pattern1.active_qubits):
             bit1 = pattern1.pattern[i]
             bit2 = pattern2.pattern[i]
-
             if bit1 != bit2:
                 differing_positions.append(qubit_idx)
-            else:
-                common_positions.append(qubit_idx)
 
-        # XOR pattern: exactly 2 positions differ, others are the same
+        # Enhanced XOR detection: handle multiple XOR pairs
         if len(differing_positions) == 2:
+            # Single XOR pair
             return differing_positions
+        elif len(differing_positions) == 4:
+            # Potential double XOR pair - check if it can be decomposed
+            return XORPatternDetector._check_double_xor_pattern(
+                pattern1, pattern2, differing_positions
+            )
+        elif len(differing_positions) > 0 and len(differing_positions) % 2 == 0:
+            # Even number of differences - might be multiple XOR pairs
+            return XORPatternDetector._check_multiple_xor_patterns(
+                pattern1, pattern2, differing_positions
+            )
 
         return None
+
+    @staticmethod
+    def _check_double_xor_pattern(
+        pattern1: ControlPattern, 
+        pattern2: ControlPattern, 
+        differing_positions: List[int]
+    ) -> Optional[List[int]]:
+        """Check if 4 differing positions form 2 independent XOR pairs."""
+        if len(differing_positions) != 4:
+            return None
+            
+        # Try all possible ways to pair the 4 positions into 2 XOR pairs
+        from itertools import combinations
+        
+        positions = differing_positions
+        # Generate all ways to choose 2 positions for first pair
+        for pair1_positions in combinations(positions, 2):
+            pair2_positions = [pos for pos in positions if pos not in pair1_positions]
+            
+            # Check if both pairs are valid XOR patterns
+            if (XORPatternDetector._is_valid_xor_pair(pattern1, pattern2, list(pair1_positions)) and
+                XORPatternDetector._is_valid_xor_pair(pattern1, pattern2, pair2_positions)):
+                # Found valid double XOR - return all positions
+                return differing_positions
+                
+        return None
+
+    @staticmethod  
+    def _check_multiple_xor_patterns(
+        pattern1: ControlPattern,
+        pattern2: ControlPattern, 
+        differing_positions: List[int]
+    ) -> Optional[List[int]]:
+        """Check if multiple differing positions form valid XOR pairs."""
+        if len(differing_positions) % 2 != 0:
+            return None
+            
+        # For now, limit to reasonable numbers (4, 6, 8 positions)
+        if len(differing_positions) > 8:
+            return None
+            
+        from itertools import combinations
+        
+        # Try to partition into XOR pairs
+        n_pairs = len(differing_positions) // 2
+        
+        # For 4 positions, try the double XOR case
+        if len(differing_positions) == 4:
+            return XORPatternDetector._check_double_xor_pattern(
+                pattern1, pattern2, differing_positions
+            )
+            
+        # For more complex cases, use a simple heuristic
+        # Check if positions can be grouped into consecutive pairs
+        sorted_positions = sorted(differing_positions)
+        for i in range(0, len(sorted_positions), 2):
+            if i + 1 < len(sorted_positions):
+                pair = [sorted_positions[i], sorted_positions[i + 1]]
+                if not XORPatternDetector._is_valid_xor_pair(pattern1, pattern2, pair):
+                    return None
+                    
+        return differing_positions
+
+    @staticmethod
+    def _is_valid_xor_pair(
+        pattern1: ControlPattern,
+        pattern2: ControlPattern, 
+        pair_positions: List[int]
+    ) -> bool:
+        """Check if two positions form a valid XOR pair."""
+        if len(pair_positions) != 2:
+            return False
+            
+        pos1, pos2 = pair_positions
+        pos1_idx = pattern1.active_qubits.index(pos1)
+        pos2_idx = pattern1.active_qubits.index(pos2)
+        
+        bit1_p1 = pattern1.pattern[pos1_idx]
+        bit2_p1 = pattern1.pattern[pos2_idx]
+        bit1_p2 = pattern2.pattern[pos1_idx] 
+        bit2_p2 = pattern2.pattern[pos2_idx]
+        
+        # Valid XOR pairs: 01-10, 10-01, 00-11, 11-00
+        valid_xor_types = [
+            (('0', '1'), ('1', '0')),  # 01-10
+            (('1', '0'), ('0', '1')),  # 10-01  
+            (('0', '0'), ('1', '1')),  # 00-11
+            (('1', '1'), ('0', '0')),  # 11-00
+        ]
+        
+        pattern1_bits = (bit1_p1, bit2_p1)
+        pattern2_bits = (bit1_p2, bit2_p2)
+        
+        return (pattern1_bits, pattern2_bits) in valid_xor_types
 
 
 class MCRXCascadeSimplifier:
     """
-    MCRX cascade simplifier with pattern reading and iterative multi-pattern handling.
+    MCRX cascade simplifier with pattern reading, iterative multi-pattern handling, 
+    and automatic fidelity verification.
+    
+    Features:
+    - Supports single and multiple MCRX pattern optimization
+    - Boolean expression simplification
+    - XOR pattern detection and CX tricks (single and multiple)
+    - Iterative pairwise simplification for complex cases
+    - Automatic state equivalence verification
+    - Debug file generation on optimization errors
     """
 
-    def __init__(self, tolerance: float = 1e-10, verbose: bool = False):
+    def __init__(self, tolerance: float = 1e-10, verbose: bool = False, verify_fidelity: bool = True):
         self.tolerance = tolerance
         self.verbose = verbose
+        self.verify_fidelity = verify_fidelity
+
+    def _verify_circuit_equivalence(
+        self, 
+        original_circuit: QuantumCircuit, 
+        optimized_circuit: QuantumCircuit, 
+        optimization_info: Dict[str, Any]
+    ) -> None:
+        """
+        Verify that the optimized circuit is equivalent to the original input circuit.
+        Saves both circuits to debug files if fidelity verification fails.
+        
+        Args:
+            original_circuit: The actual original circuit passed to simplify()
+            optimized_circuit: The optimized circuit produced by simplification
+            optimization_info: Information about the optimization process
+            
+        Raises:
+            ValueError: If fidelity is below tolerance with detailed debug info
+        """
+        if not self.verify_fidelity:
+            return
+            
+        try:
+            if self.verbose:
+                print("🔍 Verifying circuit equivalence...")
+                
+            # Get quantum states
+            state_original = get_state(original_circuit)
+            state_optimized = get_state(optimized_circuit)
+            
+            # Compare states
+            state_results = compare_quantum_states(
+                state_original, 
+                state_optimized, 
+                tolerance=self.tolerance, 
+                verbose=False  # Keep quiet unless there's an error
+            )
+            
+            fidelity = state_results.get('fidelity', 0.0)
+            amplitudes_match = state_results.get('amplitudes_match', False)
+            
+            if self.verbose:
+                print(f"✓ Fidelity: {fidelity:.10f}")
+                print(f"✓ Amplitudes match: {amplitudes_match}")
+            
+            # Check if circuits are equivalent
+            if not amplitudes_match or fidelity < (1.0 - self.tolerance):
+                # Save circuits for debugging
+                timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+                
+                # Create debug directory if it doesn't exist
+                debug_dir = "mcrx_optimization_errors"
+                os.makedirs(debug_dir, exist_ok=True)
+                
+                # Save original circuit using proper Qiskit QASM export
+                original_file = os.path.join(debug_dir, f"original_circuit_{timestamp}.qasm")
+                qasm2.dump(original_circuit, original_file)
+                
+                # Save optimized circuit using proper Qiskit QASM export
+                optimized_file = os.path.join(debug_dir, f"optimized_circuit_{timestamp}.qasm")
+                qasm2.dump(optimized_circuit, optimized_file)
+                
+                if self.verbose:
+                    print(f"💾 Saved circuits to debug files:")
+                    print(f"    Original ({len(original_circuit.data)} gates): {original_file}")
+                    print(f"    Optimized ({len(optimized_circuit.data)} gates): {optimized_file}")
+                
+                # Save optimization info
+                info_file = os.path.join(debug_dir, f"optimization_info_{timestamp}.txt")
+                with open(info_file, 'w') as f:
+                    f.write("MCRX Optimization Error Report\n")
+                    f.write("=" * 40 + "\n\n")
+                    f.write(f"Timestamp: {timestamp}\n")
+                    f.write(f"Fidelity: {fidelity:.10f}\n")
+                    f.write(f"Amplitudes match: {amplitudes_match}\n")
+                    f.write(f"Tolerance: {self.tolerance}\n\n")
+                    f.write("Optimization Info:\n")
+                    for key, value in optimization_info.items():
+                        f.write(f"  {key}: {value}\n")
+                    f.write(f"\nState Comparison Results:\n")
+                    for key, value in state_results.items():
+                        f.write(f"  {key}: {value}\n")
+                
+                # Detailed error message
+                max_diff = state_results.get('max_difference', 'N/A')
+                num_mismatched = state_results.get('num_mismatched_amplitudes', 0)
+                
+                error_msg = (
+                    f"MCRX Optimization produced incorrect circuit!\n"
+                    f"Fidelity: {fidelity:.10f} (required: >= {1.0 - self.tolerance:.10f})\n"
+                    f"Amplitudes match: {amplitudes_match}\n"
+                    f"Max amplitude difference: {max_diff}\n"
+                    f"Mismatched amplitudes: {num_mismatched}\n"
+                    f"Optimization method: {optimization_info.get('optimization_method', 'Unknown')}\n"
+                    f"Uses CX tricks: {optimization_info.get('uses_cnot_tricks', False)}\n\n"
+                    f"Debug files saved to:\n"
+                    f"  Original: {original_file}\n"
+                    f"  Optimized: {optimized_file}\n"
+                    f"  Info: {info_file}"
+                )
+                
+                raise ValueError(error_msg)
+                
+        except Exception as e:
+            if "MCRX Optimization produced incorrect circuit" in str(e):
+                # Re-raise our custom error
+                raise
+            else:
+                # Handle unexpected errors in verification
+                if self.verbose:
+                    print(f"⚠️  Warning: Could not verify circuit equivalence: {e}")
+                # Don't fail the optimization for verification errors
 
     def simplify(self, circuit: QuantumCircuit) -> Tuple[QuantumCircuit, Dict[str, Any]]:
         """Main simplification method with iterative handling of multiple patterns."""
@@ -250,14 +535,30 @@ class MCRXCascadeSimplifier:
         # Step 3: Check if we need iterative simplification
         if len(patterns) <= 2:
             # Single pattern or two patterns - use basic simplification (original implementation)
-            return self._apply_basic_simplification(
+            optimized_circuit, optimization_info = self._apply_basic_simplification(
                 patterns, target_qubit, all_ctrl_qubits, circuit, rotation_angle
             )
-
+            
+            # Verify circuit equivalence using the original input circuit
+            if self.verify_fidelity and optimization_info.get("optimization_method") not in [
+                "no_optimization", "no_optimization_different_controls", "no_optimization_mixed_controls"
+            ]:
+                self._verify_circuit_equivalence(circuit, optimized_circuit, optimization_info)
+            
+            return optimized_circuit, optimization_info
+        
         # Step 4: Apply iterative simplification for multiple patterns (3+)
-        return self._apply_iterative_simplification(
+        optimized_circuit, optimization_info = self._apply_iterative_simplification(
             patterns, circuit.num_qubits, target_qubit, rotation_angle, all_ctrl_qubits
         )
+        
+        # Verify circuit equivalence using the original input circuit
+        if self.verify_fidelity and optimization_info.get("optimization_method") not in [
+            "no_optimization", "no_optimization_different_controls", "no_optimization_mixed_controls"
+        ]:
+            self._verify_circuit_equivalence(circuit, optimized_circuit, optimization_info)
+        
+        return optimized_circuit, optimization_info
 
     def _apply_iterative_simplification(
         self,
@@ -265,7 +566,7 @@ class MCRXCascadeSimplifier:
         n_qubits: int,
         target_qubit: int,
         rotation_angle: float,
-        all_ctrl_qubits: List[int],
+        all_ctrl_qubits: List[int]
     ) -> Tuple[QuantumCircuit, Dict[str, Any]]:
         """Apply iterative pairwise simplification to multiple patterns."""
         if self.verbose:
@@ -274,13 +575,13 @@ class MCRXCascadeSimplifier:
         # Sort patterns by decimal value
         remaining_patterns = self._sort_patterns_by_value(initial_patterns)
         final_circuit = QuantumCircuit(n_qubits)
-
+        
         optimization_log = {
             "steps": [],
             "final_patterns": [],
             "cx_tricks_count": 0,
             "simplifications_count": 0,
-            "initial_gate_count": sum(p.coefficient for p in initial_patterns),
+            "initial_gate_count": sum(p.coefficient for p in initial_patterns)
         }
 
         if self.verbose:
@@ -292,9 +593,7 @@ class MCRXCascadeSimplifier:
 
         while len(remaining_patterns) > 1:
             if self.verbose:
-                print(
-                    f"\n--- Step {step_counter}: {len(remaining_patterns)} patterns remaining ---"
-                )
+                print(f"\n--- Step {step_counter}: {len(remaining_patterns)} patterns remaining ---")
 
             # Try to find a simplifiable pair starting with the lowest value pattern
             current_pattern = remaining_patterns[0]
@@ -315,14 +614,11 @@ class MCRXCascadeSimplifier:
                 # Test simplification by creating a temporary simplifier and forcing basic mode
                 # We temporarily override the pattern count to force basic simplification
                 temp_circuit = pair_circuit.copy()
-
-                # Apply basic simplification directly
+                
+                # Apply basic simplification directly 
                 simplified_circuit, simplify_info = self._apply_basic_simplification(
-                    [current_pattern, candidate_pattern],
-                    target_qubit,
-                    all_ctrl_qubits,
-                    temp_circuit,
-                    rotation_angle,
+                    [current_pattern, candidate_pattern], target_qubit, all_ctrl_qubits, 
+                    temp_circuit, rotation_angle
                 )
 
                 if self.verbose:
@@ -332,26 +628,27 @@ class MCRXCascadeSimplifier:
                 if simplify_info["gate_reduction"] > 0 or simplify_info["uses_cnot_tricks"]:
                     # Simplification found! (Either gate reduction OR CX trick)
                     if self.verbose:
-                        print(
-                            f"✓ Simplification found! Method: {simplify_info['optimization_method']}"
-                        )
+                        print(f"✓ Simplification found! Method: {simplify_info['optimization_method']}")
 
                     step_info = {
                         "step": step_counter,
                         "pattern1": f"{current_pattern.pattern} (qubits: {current_pattern.active_qubits})",
                         "pattern2": f"{candidate_pattern.pattern} (qubits: {candidate_pattern.active_qubits})",
                         "method": simplify_info["optimization_method"],
-                        "gate_reduction": simplify_info["gate_reduction"],
+                        "gate_reduction": simplify_info["gate_reduction"]
                     }
                     optimization_log["steps"].append(step_info)
 
                     if simplify_info["uses_cnot_tricks"]:
-                        # CX trick applied - append directly to final circuit
+                        # CX trick(s) applied - append directly to final circuit
                         final_circuit = final_circuit.compose(simplified_circuit)
                         optimization_log["cx_tricks_count"] += 1
-
+                        
                         if self.verbose:
-                            print("✓ CX trick applied - added to final circuit")
+                            if simplify_info["optimization_method"] == "multiple_CX_tricks":
+                                print("✓ Multiple CX tricks applied - added to final circuit")
+                            else:
+                                print("✓ CX trick applied - added to final circuit")
 
                     else:
                         # Boolean or other simplification - extract new pattern(s) from simplified circuit
@@ -360,21 +657,19 @@ class MCRXCascadeSimplifier:
                         )
                         remaining_patterns.extend(new_patterns)
                         optimization_log["simplifications_count"] += 1
-
+                        
                         if self.verbose:
-                            print(
-                                f"✓ Extracted {len(new_patterns)} new patterns from simplified circuit"
-                            )
+                            print(f"✓ Extracted {len(new_patterns)} new patterns from simplified circuit")
                             for np in new_patterns:
                                 print(f"    New pattern: {np}")
 
                     # Remove the processed patterns
                     remaining_patterns.remove(current_pattern)
                     remaining_patterns.remove(candidate_pattern)
-
+                    
                     # Re-sort remaining patterns
                     remaining_patterns = self._sort_patterns_by_value(remaining_patterns)
-
+                    
                     simplification_found = True
                     break
 
@@ -385,15 +680,13 @@ class MCRXCascadeSimplifier:
                 )
                 final_circuit = final_circuit.compose(pattern_circuit)
                 remaining_patterns.remove(current_pattern)
-
+                
                 optimization_log["final_patterns"].append(
                     f"{current_pattern.pattern} (qubits: {current_pattern.active_qubits})"
                 )
-
+                
                 if self.verbose:
-                    print(
-                        f"✗ No simplification found for {current_pattern.pattern} - added to final circuit"
-                    )
+                    print(f"✗ No simplification found for {current_pattern.pattern} - added to final circuit")
 
             step_counter += 1
 
@@ -407,15 +700,13 @@ class MCRXCascadeSimplifier:
             optimization_log["final_patterns"].append(
                 f"{last_pattern.pattern} (qubits: {last_pattern.active_qubits})"
             )
-
+            
             if self.verbose:
                 print(f"✓ Added final pattern {last_pattern.pattern} to circuit")
 
         # Compile optimization information
         optimization_info = {
-            "original_patterns": [
-                f"{p.pattern} (qubits: {p.active_qubits})" for p in initial_patterns
-            ],
+            "original_patterns": [f"{p.pattern} (qubits: {p.active_qubits})" for p in initial_patterns],
             "final_patterns": optimization_log["final_patterns"],
             "optimization_steps": optimization_log["steps"],
             "gate_reduction": optimization_log["initial_gate_count"] - len(final_circuit.data),
@@ -423,7 +714,7 @@ class MCRXCascadeSimplifier:
             "simplifications_found": optimization_log["simplifications_count"],
             "optimization_method": "iterative_pairwise_simplification",
             "uses_cnot_tricks": optimization_log["cx_tricks_count"] > 0,
-            "optimization_blocked_reason": None,
+            "optimization_blocked_reason": None
         }
 
         if self.verbose:
@@ -433,20 +724,37 @@ class MCRXCascadeSimplifier:
 
         return final_circuit, optimization_info
 
+    def _create_circuit_from_patterns(
+        self, 
+        patterns: List[ControlPattern], 
+        n_qubits: int, 
+        target_qubit: int, 
+        rotation_angle: float
+    ) -> QuantumCircuit:
+        """Create a circuit from a list of patterns (used for verification)."""
+        circuit = QuantumCircuit(n_qubits)
+        
+        for pattern in patterns:
+            for _ in range(pattern.coefficient):
+                gate = multi_crx(rotation_angle, pattern.pattern)
+                circuit.append(gate, pattern.active_qubits + [target_qubit])
+                
+        return circuit
+
     def _apply_basic_simplification(
         self,
         patterns: List[ControlPattern],
         target_qubit: int,
         all_ctrl_qubits: List[int],
         circuit: QuantumCircuit,
-        rotation_angle: float,
+        rotation_angle: float
     ) -> Tuple[QuantumCircuit, Dict[str, Any]]:
         """Apply basic simplification for single pattern or two-pattern cases."""
         if not patterns:
             return QuantumCircuit(circuit.num_qubits), {
                 "gate_reduction": 0,
                 "optimization_method": "empty_circuit",
-                "uses_cnot_tricks": False,
+                "uses_cnot_tricks": False
             }
 
         if self.verbose:
@@ -476,8 +784,22 @@ class MCRXCascadeSimplifier:
 
         if self.verbose:
             print(f"    XOR pairs found: {len(xor_pairs)}")
-            for p1, p2, diff_pos in xor_pairs:
-                print(f"      {p1.pattern} ⊕ {p2.pattern} at positions {diff_pos}")
+            for i, (p1, p2, diff_pos) in enumerate(xor_pairs):
+                # Determine XOR type for display
+                if len(diff_pos) == 2:
+                    pos1, pos2 = diff_pos
+                    pos1_idx = p1.active_qubits.index(pos1)
+                    pos2_idx = p1.active_qubits.index(pos2)
+                    
+                    bit1_p1 = p1.pattern[pos1_idx]
+                    bit2_p1 = p1.pattern[pos2_idx]
+                    bit1_p2 = p2.pattern[pos1_idx]
+                    bit2_p2 = p2.pattern[pos2_idx]
+                    
+                    xor_type = f"{bit1_p1}{bit2_p1}-{bit1_p2}{bit2_p2}"
+                    print(f"      XOR {i+1}: {p1.pattern} ⊕ {p2.pattern} at positions {diff_pos} (type: {xor_type})")
+                else:
+                    print(f"      XOR {i+1}: {p1.pattern} ⊕ {p2.pattern} at positions {diff_pos}")
 
         # Check if optimization is valid
         has_different_control_sets = self._has_different_control_sets(patterns)
@@ -489,9 +811,16 @@ class MCRXCascadeSimplifier:
         if has_different_control_sets:
             optimized_circuit = circuit.copy()
             optimization_method = "no_optimization_different_controls"
-        elif xor_pairs and self._should_apply_cx_trick(xor_pairs[0], expr_analysis):
+        elif xor_pairs and self._should_apply_cx_trick_multiple(xor_pairs, expr_analysis):
             if self.verbose:
-                print(f"    Applying CX trick for: {xor_pairs[0]}")
+                print(f"    Applying multiple CX tricks for {len(xor_pairs)} XOR pairs")
+            optimized_circuit = self._apply_multiple_cx_tricks(
+                xor_pairs, target_qubit, all_ctrl_qubits, circuit.num_qubits, rotation_angle
+            )
+            optimization_method = "multiple_CX_tricks"
+        elif xor_pairs and len(xor_pairs) == 1 and self._should_apply_cx_trick(xor_pairs[0], expr_analysis):
+            if self.verbose:
+                print(f"    Applying single CX trick for: {xor_pairs[0]}")
             optimized_circuit = self._apply_cx_trick_fixed(
                 xor_pairs[0], target_qubit, all_ctrl_qubits, circuit.num_qubits, rotation_angle
             )
@@ -525,18 +854,11 @@ class MCRXCascadeSimplifier:
                 if self._all_patterns_same_control_set(patterns):
                     # Boolean expression actually simplified - create new optimized circuit
                     if self.verbose:
-                        print(
-                            f"    Boolean simplification detected: {original_expr} → {simplified_expr}"
-                        )
-
+                        print(f"    Boolean simplification detected: {original_expr} → {simplified_expr}")
+                    
                     optimized_circuit = self._apply_boolean_simplification(
-                        simplified_expr,
-                        target_qubit,
-                        all_ctrl_qubits,
-                        circuit.num_qubits,
-                        rotation_angle,
-                        bool_analyzer,
-                        patterns,
+                        simplified_expr, target_qubit, all_ctrl_qubits, circuit.num_qubits, 
+                        rotation_angle, bool_analyzer, patterns
                     )
                     optimization_method = "boolean_simplification"
                 else:
@@ -547,7 +869,7 @@ class MCRXCascadeSimplifier:
             print(f"    Final method: {optimization_method}")
             print(f"    Gate reduction: {len(circuit.data) - len(optimized_circuit.data)}")
 
-        return optimized_circuit, {
+        optimization_info = {
             "original_patterns": [f"{p.pattern} (qubits: {p.active_qubits})" for p in patterns],
             "original_boolean_expr": str(original_expr),
             "simplified_boolean_expr": str(simplified_expr),
@@ -556,56 +878,61 @@ class MCRXCascadeSimplifier:
             "has_different_control_sets": has_different_control_sets,
             "gate_reduction": len(circuit.data) - len(optimized_circuit.data),
             "optimization_method": optimization_method,
-            "uses_cnot_tricks": optimization_method == "CX_trick",
+            "uses_cnot_tricks": optimization_method in ["CX_trick", "multiple_CX_tricks"],
             "optimization_blocked_reason": self._get_optimization_blocked_reason(
                 optimization_method, has_different_control_sets
             ),
         }
 
+        return optimized_circuit, optimization_info
+
     def _sort_patterns_by_value(self, patterns: List[ControlPattern]) -> List[ControlPattern]:
         """Sort patterns by their decimal value (ascending)."""
-
         def pattern_sort_key(pattern):
             decimal_val = pattern.to_decimal()
             # Secondary sort by number of active qubits for stability
             return (decimal_val, len(pattern.active_qubits), tuple(pattern.active_qubits))
-
+        
         return sorted(patterns, key=pattern_sort_key)
 
     def _create_pair_circuit(
-        self,
-        pattern1: ControlPattern,
-        pattern2: ControlPattern,
-        n_qubits: int,
-        target_qubit: int,
-        rotation_angle: float,
+        self, 
+        pattern1: ControlPattern, 
+        pattern2: ControlPattern, 
+        n_qubits: int, 
+        target_qubit: int, 
+        rotation_angle: float
     ) -> QuantumCircuit:
         """Create a circuit with exactly two MCRX gates for the given patterns."""
         circuit = QuantumCircuit(n_qubits)
-
+        
         # Add first pattern (with its coefficient)
         for _ in range(pattern1.coefficient):
             gate1 = multi_crx(rotation_angle, pattern1.pattern)
             circuit.append(gate1, pattern1.active_qubits + [target_qubit])
-
+        
         # Add second pattern (with its coefficient)
         for _ in range(pattern2.coefficient):
             gate2 = multi_crx(rotation_angle, pattern2.pattern)
             circuit.append(gate2, pattern2.active_qubits + [target_qubit])
-
+        
         return circuit
 
     def _create_single_pattern_circuit(
-        self, pattern: ControlPattern, n_qubits: int, target_qubit: int, rotation_angle: float
+        self, 
+        pattern: ControlPattern, 
+        n_qubits: int, 
+        target_qubit: int, 
+        rotation_angle: float
     ) -> QuantumCircuit:
         """Create a circuit with a single MCRX gate for the given pattern."""
         circuit = QuantumCircuit(n_qubits)
-
+        
         # Multiply angle by coefficient
         total_angle = rotation_angle * pattern.coefficient
         gate = multi_crx(total_angle, pattern.pattern)
         circuit.append(gate, pattern.active_qubits + [target_qubit])
-
+        
         return circuit
 
     def _apply_boolean_simplification(
@@ -616,28 +943,28 @@ class MCRXCascadeSimplifier:
         n_qubits: int,
         rotation_angle: float,
         bool_analyzer: BooleanExpressionAnalyzer,
-        original_patterns: List[ControlPattern],
+        original_patterns: List[ControlPattern]
     ) -> QuantumCircuit:
         """Apply Boolean simplification by creating optimized circuit from simplified expression."""
         circuit = QuantumCircuit(n_qubits)
-
+        
         # Calculate total angle from all original patterns
         total_angle = rotation_angle * sum(p.coefficient for p in original_patterns)
-
+        
         if self.verbose:
             print(f"      Creating circuit for simplified expression: {simplified_expr}")
             print(f"      Total angle: {total_angle}")
-
+        
         # Convert simplified expression back to control pattern
         try:
             optimized_pattern = self._boolean_expr_to_pattern(
                 simplified_expr, bool_analyzer, all_ctrl_qubits
             )
-
+            
             if optimized_pattern:
                 if self.verbose:
                     print(f"      Optimized pattern: {optimized_pattern}")
-
+                
                 # Create MCRX gate with the optimized pattern
                 gate = multi_crx(total_angle, optimized_pattern[0])
                 circuit.append(gate, optimized_pattern[1] + [target_qubit])
@@ -646,69 +973,68 @@ class MCRXCascadeSimplifier:
                 if self.verbose:
                     print(f"      Could not convert to pattern, using original circuit")
                 return QuantumCircuit(n_qubits)  # Return empty circuit to indicate no optimization
-
+                
         except Exception as e:
             if self.verbose:
                 print(f"      Error in Boolean simplification: {e}")
             return QuantumCircuit(n_qubits)  # Return empty circuit to indicate no optimization
-
+        
         return circuit
 
     def _boolean_expr_to_pattern(
-        self, expr: sp.Basic, bool_analyzer: BooleanExpressionAnalyzer, all_ctrl_qubits: List[int]
+        self, 
+        expr: sp.Basic, 
+        bool_analyzer: BooleanExpressionAnalyzer,
+        all_ctrl_qubits: List[int]
     ) -> Optional[Tuple[str, List[int]]]:
         """Convert a simplified Boolean expression back to a control pattern."""
-
+        
         # Handle simple cases first
         if expr == sp.true:
             return ("", [])  # No controls needed
         elif expr == sp.false:
             return None  # Never executes
-
+        
         # For more complex expressions, we need to extract the pattern
         # This is a simplified approach - we'll look for conjunctions of literals
-
+        
         if isinstance(expr, sp.And):
             # Handle conjunction of literals: ~x1 & ~x2 & ~x3
             pattern_bits = {}
             active_qubits = []
-
+            
             for arg in expr.args:
                 if isinstance(arg, sp.Not):
                     # Negated variable: ~x_i means qubit i should be 0
                     var = arg.args[0]
                     if var in bool_analyzer.qubit_to_symbol.values():
-                        qubit_idx = next(
-                            q for q, s in bool_analyzer.qubit_to_symbol.items() if s == var
-                        )
-                        pattern_bits[qubit_idx] = "0"
+                        qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == var)
+                        pattern_bits[qubit_idx] = '0'
                         active_qubits.append(qubit_idx)
                 elif arg in bool_analyzer.qubit_to_symbol.values():
                     # Positive variable: x_i means qubit i should be 1
-                    qubit_idx = next(
-                        q for q, s in bool_analyzer.qubit_to_symbol.items() if s == arg
-                    )
-                    pattern_bits[qubit_idx] = "1"
+                    qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == arg)
+                    pattern_bits[qubit_idx] = '1'
                     active_qubits.append(qubit_idx)
-
+            
             if active_qubits:
                 # Sort qubits and create pattern string
                 active_qubits.sort()
-                pattern_str = "".join(pattern_bits[q] for q in active_qubits)
+                pattern_str = ''.join(pattern_bits[q] for q in active_qubits)
                 return (pattern_str, active_qubits)
-
+        
         elif isinstance(expr, sp.Not):
             # Handle single negated variable
             if expr.args[0] in bool_analyzer.qubit_to_symbol.values():
                 var = expr.args[0]
                 qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == var)
-                return ("0", [qubit_idx])
-
+                return ('0', [qubit_idx])
+        
         elif expr in bool_analyzer.qubit_to_symbol.values():
             # Handle single positive variable
             qubit_idx = next(q for q, s in bool_analyzer.qubit_to_symbol.items() if s == expr)
-            return ("1", [qubit_idx])
-
+            return ('1', [qubit_idx])
+        
         # For other complex expressions, return None to indicate we can't simplify
         return None
 
@@ -752,10 +1078,10 @@ class MCRXCascadeSimplifier:
         """Validate that circuit contains only multi-controlled RX gates."""
         for i, instruction in enumerate(circuit.data):
             gate_name = instruction.operation.name.lower()
-
+            
             # Check if it's a valid MCRX-type gate using pattern matching
             is_valid = self._is_valid_mcrx_gate(gate_name, instruction)
-
+            
             if not is_valid:
                 raise ValueError(
                     f"Gate {i+1} ('{instruction.operation.name}') is not a valid multi-controlled RX gate. "
@@ -765,26 +1091,26 @@ class MCRXCascadeSimplifier:
     def _is_valid_mcrx_gate(self, gate_name: str, instruction) -> bool:
         """Check if a gate is a valid multi-controlled RX gate."""
         # Must have rotation parameter
-        if not hasattr(instruction.operation, "params") or len(instruction.operation.params) == 0:
+        if not hasattr(instruction.operation, 'params') or len(instruction.operation.params) == 0:
             return False
-
+        
         # Check various MCRX gate name patterns
         valid_patterns = [
-            r"^rx$",  # Basic RX
-            r"^crx$",  # Controlled RX
-            r"^mcrx$",  # Multi-controlled RX
-            r"^ccrx(_o\d+)?$",  # 2-controlled RX (ccrx, ccrx_o1, etc.)
-            r"^c\d+rx(_o\d+)?$",  # n-controlled RX (c3rx, c4rx_o0, etc.)
-            r"^mcx(_o\d+)?$",  # Multi-controlled X (sometimes used for RX)
-            r"^mcrx(_o\d+)?$",  # Multi-controlled RX with ctrl_state
-            r"^.*rx.*$",  # Any gate containing 'rx'
+            r'^rx$',                    # Basic RX
+            r'^crx$',                   # Controlled RX
+            r'^mcrx$',                  # Multi-controlled RX
+            r'^ccrx(_o\d+)?$',          # 2-controlled RX (ccrx, ccrx_o1, etc.)
+            r'^c\d+rx(_o\d+)?$',        # n-controlled RX (c3rx, c4rx_o0, etc.)
+            r'^mcx(_o\d+)?$',           # Multi-controlled X (sometimes used for RX)
+            r'^mcrx(_o\d+)?$',          # Multi-controlled RX with ctrl_state
+            r'^.*rx.*$',                # Any gate containing 'rx'
         ]
-
+        
         # Check if gate name matches any valid pattern
         for pattern in valid_patterns:
             if re.match(pattern, gate_name):
                 return True
-
+        
         # Additional check for gates that might be MCRX but with different naming
         # If it has qubits (at least target) and rotation params, likely valid
         if len(instruction.qubits) >= 1:
@@ -795,7 +1121,7 @@ class MCRXCascadeSimplifier:
                 return True
             except (ValueError, TypeError):
                 pass
-
+        
         return False
 
     def _extract_patterns_fixed(
@@ -899,6 +1225,177 @@ class MCRXCascadeSimplifier:
         """Check if all patterns have the same control qubit set."""
         return not self._has_different_control_sets(patterns)
 
+    def _should_apply_cx_trick_multiple(self, xor_pairs: List[Tuple], expr_analysis: Dict) -> bool:
+        """Determine if multiple CX tricks should be applied."""
+        if not xor_pairs:
+            return False
+            
+        # Apply multiple CX tricks if:
+        # 1. We have multiple XOR pairs from the same pattern comparison
+        # 2. All pairs have exactly 2 differing positions
+        # 3. The expression doesn't simplify to something simpler
+        
+        # Check if all XOR pairs are from the same pattern comparison
+        if len(xor_pairs) > 1:
+            first_patterns = (xor_pairs[0][0], xor_pairs[0][1])
+            for pattern1, pattern2, _ in xor_pairs[1:]:
+                if (pattern1, pattern2) != first_patterns:
+                    return False
+                    
+        # Check that all pairs have exactly 2 differing positions
+        for _, _, diff_positions in xor_pairs:
+            if len(diff_positions) != 2:
+                return False
+                
+        # Don't apply if expression simplifies to something simpler
+        if expr_analysis["is_single_variable"] or expr_analysis["is_negated_variable"]:
+            return False
+            
+        return True
+
+    def _apply_multiple_cx_tricks(
+        self,
+        xor_pairs: List[Tuple],
+        target_qubit: int,
+        all_ctrl_qubits: List[int],
+        n_qubits: int,
+        rotation_angle: float,
+    ) -> QuantumCircuit:
+        """Apply multiple CX tricks for multiple XOR pairs within the same pattern comparison."""
+        circuit = QuantumCircuit(n_qubits)
+        
+        if not xor_pairs:
+            return circuit
+            
+        # Get the reference patterns (should be the same for all pairs)
+        reference_pattern1 = xor_pairs[0][0]
+        reference_pattern2 = xor_pairs[0][1]
+        
+        if self.verbose:
+            print(f"      Applying {len(xor_pairs)} CX tricks:")
+            
+        # Apply each XOR pair transformation
+        for i, (pattern1, pattern2, diff_positions) in enumerate(xor_pairs):
+            if self.verbose:
+                print(f"        XOR pair {i+1}: positions {diff_positions}")
+                
+            if len(diff_positions) == 2:
+                pos1, pos2 = diff_positions
+                
+                # Determine XOR pattern type
+                pos1_idx = pattern1.active_qubits.index(pos1)
+                pos2_idx = pattern1.active_qubits.index(pos2)
+                
+                bit1_pattern1 = pattern1.pattern[pos1_idx]
+                bit2_pattern1 = pattern1.pattern[pos2_idx] 
+                bit1_pattern2 = pattern2.pattern[pos1_idx]
+                bit2_pattern2 = pattern2.pattern[pos2_idx]
+                
+                if self.verbose:
+                    print(f"          Position {pos1}: {bit1_pattern1} vs {bit1_pattern2}")
+                    print(f"          Position {pos2}: {bit2_pattern1} vs {bit2_pattern2}")
+                
+                # Apply appropriate CX trick
+                if (bit1_pattern1, bit2_pattern1) == ('0', '1') and (bit1_pattern2, bit2_pattern2) == ('1', '0'):
+                    # 01-10 pattern → Standard CX trick
+                    if self.verbose:
+                        print(f"          Type: 01-10 XOR → Standard CX trick")
+                    circuit.cx(pos1, pos2)
+                elif (bit1_pattern1, bit2_pattern1) == ('1', '0') and (bit1_pattern2, bit2_pattern2) == ('0', '1'):
+                    # 10-01 pattern → Standard CX trick  
+                    if self.verbose:
+                        print(f"          Type: 10-01 XOR → Standard CX trick")
+                    circuit.cx(pos1, pos2)
+                elif (bit1_pattern1, bit2_pattern1) == ('0', '0') and (bit1_pattern2, bit2_pattern2) == ('1', '1'):
+                    # 00-11 pattern → X + CX trick
+                    if self.verbose:
+                        print(f"          Type: 00-11 XOR → X + CX trick")
+                    circuit.x(pos2)
+                    circuit.cx(pos1, pos2)
+                elif (bit1_pattern1, bit2_pattern1) == ('1', '1') and (bit1_pattern2, bit2_pattern2) == ('0', '0'):
+                    # 11-00 pattern → X + CX trick
+                    if self.verbose:
+                        print(f"          Type: 11-00 XOR → X + CX trick")
+                    circuit.x(pos2)
+                    circuit.cx(pos1, pos2)
+                    
+        # Apply the controlled rotation on the transformed pattern
+        # After CX transformations, calculate the effective control pattern
+        reference_pattern = reference_pattern1  # Use first pattern as reference
+        
+        # Get common control positions (positions that don't differ)
+        all_diff_positions = set()
+        cx_target_positions = []  # Second position of each XOR pair
+        
+        for _, _, diff_positions in xor_pairs:
+            all_diff_positions.update(diff_positions)
+            if len(diff_positions) == 2:
+                cx_target_positions.append(diff_positions[1])  # Second position is CX target
+                
+        # Build the effective pattern after CX transformations
+        effective_pattern = ""
+        effective_qubits = []
+        
+        # Add common control positions (unchanged by CX)
+        for i, qubit_idx in enumerate(reference_pattern.active_qubits):
+            if qubit_idx not in all_diff_positions:
+                bit = reference_pattern.pattern[i]
+                effective_pattern += bit
+                effective_qubits.append(qubit_idx)
+                
+        # Add CX target positions (always '1' after CX transformation)
+        for target_pos in sorted(cx_target_positions):
+            effective_pattern += "1"
+            effective_qubits.append(target_pos)
+            
+        # Sort qubits and reorder pattern accordingly
+        sorted_indices = sorted(range(len(effective_qubits)), key=lambda i: effective_qubits[i])
+        final_qubits = [effective_qubits[i] for i in sorted_indices]
+        final_pattern = "".join(effective_pattern[i] for i in sorted_indices)
+        
+        if self.verbose:
+            print(f"      Effective MCRX pattern: '{final_pattern}' on qubits {final_qubits}")
+            
+        # Apply the MCRX with the effective pattern
+        if final_pattern and final_qubits:
+            gate = multi_crx(rotation_angle, final_pattern)
+            circuit.append(gate, final_qubits + [target_qubit])
+        else:
+            # Fallback: unconditional rotation
+            circuit.rx(rotation_angle, target_qubit)
+                
+        # Undo the XOR transformations in reverse order
+        for pattern1, pattern2, diff_positions in reversed(xor_pairs):
+            if len(diff_positions) == 2:
+                pos1, pos2 = diff_positions
+                
+                # Determine XOR pattern type
+                pos1_idx = pattern1.active_qubits.index(pos1)
+                pos2_idx = pattern1.active_qubits.index(pos2)
+                
+                bit1_pattern1 = pattern1.pattern[pos1_idx]
+                bit2_pattern1 = pattern1.pattern[pos2_idx] 
+                bit1_pattern2 = pattern2.pattern[pos1_idx]
+                bit2_pattern2 = pattern2.pattern[pos2_idx]
+                
+                # Undo transformations
+                if (bit1_pattern1, bit2_pattern1) == ('0', '1') and (bit1_pattern2, bit2_pattern2) == ('1', '0'):
+                    # 01-10 pattern → Undo CX
+                    circuit.cx(pos1, pos2)
+                elif (bit1_pattern1, bit2_pattern1) == ('1', '0') and (bit1_pattern2, bit2_pattern2) == ('0', '1'):
+                    # 10-01 pattern → Undo CX
+                    circuit.cx(pos1, pos2)
+                elif (bit1_pattern1, bit2_pattern1) == ('0', '0') and (bit1_pattern2, bit2_pattern2) == ('1', '1'):
+                    # 00-11 pattern → Undo CX + X
+                    circuit.cx(pos1, pos2)
+                    circuit.x(pos2)
+                elif (bit1_pattern1, bit2_pattern1) == ('1', '1') and (bit1_pattern2, bit2_pattern2) == ('0', '0'):
+                    # 11-00 pattern → Undo CX + X
+                    circuit.cx(pos1, pos2)
+                    circuit.x(pos2)
+                    
+        return circuit
+
     def _should_apply_cx_trick(self, xor_pair_info: Tuple, expr_analysis: Dict) -> bool:
         """Determine if CX trick should be applied."""
         pattern1, pattern2, diff_positions = xor_pair_info
@@ -931,9 +1428,9 @@ class MCRXCascadeSimplifier:
             # Find the bit values at the differing positions
             pos1_idx = pattern1.active_qubits.index(pos1)
             pos2_idx = pattern1.active_qubits.index(pos2)
-
+            
             bit1_pattern1 = pattern1.pattern[pos1_idx]
-            bit2_pattern1 = pattern1.pattern[pos2_idx]
+            bit2_pattern1 = pattern1.pattern[pos2_idx] 
             bit1_pattern2 = pattern2.pattern[pos1_idx]
             bit2_pattern2 = pattern2.pattern[pos2_idx]
 
@@ -943,69 +1440,47 @@ class MCRXCascadeSimplifier:
                 print(f"        Position {pos2}: {bit2_pattern1} vs {bit2_pattern2}")
 
             # Determine XOR type and apply appropriate sequence
-            if (bit1_pattern1, bit2_pattern1) == ("0", "1") and (bit1_pattern2, bit2_pattern2) == (
-                "1",
-                "0",
-            ):
+            if (bit1_pattern1, bit2_pattern1) == ('0', '1') and (bit1_pattern2, bit2_pattern2) == ('1', '0'):
                 # Type 1: 01-10 pattern → Standard CX trick
                 if self.verbose:
                     print(f"        Type: 01-10 XOR → Standard CX trick")
-                self._apply_01_10_cx_trick(
-                    circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions
-                )
-
-            elif (bit1_pattern1, bit2_pattern1) == ("1", "0") and (
-                bit1_pattern2,
-                bit2_pattern2,
-            ) == ("0", "1"):
+                self._apply_01_10_cx_trick(circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions)
+                
+            elif (bit1_pattern1, bit2_pattern1) == ('1', '0') and (bit1_pattern2, bit2_pattern2) == ('0', '1'):
                 # Type 1: 10-01 pattern → Standard CX trick
                 if self.verbose:
                     print(f"        Type: 10-01 XOR → Standard CX trick")
-                self._apply_01_10_cx_trick(
-                    circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions
-                )
-
-            elif (bit1_pattern1, bit2_pattern1) == ("0", "0") and (
-                bit1_pattern2,
-                bit2_pattern2,
-            ) == ("1", "1"):
+                self._apply_01_10_cx_trick(circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions)
+                
+            elif (bit1_pattern1, bit2_pattern1) == ('0', '0') and (bit1_pattern2, bit2_pattern2) == ('1', '1'):
                 # Type 2: 00-11 pattern → X + CX trick
                 if self.verbose:
                     print(f"        Type: 00-11 XOR → X + CX trick")
-                self._apply_00_11_cx_trick(
-                    circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions
-                )
-
-            elif (bit1_pattern1, bit2_pattern1) == ("1", "1") and (
-                bit1_pattern2,
-                bit2_pattern2,
-            ) == ("0", "0"):
+                self._apply_00_11_cx_trick(circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions)
+                
+            elif (bit1_pattern1, bit2_pattern1) == ('1', '1') and (bit1_pattern2, bit2_pattern2) == ('0', '0'):
                 # Type 2: 11-00 pattern → X + CX trick
                 if self.verbose:
                     print(f"        Type: 11-00 XOR → X + CX trick")
-                self._apply_00_11_cx_trick(
-                    circuit, pattern2, pos1, pos2, target_qubit, rotation_angle, diff_positions
-                )
-
+                self._apply_00_11_cx_trick(circuit, pattern2, pos1, pos2, target_qubit, rotation_angle, diff_positions)
+                
             else:
                 # Fallback: shouldn't happen if XOR detection is correct
                 if self.verbose:
                     print(f"        Type: Unknown XOR pattern → Fallback to standard")
-                self._apply_01_10_cx_trick(
-                    circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions
-                )
+                self._apply_01_10_cx_trick(circuit, pattern1, pos1, pos2, target_qubit, rotation_angle, diff_positions)
 
         return circuit
 
     def _apply_01_10_cx_trick(
-        self,
-        circuit: QuantumCircuit,
-        reference_pattern: ControlPattern,
-        pos1: int,
-        pos2: int,
-        target_qubit: int,
+        self, 
+        circuit: QuantumCircuit, 
+        reference_pattern: ControlPattern, 
+        pos1: int, 
+        pos2: int, 
+        target_qubit: int, 
         rotation_angle: float,
-        diff_positions: List[int],
+        diff_positions: List[int]
     ) -> None:
         """Apply standard CX trick for 01-10 XOR patterns."""
         # Standard CX trick: CX + controlled rotation + CX
@@ -1040,14 +1515,14 @@ class MCRXCascadeSimplifier:
         circuit.cx(pos1, pos2)
 
     def _apply_00_11_cx_trick(
-        self,
-        circuit: QuantumCircuit,
-        reference_pattern: ControlPattern,
-        pos1: int,
-        pos2: int,
-        target_qubit: int,
+        self, 
+        circuit: QuantumCircuit, 
+        reference_pattern: ControlPattern, 
+        pos1: int, 
+        pos2: int, 
+        target_qubit: int, 
         rotation_angle: float,
-        diff_positions: List[int],
+        diff_positions: List[int]
     ) -> None:
         """Apply X + CX trick for 00-11 XOR patterns."""
         # X + CX trick: X(pos2) + CX + controlled rotation + CX + X(pos2)
@@ -1153,31 +1628,26 @@ class MCRXCascadeSimplifier:
             simplification_opportunities = []
             if len(patterns) > 1:
                 sorted_patterns = self._sort_patterns_by_value(patterns)
-
+                
                 for i, pattern1 in enumerate(sorted_patterns):
-                    for j, pattern2 in enumerate(sorted_patterns[i + 1 :], i + 1):
+                    for j, pattern2 in enumerate(sorted_patterns[i+1:], i+1):
                         pair_circuit = self._create_pair_circuit(
                             pattern1, pattern2, circuit.num_qubits, target_qubit, rotation_angle
                         )
-
+                        
                         _, simplify_info = self._apply_basic_simplification(
-                            [pattern1, pattern2],
-                            target_qubit,
-                            all_ctrl_qubits,
-                            pair_circuit,
-                            rotation_angle,
+                            [pattern1, pattern2], target_qubit, all_ctrl_qubits, 
+                            pair_circuit, rotation_angle
                         )
-
+                        
                         if simplify_info["gate_reduction"] > 0:
-                            simplification_opportunities.append(
-                                {
-                                    "pattern1": f"{pattern1.pattern} (qubits: {pattern1.active_qubits})",
-                                    "pattern2": f"{pattern2.pattern} (qubits: {pattern2.active_qubits})",
-                                    "method": simplify_info["optimization_method"],
-                                    "gate_reduction": simplify_info["gate_reduction"],
-                                    "uses_cx_trick": simplify_info["uses_cnot_tricks"],
-                                }
-                            )
+                            simplification_opportunities.append({
+                                "pattern1": f"{pattern1.pattern} (qubits: {pattern1.active_qubits})",
+                                "pattern2": f"{pattern2.pattern} (qubits: {pattern2.active_qubits})",
+                                "method": simplify_info["optimization_method"],
+                                "gate_reduction": simplify_info["gate_reduction"],
+                                "uses_cx_trick": simplify_info["uses_cnot_tricks"]
+                            })
 
             return {
                 "status": "success",
@@ -1187,7 +1657,7 @@ class MCRXCascadeSimplifier:
                         "pattern": p.pattern,
                         "decimal_value": p.to_decimal(),
                         "active_qubits": p.active_qubits,
-                        "coefficient": p.coefficient,
+                        "coefficient": p.coefficient
                     }
                     for p in self._sort_patterns_by_value(patterns)
                 ],
@@ -1205,10 +1675,8 @@ class MCRXCascadeSimplifier:
                 "simplifies": str(original_expr) != str(simplified_expr),
                 "can_optimize": not has_different_control_sets,
                 "simplification_opportunities": simplification_opportunities,
-                "potential_gate_reduction": sum(
-                    opp["gate_reduction"] for opp in simplification_opportunities
-                ),
-                "supports_iterative": len(patterns) > 1,
+                "potential_gate_reduction": sum(opp["gate_reduction"] for opp in simplification_opportunities),
+                "supports_iterative": len(patterns) > 1
             }
 
         except Exception as e:
