@@ -4,9 +4,9 @@ from typing import Dict, Union
 import networkx as nx
 import numpy as np
 from qiskit import QuantumCircuit, transpile
+from qiskit.circuit import Gate
 from qiskit.circuit.library import RXGate
 from qiskit.quantum_info import Statevector, state_fidelity
-from qiskit.circuit import Gate
 
 
 def multi_crx(angle, ctrl_state):
@@ -220,6 +220,51 @@ def count_gates(circuit, optimization_level=3):
     u3_count = op_counts.get("u3", 0)
 
     return cx_count, u3_count
+
+
+def count_gates_direct_transpilation(circuit, optimization_level=3):
+    """
+    Count gates using DIRECT Qiskit transpilation only - NO estimation fallbacks.
+
+    Args:
+        circuit: QuantumCircuit to analyze
+        optimization_level: Transpilation optimization level (0-3)
+
+    Returns:
+        Tuple of (cx_count, u3_count, success_flag, method_used, transpiled_circuit)
+    """
+
+    try:
+        transpiled_circuit = transpile(
+            circuit,
+            basis_gates=["cx", "u3", "u", "rz", "ry", "rx", "x", "h", "p"],
+            optimization_level=optimization_level,
+            seed_transpiler=42,  # For reproducible results
+        )
+
+        op_counts = transpiled_circuit.count_ops()
+
+        # Count gates
+        cx_count = op_counts.get("cx", 0) + op_counts.get("cnot", 0)
+
+        u3_count = (
+            op_counts.get("u3", 0)
+            + op_counts.get("u", 0)
+            + op_counts.get("rz", 0)
+            + op_counts.get("ry", 0)
+            + op_counts.get("rx", 0)
+            + op_counts.get("p", 0)
+            + op_counts.get("x", 0)
+            + op_counts.get("h", 0)
+        )
+
+        return cx_count, u3_count, True, "Direct-Transpile", transpiled_circuit
+
+    except Exception as e:
+        print(f"  Direct transpilation failed: {str(e)[:60]}...")
+
+        # NO FALLBACK - Return failure
+        return 0, 0, False, "FAILED", None
 
 
 def compare_quantum_states(

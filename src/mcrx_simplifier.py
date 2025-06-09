@@ -9,15 +9,17 @@ CRITICAL FIXES:
 5. CX trick implementation with qubit mapping
 """
 
-import numpy as np
-from typing import List, Dict, Tuple, Optional, Any, Set
-from collections import defaultdict
 import itertools
+from collections import defaultdict
+from typing import Any, Dict, List, Optional, Set, Tuple
+
+import numpy as np
+import sympy as sp
 from qiskit import QuantumCircuit
 from qiskit.circuit.library import RXGate
-import sympy as sp
 from sympy.logic import simplify_logic
-from sympy.logic.boolalg import And, Or, Not, Xor
+from sympy.logic.boolalg import And, Not, Or, Xor
+
 from .misc import multi_crx
 
 
@@ -197,7 +199,7 @@ class XORPatternDetector:
 
 class MCRXCascadeSimplifier:
     """
-     MCRX cascade simplifier with correct pattern reading.
+    MCRX cascade simplifier with correct pattern reading.
     """
 
     def __init__(self, tolerance: float = 1e-10, verbose: bool = False):
@@ -219,9 +221,7 @@ class MCRXCascadeSimplifier:
             )
 
         # Step 2:  pattern extraction
-        patterns = self._extract_patterns(
-            circuit, target_qubit, rotation_angle, all_ctrl_qubits
-        )
+        patterns = self._extract_patterns(circuit, target_qubit, rotation_angle, all_ctrl_qubits)
 
         if self.verbose:
             print(f"✓ Extracted {len(patterns)} patterns:")
@@ -370,9 +370,7 @@ class MCRXCascadeSimplifier:
             gate_ctrl_qubits = qubits[:-1]  # All except target
 
             # Extract pattern correctly
-            pattern_str, active_qubits = self._extract_pattern_string(
-                instruction, gate_ctrl_qubits
-            )
+            pattern_str, active_qubits = self._extract_pattern_string(instruction, gate_ctrl_qubits)
 
             # Create key for grouping
             key = (pattern_str, tuple(active_qubits))
@@ -615,5 +613,3 @@ class MCRXCascadeSimplifier:
 
         except Exception as e:
             return {"status": "error", "error": str(e)}
-
-
