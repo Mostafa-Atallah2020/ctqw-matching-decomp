@@ -10,6 +10,7 @@ from scipy.linalg import expm
 from sympy import symbols
 
 from src import MCRX, Edge, Expression, GraphDrawer
+from src.mcrx_simplifier import MCRXCascadeSimplifier
 from src.misc import (
     binary_tuple_to_int_tuple,
     get_cyclic_connections,
@@ -534,17 +535,25 @@ class DiagonalEdgeGraph(StaticGraph):
                 if cx not in cnots_lists:
                     cnots_lists.append(cx)
 
+        unsimplified_qc = self.best_candidate.get_qc()
+        n_qubits = self.best_candidate.n_qubits
+
         # Build the circuit
-        circ = QuantumCircuit(self.best_candidate.n_qubits)
+        circ = QuantumCircuit(n_qubits)
 
         # Add forward CNOTs
         for t in cnots_lists:
             circ.cx(*t)
 
-        # Add subcircuit from best candidate
-        circ.append(
-            self.best_candidate.get_qc(simplified=simplified), range(self.best_candidate.n_qubits)
-        )
+        if simplified:
+            try:
+                simplifier = MCRXCascadeSimplifier(verbose=False)
+                simplified_qc, _ = simplifier.simplify(unsimplified_qc)
+                circ.append(simplified_qc, range(n_qubits))
+            except:
+                circ.append(unsimplified_qc, range(n_qubits))
+        else:
+            circ.append(unsimplified_qc, range(n_qubits))
 
         # Add reverse CNOTs
         for t in reversed(cnots_lists):
