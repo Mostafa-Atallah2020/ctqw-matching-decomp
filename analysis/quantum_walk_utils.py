@@ -133,78 +133,79 @@ class BaseAnalyzer:
         self.delta_t = delta_t
         self.seed = seed
 
-    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
-        """Analyze circuit with fixed transpilation settings over multiple runs and return the lowest counts."""
-        min_metrics = CircuitMetrics(
-            cx_count=float("inf"), u3_count=float("inf"), depth=float("inf")
-        )
-
-        for _ in range(runs):
-            try:
-                transpiled_qc = transpile(
-                    qc,
-                    basis_gates=["cx", "u3"],
-                    optimization_level=3,
-                    seed_transpiler=self.seed,
-                    # routing_method="sabre",
-                )
-
-                counts = transpiled_qc.count_ops()
-                current_metrics = CircuitMetrics(
-                    cx_count=counts.get("cx", 0),
-                    u3_count=counts.get("u3", 0),
-                    depth=transpiled_qc.depth(),
-                )
-
-                # Update minimum metrics
-                min_metrics.cx_count = min(min_metrics.cx_count, current_metrics.cx_count)
-                min_metrics.u3_count = min(min_metrics.u3_count, current_metrics.u3_count)
-                min_metrics.depth = min(min_metrics.depth, current_metrics.depth)
-
-            except Exception as e:
-                print(f"Transpilation error: {str(e)}")
-
-        # Return the minimum metrics found
-        return min_metrics if min_metrics.cx_count != float("inf") else None
-
     # def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
-    #     """Analyze circuit with fixed transpilation settings over multiple runs and return the average counts."""
-    #     total_metrics = CircuitMetrics(cx_count=0, u3_count=0, depth=0)
+    #     """Analyze circuit with fixed transpilation settings over multiple runs and return the lowest counts."""
+    #     min_metrics = CircuitMetrics(
+    #         cx_count=float("inf"), u3_count=float("inf"), depth=float("inf")
+    #     )
 
     #     for _ in range(runs):
     #         try:
     #             transpiled_qc = transpile(
     #                 qc,
-    #                 basis_gates=['cx', 'u3'],
+    #                 basis_gates=["cx", "u3"],
+    #                 optimization_level=3,
     #                 seed_transpiler=self.seed,
-    #                 optimization_level=3
-    #                 #routing_method='sabre'
-
+    #                 # routing_method="sabre",
     #             )
 
     #             counts = transpiled_qc.count_ops()
     #             current_metrics = CircuitMetrics(
-    #                 cx_count=counts.get('cx', 0),
-    #                 u3_count=counts.get('u3', 0),
-    #                 depth=transpiled_qc.depth()
+    #                 cx_count=counts.get("cx", 0),
+    #                 u3_count=counts.get("u3", 0),
+    #                 depth=transpiled_qc.depth(),
     #             )
 
-    #             # Accumulate metrics
-    #             total_metrics.cx_count += current_metrics.cx_count
-    #             total_metrics.u3_count += current_metrics.u3_count
-    #             total_metrics.depth += current_metrics.depth
+    #             # Update minimum metrics
+    #             min_metrics.cx_count = min(min_metrics.cx_count, current_metrics.cx_count)
+    #             min_metrics.u3_count = min(min_metrics.u3_count, current_metrics.u3_count)
+    #             min_metrics.depth = min(min_metrics.depth, current_metrics.depth)
 
     #         except Exception as e:
     #             print(f"Transpilation error: {str(e)}")
 
-    #     # Calculate averages
-    #     average_metrics = CircuitMetrics(
-    #         cx_count=total_metrics.cx_count / runs,
-    #         u3_count=total_metrics.u3_count / runs,
-    #         depth=total_metrics.depth / runs
-    #     )
+    #     # Return the minimum metrics found
+    #     return min_metrics if min_metrics.cx_count != float("inf") else None
 
-    #     return average_metrics
+    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
+        """Analyze circuit with fixed transpilation settings over multiple runs and return the average counts."""
+        total_metrics = CircuitMetrics(cx_count=0, u3_count=0, depth=0)
+
+        for _ in range(runs):
+            try:
+                transpiled_qc = transpile(
+                    qc,
+                    basis_gates=['cx', 'u3'],
+                    # seed_transpiler=self.seed,
+                    optimization_level=1,
+                    routing_method='basic',
+                    layout_method='trivial'
+
+                )
+
+                counts = transpiled_qc.count_ops()
+                current_metrics = CircuitMetrics(
+                    cx_count=counts.get('cx', 0),
+                    u3_count=counts.get('u3', 0),
+                    depth=transpiled_qc.depth()
+                )
+
+                # Accumulate metrics
+                total_metrics.cx_count += current_metrics.cx_count
+                total_metrics.u3_count += current_metrics.u3_count
+                total_metrics.depth += current_metrics.depth
+
+            except Exception as e:
+                print(f"Transpilation error: {str(e)}")
+
+        # Calculate averages
+        average_metrics = CircuitMetrics(
+            cx_count=total_metrics.cx_count / runs,
+            u3_count=total_metrics.u3_count / runs,
+            depth=total_metrics.depth / runs
+        )
+
+        return average_metrics
 
     def analyze_matching(
         self, edges: Set[Tuple[str, str]], n_steps: int = 1
@@ -371,7 +372,7 @@ class ResultsManager:
         self.graph_info = graph_info
 
     def get_output_path(self, category: str, ext: str) -> str:
-        filename = f"{category}_{self.graph_info['size']}_{self.graph_info['vertices']}c"
+        filename = f"{category}_{self.graph_info['size']}_{self.graph_info['vertices']}c.{ext}"
         return os.path.join(self.base_dir, filename)
 
     def save_results(self, results: Dict, category: str):
@@ -399,7 +400,6 @@ class ResultsManager:
                 for G in graphs:
                     g6_string = nx.to_graph6_bytes(G, header=False).decode().strip()
                     f.write(f"{g6_string}\n")
-
 
 class PlotManager:
     def __init__(self, output_dir: str):
