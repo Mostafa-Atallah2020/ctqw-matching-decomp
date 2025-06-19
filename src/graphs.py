@@ -1,5 +1,6 @@
 import random
 from collections import defaultdict
+from itertools import product
 
 import matplotlib.pyplot as plt
 import networkx as nx
@@ -434,7 +435,10 @@ class DiagonalEdgeGraph(StaticGraph):
 
     def _get_candidates(self):
         """
-        Get valid candidates for transformation with detailed debugging.
+        Get valid candidates for transformation.
+        Each candidate will have exactly 2 edges:
+        - The common Hamming-1 edge(s)
+        - One individual projection edge from the diagonal edge decomposition
         """
         # print("Starting _get_candidates")
         if not self.set_hamming_greater_1:
@@ -442,11 +446,11 @@ class DiagonalEdgeGraph(StaticGraph):
             return []
 
         valid_candidates = []
-        hamming1_edges = self.set_hamming_1.copy()
+        hamming1_edges = self.set_hamming_1.copy()  # Common edges
         # print(f"Hamming-1 edges: {hamming1_edges}")
         # print(f"Diagonal edges: {self.set_hamming_greater_1}")
 
-        # For each diagonal edge
+        # For each diagonal edge, collect all individual projection edges
         for diagonal_edge in self.set_hamming_greater_1:
             # print(f"\nProcessing diagonal edge: {diagonal_edge}")
             start, end = diagonal_edge
@@ -458,42 +462,49 @@ class DiagonalEdgeGraph(StaticGraph):
                     diff_positions.append(i)
             # print(f"Differing positions: {diff_positions}")
 
-            # For each differing position, create projections
+            # For each differing position, create individual projection edges
             for target_qubit in diff_positions:
                 # print(f"\nTrying target qubit {target_qubit}")
-                projections = set()
 
                 # Create projection for start node
                 start_proj = list(start)
                 start_proj[target_qubit] = end[target_qubit]
                 start_intermediate = "".join(start_proj)
-                projections.add((start, start_intermediate))
+                projection_edge_1 = (start, start_intermediate)
 
                 # Create projection for end node
                 end_proj = list(end)
                 end_proj[target_qubit] = start[target_qubit]
                 end_intermediate = "".join(end_proj)
-                projections.add((end_intermediate, end))
+                projection_edge_2 = (end_intermediate, end)
 
-                # print(f"Generated projections: {projections}")
+                # Create candidates: common edges + individual projection edge
+                for projection_edge in [projection_edge_1, projection_edge_2]:
+                    try:
+                        # Each candidate: common Hamming-1 edges + one projection edge
+                        combined_edges = hamming1_edges | {projection_edge}
+                        # print(f"Candidate edges: {combined_edges}")
 
-                # Add projections to existing Hamming-1 edges
-                try:
-                    combined_edges = projections | hamming1_edges
-                    # print(f"Combined edges: {combined_edges}")
+                        # Validate that all edges have Hamming distance 1
+                        valid_edges = True
+                        for edge in combined_edges:
+                            dist = sum(1 for a, b in zip(edge[0], edge[1]) if a != b)
+                            # print(f"Edge {edge}: Hamming distance = {dist}")
+                            if dist != 1:
+                                valid_edges = False
+                                break
 
-                    # Let's see why NonDiagonalEdgeGraph might be failing
-                    # print("Checking Hamming distances in combined edges:")
-                    for edge in combined_edges:
-                        dist = sum(1 for a, b in zip(edge[0], edge[1]) if a != b)
-                        # print(f"Edge {edge}: Hamming distance = {dist}")
+                        if valid_edges:
+                            candidate_graph = NonDiagonalEdgeGraph(combined_edges)
+                            valid_candidates.append(candidate_graph)
+                            # print("Successfully created candidate")
+                        else:
+                            # print("Skipped candidate due to invalid Hamming distances")
+                            pass
 
-                    candidate_graph = NonDiagonalEdgeGraph(combined_edges)
-                    valid_candidates.append(candidate_graph)
-                    # print("Successfully created candidate")
-                except ValueError as e:
-                    print(f"Failed to create candidate: {str(e)}")
-                    continue
+                    except ValueError as e:
+                        print(f"Failed to create candidate: {str(e)}")
+                        continue
 
         # print(f"\nFinal number of valid candidates: {len(valid_candidates)}")
         return valid_candidates
