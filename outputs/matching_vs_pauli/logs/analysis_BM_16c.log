@@ -1,6 +1,0 @@
-[2025-06-11 17:07:38] Starting analysis with:
-[2025-06-11 17:07:38] Number of qubits: 4
-[2025-06-11 17:07:38] Number of vertices: 16
-[2025-06-11 17:07:38] Delta t: 0.1
-[2025-06-11 17:07:38] Input file: ../data/graphs/11117graph_BM_16c.g6
-[2025-06-11 17:07:38] Critical error in main execution: Graph file not found: ../data/graphs/11117graph_BM_16c.g6
