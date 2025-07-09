@@ -93,20 +93,95 @@ def lists_to_sets(*lists):
     return sets
 
 
+# def graph_matchings(edges):
+#     subgraphs = []
+#     for edge in edges:
+#         placed = False
+#         for subgraph in subgraphs:
+#             if not any(set(edge) & set(e) for e in subgraph):
+#                 subgraph.add(edge)
+#                 placed = True
+#                 break
+
+#         if not placed:
+#             subgraphs.append({edge})
+
+#     return subgraphs
+
+
 def graph_matchings(edges):
-    subgraphs = []
+    from collections import defaultdict
+
+    def get_bit_flip_position(edge):
+        """Determine which bit position differs between edge endpoints"""
+        u, v = edge
+
+        # Handle string vertices (convert binary strings to integers)
+        if isinstance(u, str) and isinstance(v, str):
+            try:
+                u_int = int(u, 2)  # Convert binary string to integer
+                v_int = int(v, 2)
+            except ValueError:
+                # If not binary strings, treat as arbitrary vertex labels
+                return -2
+        else:
+            u_int, v_int = u, v
+
+        # XOR to find differing bits
+        diff = u_int ^ v_int
+        if diff == 0:
+            return -1  # Self-loop or identical vertices
+
+        # Check if only one bit differs (Hamming distance = 1)
+        if bin(diff).count("1") == 1:
+            # Find position of the single differing bit
+            position = (diff & -diff).bit_length() - 1
+            return position
+        else:
+            return -2  # Multi-bit difference
+
+    # Group edges by bit flip position
+    edge_groups = defaultdict(list)
     for edge in edges:
-        placed = False
-        for subgraph in subgraphs:
-            if not any(set(edge) & set(e) for e in subgraph):
-                subgraph.add(edge)
-                placed = True
-                break
+        bit_pos = get_bit_flip_position(edge)
+        edge_groups[bit_pos].append(edge)
 
-        if not placed:
-            subgraphs.append({edge})
+    matchings = []
 
-    return subgraphs
+    # Process each edge group to create optimal matchings
+    for bit_position, group_edges in edge_groups.items():
+        # For single-bit flip edges, create maximum matchings
+        if bit_position >= 0:
+            while group_edges:
+                current_matching = set()
+                remaining_edges = []
+
+                for edge in group_edges:
+                    # Check if edge shares vertices with current matching
+                    if not any(
+                        set(edge) & set(existing_edge) for existing_edge in current_matching
+                    ):
+                        current_matching.add(edge)
+                    else:
+                        remaining_edges.append(edge)
+
+                if current_matching:
+                    matchings.append(current_matching)
+                group_edges = remaining_edges
+
+        # Handle multi-bit flip edges or non-binary vertices with greedy approach
+        else:
+            for edge in group_edges:
+                placed = False
+                for matching in matchings:
+                    if not any(set(edge) & set(e) for e in matching):
+                        matching.add(edge)
+                        placed = True
+                        break
+                if not placed:
+                    matchings.append({edge})
+
+    return matchings
 
 
 def graph_to_bitstring_edges(graph):
