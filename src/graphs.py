@@ -15,7 +15,8 @@ from src.mcrx_simplifier import MCRXCascadeSimplifier
 from src.misc import (
     binary_tuple_to_int_tuple,
     get_cyclic_connections,
-    graph_matchings,
+    graph_matchings_greedy,
+    graph_matchings_parallel,
     hamming_distance,
     lists_to_sets,
 )
@@ -230,14 +231,32 @@ class DynamicGraph:
 
 
 class IntersectingEdgesGraph(StaticGraph):
-    def __init__(self, edges):
+    def __init__(self, edges, matchings=""):
+        """
+        Initialize IntersectingEdgesGraph with specified matching algorithm.
+        
+        Args:
+            edges: The edges for the graph
+            matchings: Matching algorithm to use. Options:
+                - 'greedy': Use graph_matchings_greedy function
+                - 'parallel': Use graph_matchings_parallel function
+        """
         super().__init__(edges)
+        self.matchings = matchings
         self.subgraphs = self.__decompose_into_subgraphs()
 
     def __decompose_into_subgraphs(self):
         decomposed_subgraphs = []
 
-        subgraphs = graph_matchings(self.edges)
+        # Select the appropriate matching function
+        if self.matchings == 'greedy':
+            subgraphs = graph_matchings_greedy(self.edges)
+        elif self.matchings == 'parallel':
+            subgraphs = graph_matchings_parallel(self.edges)
+        else:
+            raise ValueError(f"Invalid matchings value: '{self.matchings}'. "
+                           f"Valid options are: 'greedy', 'parallel'")
+
         for sg in subgraphs:
             g = MultiEdgeGraph(sg)
             decomposed_subgraphs.append(g)

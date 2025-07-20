@@ -93,23 +93,23 @@ def lists_to_sets(*lists):
     return sets
 
 
-# def graph_matchings(edges):
-#     subgraphs = []
-#     for edge in edges:
-#         placed = False
-#         for subgraph in subgraphs:
-#             if not any(set(edge) & set(e) for e in subgraph):
-#                 subgraph.add(edge)
-#                 placed = True
-#                 break
+def graph_matchings_greedy(edges):
+    subgraphs = []
+    for edge in edges:
+        placed = False
+        for subgraph in subgraphs:
+            if not any(set(edge) & set(e) for e in subgraph):
+                subgraph.add(edge)
+                placed = True
+                break
 
-#         if not placed:
-#             subgraphs.append({edge})
+        if not placed:
+            subgraphs.append({edge})
 
-#     return subgraphs
+    return subgraphs
 
 
-def graph_matchings(edges):
+def graph_matchings_parallel(edges):
     from collections import defaultdict
 
     def get_bit_flip_position(edge):
