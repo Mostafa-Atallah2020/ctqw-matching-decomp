@@ -2,15 +2,17 @@
 """
 Operator Difference Norm Analysis Script
 
-This script analyzes operator norm differences between quantum walk implementations:
-1. Trotterized quantum walk using Matching decomposition vs exact CTQW
-2. Trotterized quantum walk using Pauli decomposition vs exact CTQW  
+This script analyzes operator difference norms between quantum walk implementations:
+1. Trotterized quantum walk using First-Fit Algorithm decomposition vs exact CTQW
+2. Trotterized quantum walk using Structure-Aware Algorithm decomposition vs exact CTQW  
+3. Trotterized quantum walk using Pauli decomposition vs exact CTQW
+
+Loads graphs from ../data/graphs directory.
 """
 
 import argparse
 import itertools
 import os
-import random
 import sys
 from pathlib import Path
 
@@ -32,11 +34,11 @@ sys.path.insert(0, project_root)
 sys.path.insert(0, src_path)
 
 try:
-    from src.graphs import Graph, PowerOf2EdgeGraph
+    from src.graphs import IntersectingEdgesGraph
 except ImportError:
     # Fallback if src.graphs doesn't work
     try:
-        from graphs import Graph, PowerOf2EdgeGraph
+        from graphs import IntersectingEdgesGraph
     except ImportError as e:
         print(f"Error importing graph classes: {e}")
         print(f"Current working directory: {os.getcwd()}")
@@ -49,35 +51,24 @@ except ImportError:
         sys.exit(1)
 
 
-def generate_test_graphs(n_vertices, n_graphs=100, seed=None):
-    """Generate test graphs and save them to files."""
-    if seed is not None:
-        random.seed(seed)
-        np.random.seed(seed)
-    
-    graphs = []
-    while len(graphs) < n_graphs:
-        g = nx.gnm_random_graph(n_vertices, random.randint(n_vertices, n_vertices*(n_vertices-1)//2))
-        if nx.is_connected(g) and all(nx.is_isomorphic(g, h) == False for h in graphs):
-            graphs.append(g)
-    return graphs
-
-
-def save_graphs(graphs, n_vertices, n_graphs, output_dir, verbose=True):
-    """Save graphs in graph6 format."""
-    output_dir = Path(output_dir)
-    output_dir.mkdir(parents=True, exist_ok=True)
-    
+def load_graphs(graphs_dir, n_vertices, n_graphs, verbose=True):
+    """Load graphs from graph6 format files."""
+    graphs_dir = Path(graphs_dir)
     filename = f"{n_graphs}graph_random_{n_vertices}c.g6"
-    filepath = output_dir / filename
+    filepath = graphs_dir / filename
     
-    with open(filepath, 'w') as f:
-        for graph in graphs:
-            f.write(nx.to_graph6_bytes(graph, header=False).decode('ascii'))
+    if not filepath.exists():
+        raise FileNotFoundError(f"Graph file not found: {filepath}")
     
     if verbose:
-        print(f"Saved {len(graphs)} graphs to {filepath}")
-    return filepath
+        print(f"Loading graphs from {filepath}")
+    
+    graphs = list(nx.read_graph6(filepath))
+    
+    if verbose:
+        print(f"Loaded {len(graphs)} graphs with {n_vertices} vertices")
+    
+    return graphs
 
 
 def unitary_to_pauli(U, tolerance=1e-10):
@@ -102,37 +93,114 @@ def unitary_to_pauli(U, tolerance=1e-10):
     return SparsePauliOp(pauli_strings, coeffs)
 
 
-def trotterized_quantum_walk(graph, time, n_steps):
-    """Original trotterized quantum walk using subgraph decomposition"""
-    edge_set = set(graph.edges())
-    power_of_2_graph = PowerOf2EdgeGraph(edge_set)
-    subgraphs = power_of_2_graph.subgraphs
+def trotterized_quantum_walk(graph, time, n_steps, matching_algorithm='first-fit'):
+    """Trotterized quantum walk using subgraph decomposition with matching algorithms
+    
+    Args:
+        graph: NetworkX graph
+        time: Evolution time
+        n_steps: Number of Trotter steps
+        matching_algorithm: 'first-fit' or 'structure-aware'
+    """
+    if matching_algorithm not in ['first-fit', 'structure-aware']:
+        raise ValueError(f"Invalid matching algorithm: {matching_algorithm}. "
+                       f"Valid options are: 'first-fit', 'structure-aware'")
+    
+    # Map new names to internal names
+    algorithm_mapping = {
+        'first-fit': 'greedy',
+        'structure-aware': 'parallel'
+    }
+    internal_algorithm = algorithm_mapping[matching_algorithm]
+    
+    # Get integer edges from NetworkX graph
+    int_edges = set(graph.edges())
+    
+    # Determine number of qubits needed to represent all nodes
+    max_node = max(max(edge) for edge in int_edges) if int_edges else 0
+    n_qubits = max_node.bit_length()  # Number of bits needed to represent max_node
+    if n_qubits == 0:  # Handle case where max_node is 0
+        n_qubits = 1
+    
+    # Convert integer edges to binary string edges for StaticGraph
+    binary_edges = set()
+    for u, v in int_edges:
+        # Convert integers to binary strings with proper zero-padding
+        u_binary = format(u, f'0{n_qubits}b')
+        v_binary = format(v, f'0{n_qubits}b')
+        binary_edges.add((u_binary, v_binary))
+    
+    # Create IntersectingEdgesGraph with binary string edges
+    decomp_graph = IntersectingEdgesGraph(binary_edges, matchings=internal_algorithm)
+    subgraphs = decomp_graph.subgraphs
     delta_t = time / n_steps
     
-    n_qubits = power_of_2_graph.n_qubits
     n_states = 2**n_qubits
     time_evo_op = np.eye(n_states, dtype=complex)
     
     for _ in range(n_steps):
         for subgraph in subgraphs:
+            try:
+                # Get integer edges from the subgraph for matrix operations
+                if hasattr(subgraph, '_StaticGraph__int_edges'):
+                    subgraph_edges = list(subgraph._StaticGraph__int_edges)
+                elif hasattr(subgraph, 'edges'):
+                    # Convert from string edges to int edges if needed
+                    subgraph_edges = []
+                    for edge in subgraph.edges:
+                        if isinstance(edge[0], str):
+                            u = int(edge[0], 2)
+                            v = int(edge[1], 2)
+                            subgraph_edges.append((u, v))
+                        else:
+                            subgraph_edges.append(edge)
+                else:
+                    continue
+                
+                # Get nodes
+                if hasattr(subgraph, 'nodes'):
+                    if isinstance(subgraph.nodes, set):
+                        subgraph_nodes = list(subgraph.nodes)
+                    else:
+                        subgraph_nodes = subgraph.nodes
+                else:
+                    # Infer nodes from edges
+                    if subgraph_edges:
+                        all_nodes = set()
+                        for u, v in subgraph_edges:
+                            all_nodes.add(u)
+                            all_nodes.add(v)
+                        subgraph_nodes = list(all_nodes)
+                    else:
+                        continue
+                
+            except Exception as e:
+                print(f"Warning: Could not process subgraph: {e}")
+                continue
+            
+            if not subgraph_edges:
+                continue
+                
             # Create a mapping from subgraph nodes to indices
-            node_to_index = {node: i for i, node in enumerate(subgraph.nodes())}
+            node_to_index = {node: i for i, node in enumerate(subgraph_nodes)}
             subgraph_size = len(node_to_index)
             
             # Create the adjacency matrix for the subgraph
             adj_matrix = np.zeros((subgraph_size, subgraph_size), dtype=complex)
-            for u, v in subgraph.edges():
-                i, j = node_to_index[u], node_to_index[v]
-                adj_matrix[i, j] = adj_matrix[j, i] = 1
+            for u, v in subgraph_edges:
+                if u in node_to_index and v in node_to_index:
+                    i, j = node_to_index[u], node_to_index[v]
+                    adj_matrix[i, j] = adj_matrix[j, i] = 1
             
             # Compute the unitary for the subgraph
             subgraph_unitary = expm(-1j * adj_matrix * delta_t)
             
             # Create the full unitary by embedding the subgraph unitary
             full_unitary = np.eye(n_states, dtype=complex)
-            for i, node_i in enumerate(subgraph.nodes()):
-                for j, node_j in enumerate(subgraph.nodes()):
-                    full_unitary[node_i, node_j] = subgraph_unitary[i, j]
+            for i, node_i in enumerate(subgraph_nodes):
+                for j, node_j in enumerate(subgraph_nodes):
+                    if node_i < n_states and node_j < n_states:
+                        full_unitary[node_i, node_j] = subgraph_unitary[i, j]
             
             time_evo_op = np.dot(full_unitary, time_evo_op)
     
@@ -141,8 +209,15 @@ def trotterized_quantum_walk(graph, time, n_steps):
 
 def trotterized_pauli_decomp(graph, time, n_steps):
     """Trotterized quantum walk using first-order Trotter decomposition of Pauli terms"""
-    static_graph = Graph(set(graph.edges()))
-    n_qubits = static_graph.n_qubits
+    # Get integer edges from NetworkX graph
+    int_edges = set(graph.edges())
+    
+    # Determine number of qubits needed to represent all nodes
+    max_node = max(max(edge) for edge in int_edges) if int_edges else 0
+    n_qubits = max_node.bit_length()  # Number of bits needed to represent max_node
+    if n_qubits == 0:  # Handle case where max_node is 0
+        n_qubits = 1
+    
     n_states = 2**n_qubits
     adj_matrix = nx.adjacency_matrix(graph).toarray()
     
@@ -175,8 +250,15 @@ def trotterized_pauli_decomp(graph, time, n_steps):
 
 def original_ctqw(graph, time):
     """Original continuous-time quantum walk"""
-    static_graph = Graph(set(graph.edges()))
-    n_qubits = static_graph.n_qubits
+    # Get integer edges from NetworkX graph
+    int_edges = set(graph.edges())
+    
+    # Determine number of qubits needed to represent all nodes
+    max_node = max(max(edge) for edge in int_edges) if int_edges else 0
+    n_qubits = max_node.bit_length()  # Number of bits needed to represent max_node
+    if n_qubits == 0:  # Handle case where max_node is 0
+        n_qubits = 1
+    
     n_states = 2**n_qubits
     adj_matrix = nx.adjacency_matrix(graph).toarray()
     time_evo_op = expm(-1j * adj_matrix * time)
@@ -190,9 +272,16 @@ def original_ctqw(graph, time):
     return Operator(time_evo_op)
 
 
-def compare_all_walks(graph, time, n_steps):
-    """Compare trotterized and pauli methods vs original"""
-    trotterized_op = trotterized_quantum_walk(graph, time, n_steps)
+def compare_all_walks(graph, time, n_steps, matching_algorithm='first-fit'):
+    """Compare trotterized and pauli methods vs original
+    
+    Args:
+        graph: NetworkX graph
+        time: Evolution time
+        n_steps: Number of Trotter steps
+        matching_algorithm: 'first-fit' or 'structure-aware'
+    """
+    trotterized_op = trotterized_quantum_walk(graph, time, n_steps, matching_algorithm)
     trotterized_pauli_op = trotterized_pauli_decomp(graph, time, n_steps)
     original_op = original_ctqw(graph, time)
     
@@ -206,8 +295,18 @@ def compare_all_walks(graph, time, n_steps):
     }
 
 
-def plot_results(graphs, times, n_steps_list, title, save_dir, verbose=True):
-    """Plot results comparing trotterized and pauli methods vs original"""
+def plot_results(graphs, times, n_steps_list, title, save_dir, matching_algorithm='first-fit', verbose=True):
+    """Plot results comparing trotterized and pauli methods vs original
+    
+    Args:
+        graphs: List of NetworkX graphs
+        times: List of evolution times
+        n_steps_list: List of Trotter step counts
+        title: Plot title
+        save_dir: Directory to save plots
+        matching_algorithm: 'first-fit' or 'structure-aware'
+        verbose: Whether to print progress
+    """
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     
@@ -251,14 +350,21 @@ def plot_results(graphs, times, n_steps_list, title, save_dir, verbose=True):
         } for t in times
     }
     
+    # Map algorithm names to display names
+    algorithm_display_names = {
+        'first-fit': 'First-Fit Algorithm',
+        'structure-aware': 'Structure-Aware Algorithm'
+    }
+    display_name = algorithm_display_names.get(matching_algorithm, matching_algorithm)
+    
     if verbose:
-        print(f"Analyzing {len(graphs)} graphs for {title}...")
+        print(f"Analyzing {len(graphs)} graphs for {title} (matching: {display_name})...")
     for i, graph in enumerate(graphs):
         if verbose and (i + 1) % 10 == 0:
             print(f"  Processed {i + 1}/{len(graphs)} graphs")
         for t in times:
             for N in n_steps_list:
-                comparison_results = compare_all_walks(graph, t, N)
+                comparison_results = compare_all_walks(graph, t, N, matching_algorithm)
                 for key, value in comparison_results.items():
                     results[t][N][key].append(value)
     
@@ -268,9 +374,12 @@ def plot_results(graphs, times, n_steps_list, title, save_dir, verbose=True):
     # Color palette
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
     
+    # Update comparison labels based on matching algorithm
+    trotter_label = f'{display_name} CTQW vs exact CTQW'
+    
     # Comparison types and their labels
     comparisons = [
-        ('qw_vs_original', 'Matchings CTQW vs exact CTQW', axes[0]),
+        ('qw_vs_original', trotter_label, axes[0]),
         ('pauli_vs_original', 'Pauli Decomposition vs exact CTQW', axes[1])
     ]
     
@@ -300,7 +409,7 @@ def plot_results(graphs, times, n_steps_list, title, save_dir, verbose=True):
         
         ax.set_yscale('log')
         ax.set_xlabel('Number of Trotter Steps (N)')
-        ax.set_ylabel('Operator Norm Difference')
+        ax.set_ylabel('Operator Difference Norm')
         ax.set_title(comp_label)
         ax.grid(True, which='both', linestyle=':', alpha=0.2)
     
@@ -313,14 +422,16 @@ def plot_results(graphs, times, n_steps_list, title, save_dir, verbose=True):
               fancybox=True, 
               shadow=True)
     
-    # Add overall title
-    fig.suptitle(title, fontsize=24, y=1.02)
+    # Add overall title with matching algorithm info
+    full_title = f"{title} ({display_name})"
+    fig.suptitle(full_title, fontsize=24, y=1.02)
     
     # Adjust layout to make room for legend
     plt.subplots_adjust(right=0.85)
     
-    # Save the plot
-    filename = title.lower().replace(' ', '_').replace('-', '_') + '.pdf'
+    # Save the plot with matching algorithm in filename
+    filename = title.lower().replace(' ', '_').replace('-', '_')
+    filename += f"_{matching_algorithm.replace('-', '_')}.pdf"
     filepath = save_dir / filename
     fig.savefig(filepath, 
                 format='pdf', 
@@ -354,52 +465,53 @@ def print_summary_statistics(results_dict, verbose=True):
 
 
 def main():
-    # Set default directories based on structure: base/{analysis, src, data}
+    # Set default directories based on script location in ./analysis
     script_dir = os.path.dirname(__file__)
-    parent_dir = os.path.dirname(script_dir)
-    default_graphs_dir = os.path.join(parent_dir, 'data', 'graphs')
-    default_plots_dir = os.path.join(parent_dir, 'data', 'plots')
+    default_graphs_dir = os.path.join(script_dir, '..', 'data', 'graphs')
+    default_plots_dir = os.path.join(script_dir, '..', 'data', 'plots')
 
-    parser = argparse.ArgumentParser(description='Analyze operator norm differences between quantum walk implementations')
+    parser = argparse.ArgumentParser(description='Analyze operator difference norms between quantum walk implementations')
     
-    # Graph generation parameters
+    # Graph loading parameters
     parser.add_argument('--vertex-sizes', nargs='+', type=int, default=[8, 16, 32],
-                        help='List of vertex sizes for graphs (default: 8 16 32)')
+                        help='List of vertex sizes for graphs to analyze (default: 8 16 32)')
     parser.add_argument('--n-graphs', type=int, default=100,
-                        help='Number of graphs to generate per vertex size (default: 100)')
-    parser.add_argument('--seed', type=int, default=None,
-                        help='Random seed for reproducibility')
+                        help='Number of graphs to load per vertex size (default: 100)')
     
     # Analysis parameters
     parser.add_argument('--times', nargs='+', type=float, default=[0.1, 0.5, 1.0],
                         help='Time values for quantum walk (default: 0.1 0.5 1.0)')
     parser.add_argument('--n-steps', nargs='+', type=int, default=[5, 10, 20, 50, 100],
                         help='Number of Trotter steps (default: 5 10 20 50 100)')
+    parser.add_argument('--matching-algorithm', choices=['first-fit', 'structure-aware'], default='first-fit',
+                        help='Matching algorithm for Trotterized quantum walk (default: first-fit)')
     
-    # Output directories
+    # Input/Output directories
     parser.add_argument('--graphs-dir', type=str, default=default_graphs_dir,
-                        help=f'Directory to save generated graphs (default: {default_graphs_dir})')
+                        help=f'Directory to load graphs from (default: {default_graphs_dir})')
     parser.add_argument('--plots-dir', type=str, default=default_plots_dir,
                         help=f'Directory to save plots (default: {default_plots_dir})')
     
     # Control options
-    parser.add_argument('--skip-generation', action='store_true',
-                        help='Skip graph generation (use existing graphs)')
-    parser.add_argument('--verbose', '-v', choices=['true', 'false'], default='true',
-                        help='Verbose output (default: true)')
+    parser.add_argument('--verbose', '-v', action='store_true', default=True,
+                        help='Verbose output')
     
     args = parser.parse_args()
     
-    # Convert verbose string to boolean
-    args.verbose = args.verbose.lower() == 'true'
+    # Map algorithm names to display names
+    algorithm_display_names = {
+        'first-fit': 'First-Fit Algorithm',
+        'structure-aware': 'Structure-Aware Algorithm'
+    }
     
     if args.verbose:
-        print(f"Configuration:")
+        display_name = algorithm_display_names.get(args.matching_algorithm, args.matching_algorithm)
+        print(f"Analysis Configuration:")
         print(f"  Vertex sizes: {args.vertex_sizes}")
         print(f"  Number of graphs per size: {args.n_graphs}")
         print(f"  Times: {args.times}")
         print(f"  Trotter steps: {args.n_steps}")
-        print(f"  Seed: {args.seed}")
+        print(f"  Matching algorithm: {display_name}")
         print(f"  Graphs directory: {args.graphs_dir}")
         print(f"  Plots directory: {args.plots_dir}")
     
@@ -407,37 +519,36 @@ def main():
     
     for n_vertices in args.vertex_sizes:
         print(f"\n{'='*50}")
-        print(f"Processing {n_vertices}-vertex graphs")
+        print(f"Processing {n_vertices}-vertex graphs with {algorithm_display_names.get(args.matching_algorithm, args.matching_algorithm)}")
         print(f"{'='*50}")
         
-        if not args.skip_generation:
+        try:
+            # Load graphs
+            graphs = load_graphs(args.graphs_dir, n_vertices, args.n_graphs, args.verbose)
+            
             if args.verbose:
-                print(f"Generating {args.n_graphs} random connected graphs with {n_vertices} vertices...")
-            graphs = generate_test_graphs(n_vertices, args.n_graphs, args.seed)
-            save_graphs(graphs, n_vertices, args.n_graphs, args.graphs_dir, args.verbose)
-        else:
-            # Load existing graphs if needed
-            graphs_file = Path(args.graphs_dir) / f"{args.n_graphs}graph_random_{n_vertices}c.g6"
-            if graphs_file.exists():
-                if args.verbose:
-                    print(f"Loading graphs from {graphs_file}")
-                graphs = list(nx.read_graph6(graphs_file))
-            else:
-                if args.verbose:
-                    print(f"Graph file {graphs_file} not found, generating new graphs...")
-                graphs = generate_test_graphs(n_vertices, args.n_graphs, args.seed)
-                save_graphs(graphs, n_vertices, args.n_graphs, args.graphs_dir, args.verbose)
-        
-        if args.verbose:
-            print(f"Running analysis on {len(graphs)} graphs...")
-        title = f'{n_vertices}-Vertex Graphs'
-        results = plot_results(graphs, args.times, args.n_steps, title, args.plots_dir, args.verbose)
-        all_results[f"{n_vertices}-vertex"] = results
+                print(f"Running analysis on {len(graphs)} graphs...")
+            
+            title = f'{n_vertices}-Vertex Graphs'
+            results = plot_results(graphs, args.times, args.n_steps, title, args.plots_dir, 
+                                 matching_algorithm=args.matching_algorithm, verbose=args.verbose)
+            all_results[f"{n_vertices}-vertex"] = results
+            
+        except FileNotFoundError as e:
+            print(f"Error: {e}")
+            print(f"Please run generate_graphs.py first to create the graph files.")
+            continue
+        except Exception as e:
+            print(f"Error processing {n_vertices}-vertex graphs: {e}")
+            continue
     
-    # Print overall summary
-    print_summary_statistics(all_results, args.verbose)
-    if args.verbose:
-        print(f"\nOperator difference norm analysis complete! Plots saved to {args.plots_dir}")
+    if all_results:
+        # Print overall summary
+        print_summary_statistics(all_results, args.verbose)
+        if args.verbose:
+            print(f"\nOperator difference norm analysis complete! Plots saved to {args.plots_dir}")
+    else:
+        print("\nNo graphs were successfully analyzed. Please check that graph files exist.")
 
 
 if __name__ == "__main__":
