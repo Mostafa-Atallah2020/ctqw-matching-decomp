@@ -7,6 +7,9 @@ This script analyzes operator difference norms between quantum walk implementati
 2. Trotterized quantum walk using Hamming Distance Greedy decomposition vs exact CTQW  
 3. Trotterized quantum walk using Pauli decomposition vs exact CTQW
 
+The script allows flexible selection of which methods to analyze and compare.
+Creates dynamic grid plots: rows = vertex sizes, columns = selected methods.
+
 Loads graphs from ../data/graphs directory.
 """
 
@@ -272,32 +275,35 @@ def original_ctqw(graph, time):
     return Operator(time_evo_op)
 
 
-def analyze_graphs(graphs, times, n_steps_list, verbose=True):
-    """Analyze graphs with all three methods and return results
+def analyze_graphs(graphs, times, n_steps_list, selected_methods, verbose=True):
+    """Analyze graphs with selected methods and return results
     
     Args:
         graphs: List of NetworkX graphs
         times: List of evolution times
         n_steps_list: List of Trotter step counts
+        selected_methods: List of methods to analyze
         verbose: Whether to print progress
         
     Returns:
-        dict: Results for all three methods
+        dict: Results for selected methods
     """
-    results = {
-        'first-fit-greedy': {
-            t: {N: [] for N in n_steps_list} for t in times
-        },
-        'hamming-distance-greedy': {
-            t: {N: [] for N in n_steps_list} for t in times
-        },
-        'pauli-decomposition': {
+    results = {}
+    
+    # Initialize results structure for selected methods only
+    for method in selected_methods:
+        results[method] = {
             t: {N: [] for N in n_steps_list} for t in times
         }
-    }
     
     if verbose:
-        print(f"Analyzing {len(graphs)} graphs...")
+        method_names = {
+            'first-fit-greedy': 'First-Fit Greedy',
+            'hamming-distance-greedy': 'Hamming Distance Greedy', 
+            'pauli-decomposition': 'Pauli Decomposition'
+        }
+        selected_names = [method_names[m] for m in selected_methods]
+        print(f"Analyzing {len(graphs)} graphs with methods: {', '.join(selected_names)}...")
     
     for i, graph in enumerate(graphs):
         if verbose and (i + 1) % 10 == 0:
@@ -305,35 +311,37 @@ def analyze_graphs(graphs, times, n_steps_list, verbose=True):
         
         for t in times:
             for N in n_steps_list:
-                # Get exact CTQW for comparison
-                original_op = original_ctqw(graph, t)
+                # Get exact CTQW for comparison (only if needed)
+                original_op = None
                 
-                # First-Fit Greedy
-                first_fit_op = trotterized_quantum_walk(graph, t, N, 'first-fit-greedy')
-                first_fit_diff = np.linalg.norm((first_fit_op - original_op).data, ord=2)
-                results['first-fit-greedy'][t][N].append(first_fit_diff)
-                
-                # Hamming Distance Greedy
-                hamming_op = trotterized_quantum_walk(graph, t, N, 'hamming-distance-greedy')
-                hamming_diff = np.linalg.norm((hamming_op - original_op).data, ord=2)
-                results['hamming-distance-greedy'][t][N].append(hamming_diff)
-                
-                # Pauli Decomposition
-                pauli_op = trotterized_pauli_decomp(graph, t, N)
-                pauli_diff = np.linalg.norm((pauli_op - original_op).data, ord=2)
-                results['pauli-decomposition'][t][N].append(pauli_diff)
+                for method in selected_methods:
+                    if original_op is None:
+                        original_op = original_ctqw(graph, t)
+                    
+                    if method == 'first-fit-greedy':
+                        method_op = trotterized_quantum_walk(graph, t, N, 'first-fit-greedy')
+                    elif method == 'hamming-distance-greedy':
+                        method_op = trotterized_quantum_walk(graph, t, N, 'hamming-distance-greedy')
+                    elif method == 'pauli-decomposition':
+                        method_op = trotterized_pauli_decomp(graph, t, N)
+                    else:
+                        continue
+                    
+                    method_diff = np.linalg.norm((method_op - original_op).data, ord=2)
+                    results[method][t][N].append(method_diff)
     
     return results
 
 
-def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, save_dir, verbose=True):
-    """Create a 3x3 grid plot comparing all methods across all vertex sizes
+def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, selected_methods, save_dir, verbose=True):
+    """Create a grid plot comparing selected methods across all vertex sizes
     
     Args:
         all_results: Dictionary of results for all vertex sizes
         vertex_sizes: List of vertex sizes
         times: List of evolution times  
         n_steps_list: List of Trotter step counts
+        selected_methods: List of methods to plot
         save_dir: Directory to save plots
         verbose: Whether to print progress
     """
@@ -349,7 +357,7 @@ def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, sa
         'xtick.labelsize': 12,
         'ytick.labelsize': 12,
         'legend.fontsize': 10,
-        'figure.figsize': (18, 12),
+        'figure.figsize': (6*len(selected_methods), 6*len(vertex_sizes)),
         'figure.dpi': 300,
         'lines.linewidth': 2,
         'lines.markersize': 6,
@@ -362,17 +370,24 @@ def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, sa
         'axes.facecolor': 'white',
     })
     
-    # Create 3x3 grid: rows=vertex sizes, columns=methods
-    fig, axes = plt.subplots(len(vertex_sizes), 3, figsize=(18, 6*len(vertex_sizes)))
-    if len(vertex_sizes) == 1:
-        axes = axes.reshape(1, 3)
+    # Create dynamic grid: rows=vertex sizes, columns=selected methods
+    fig, axes = plt.subplots(len(vertex_sizes), len(selected_methods), 
+                            figsize=(6*len(selected_methods), 6*len(vertex_sizes)))
+    
+    # Handle single row or single column cases
+    if len(vertex_sizes) == 1 and len(selected_methods) == 1:
+        axes = np.array([[axes]])
+    elif len(vertex_sizes) == 1:
+        axes = axes.reshape(1, -1)
+    elif len(selected_methods) == 1:
+        axes = axes.reshape(-1, 1)
     
     # Method information
-    methods = [
-        ('first-fit-greedy', 'First-Fit Greedy vs Exact CTQW'),
-        ('hamming-distance-greedy', 'Hamming Distance Greedy vs Exact CTQW'),
-        ('pauli-decomposition', 'Pauli Decomposition vs Exact CTQW')
-    ]
+    method_info = {
+        'first-fit-greedy': 'First-Fit Greedy vs Exact CTQW',
+        'hamming-distance-greedy': 'Hamming Distance Greedy vs Exact CTQW',
+        'pauli-decomposition': 'Pauli Decomposition vs Exact CTQW'
+    }
     
     # Color palette for different times
     colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
@@ -386,8 +401,9 @@ def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, sa
             
         vertex_results = all_results[vertex_key]
         
-        for col, (method_key, method_label) in enumerate(methods):
+        for col, method_key in enumerate(selected_methods):
             ax = axes[row, col]
+            method_label = method_info[method_key]
             
             # Plot each time value
             for t_idx, t in enumerate(times):
@@ -422,69 +438,87 @@ def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, sa
             # Format subplot
             ax.set_yscale('log')
             ax.set_xlabel('Number of Trotter Steps (N)')
-            # ax.set_ylabel('Operator Difference Norm')
+            ax.set_ylabel('Operator Difference Norm')
             ax.grid(True, which='both', linestyle=':', alpha=0.3)
             
-            # Set title
+            # Set title (method name at top row)
             if row == 0:
-                # Method name at top
                 ax.set_title(method_label, fontsize=16, fontweight='bold')
             
-            # Add vertex size label on left
+            # Add vertex size label on leftmost column
             if col == 0:
-                ax.text(-0.5, 0.5, f'{n_vertices} Vertices', 
+                ax.text(1.15, 0.5, f'{n_vertices} Vertices', 
                        transform=ax.transAxes, rotation=90, 
                        verticalalignment='center', horizontalalignment='center',
                        fontsize=16, fontweight='bold')
             
             # Add legend only to top-right subplot
-            if row == 0 and col == 2:
+            if row == 0 and col == len(selected_methods) - 1:
                 ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     
-    # Add overall title
-    fig.suptitle('Operator Difference Norms', fontsize=20, fontweight='bold', y=0.98)
+    # # Create title based on selected methods
+    # method_names = [method_info[m].split(' vs')[0] for m in selected_methods]
+    # if len(method_names) == 1:
+    #     title = f'Quantum Walk Analysis: {method_names[0]}'
+    # elif len(method_names) == 2:
+    #     title = f'Quantum Walk Analysis: {method_names[0]} vs {method_names[1]}'
+    # else:
+    #     title = 'Comprehensive Quantum Walk Operator Difference Norm Analysis'
+    
+    # fig.suptitle(title, fontsize=20, fontweight='bold', y=0.98)
     
     # Adjust layout
     plt.tight_layout()
     plt.subplots_adjust(top=0.94, left=0.08, right=0.92)
     
-    # Save the plot
-    filename = 'comprehensive_operator_difference_analysis.pdf'
+    # Create filename based on selected methods
+    method_short_names = {
+        'first-fit-greedy': 'first_fit',
+        'hamming-distance-greedy': 'hamming_distance', 
+        'pauli-decomposition': 'pauli'
+    }
+    filename_parts = [method_short_names[m] for m in selected_methods]
+    filename = f"operator_analysis_{'_vs_'.join(filename_parts)}.pdf"
     filepath = save_dir / filename
+    
     fig.savefig(filepath, format='pdf', dpi=300, bbox_inches='tight')
     
     if verbose:
-        print(f"Comprehensive plot saved as: {filepath}")
+        print(f"Analysis plot saved as: {filepath}")
     
     plt.close(fig)
     return filepath
 
 
-def print_summary_statistics(all_results, verbose=True):
-    """Print summary statistics for all results"""
+def print_summary_statistics(all_results, selected_methods, verbose=True):
+    """Print summary statistics for selected results"""
     if not verbose:
         return
         
     print("\nSummary Statistics:")
     print("=" * 80)
     
+    # Method display names
+    method_display_names = {
+        'first-fit-greedy': 'First-Fit Greedy',
+        'hamming-distance-greedy': 'Hamming Distance Greedy',
+        'pauli-decomposition': 'Pauli Decomposition'
+    }
+    
     for vertex_key, vertex_results in all_results.items():
         print(f"\n{vertex_key.upper()} GRAPHS:")
         print("-" * 50)
         
-        methods = [
-            ('first-fit-greedy', 'First-Fit Greedy'),
-            ('hamming-distance-greedy', 'Hamming Distance Greedy'),
-            ('pauli-decomposition', 'Pauli Decomposition')
-        ]
+        # Only show statistics for selected methods
+        selected_method_info = [(method, method_display_names[method]) for method in selected_methods]
         
         # Show statistics for representative time and step values
         for t in [0.1, 1.0]:  # Representative times
-            if any(t in vertex_results.get(method, {}) for method, _ in methods):
+            if any(t in vertex_results.get(method, {}) for method, _ in selected_method_info):
                 print(f"\n  Time t = {t}:")
                 for N in [10, 50]:  # Representative step counts
                     print(f"    Trotter Steps N = {N}:")
-                    for method_key, method_name in methods:
+                    for method_key, method_name in selected_method_info:
                         if (method_key in vertex_results and 
                             t in vertex_results[method_key] and 
                             N in vertex_results[method_key][t] and
@@ -517,6 +551,10 @@ def main():
                         help='Time values for quantum walk (default: 0.1 0.5 1.0)')
     parser.add_argument('--n-steps', nargs='+', type=int, default=[5, 10, 20, 50, 100],
                         help='Number of Trotter steps (default: 5 10 20 50 100)')
+    parser.add_argument('--methods', nargs='+', 
+                        choices=['first-fit-greedy', 'hamming-distance-greedy', 'pauli-decomposition'],
+                        default=['first-fit-greedy', 'hamming-distance-greedy', 'pauli-decomposition'],
+                        help='Methods to analyze and plot (default: all three methods)')
     
     # Input/Output directories
     parser.add_argument('--graphs-dir', type=str, default=default_graphs_dir,
@@ -530,12 +568,21 @@ def main():
     
     args = parser.parse_args()
     
+    # Method display names for user output
+    method_display_names = {
+        'first-fit-greedy': 'First-Fit Greedy',
+        'hamming-distance-greedy': 'Hamming Distance Greedy',
+        'pauli-decomposition': 'Pauli Decomposition'
+    }
+    selected_display_names = [method_display_names[m] for m in args.methods]
+    
     if args.verbose:
-        print(f"Comprehensive Quantum Walk Analysis Configuration:")
+        print(f"Quantum Walk Analysis Configuration:")
         print(f"  Vertex sizes: {args.vertex_sizes}")
         print(f"  Number of graphs per size: {args.n_graphs}")
         print(f"  Times: {args.times}")
         print(f"  Trotter steps: {args.n_steps}")
+        print(f"  Selected methods: {', '.join(selected_display_names)}")
         print(f"  Graphs directory: {args.graphs_dir}")
         print(f"  Plots directory: {args.plots_dir}")
     
@@ -551,8 +598,8 @@ def main():
             # Load graphs
             graphs = load_graphs(args.graphs_dir, n_vertices, args.n_graphs, args.verbose)
             
-            # Analyze with all three methods
-            results = analyze_graphs(graphs, args.times, args.n_steps, args.verbose)
+            # Analyze with selected methods
+            results = analyze_graphs(graphs, args.times, args.n_steps, args.methods, args.verbose)
             all_results[f"{n_vertices}-vertex"] = results
             
         except FileNotFoundError as e:
@@ -567,17 +614,19 @@ def main():
         # Create comprehensive plot
         if args.verbose:
             print(f"\n{'='*70}")
-            print("Creating comprehensive analysis plot...")
+            print("Creating analysis plot...")
             print(f"{'='*70}")
         
         create_comprehensive_plot(all_results, args.vertex_sizes, args.times, 
-                                args.n_steps, args.plots_dir, args.verbose)
+                                args.n_steps, args.methods, args.plots_dir, args.verbose)
         
         # Print summary statistics
-        print_summary_statistics(all_results, args.verbose)
+        print_summary_statistics(all_results, args.methods, args.verbose)
         
         if args.verbose:
-            print(f"\nComprehensive operator difference norm analysis complete!")
+            methods_str = ' vs '.join(selected_display_names)
+            print(f"\nOperator difference norm analysis complete!")
+            print(f"Methods analyzed: {methods_str}")
             print(f"Results saved to {args.plots_dir}")
     else:
         print("\nNo graphs were successfully analyzed. Please check that graph files exist.")
