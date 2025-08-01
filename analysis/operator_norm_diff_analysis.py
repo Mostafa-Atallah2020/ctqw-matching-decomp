@@ -3,8 +3,8 @@
 Operator Difference Norm Analysis Script
 
 This script analyzes operator difference norms between quantum walk implementations:
-1. Trotterized quantum walk using First-Fit Algorithm decomposition vs exact CTQW
-2. Trotterized quantum walk using Structure-Aware Algorithm decomposition vs exact CTQW  
+1. Trotterized quantum walk using First-Fit Greedy decomposition vs exact CTQW
+2. Trotterized quantum walk using Hamming Distance Greedy decomposition vs exact CTQW  
 3. Trotterized quantum walk using Pauli decomposition vs exact CTQW
 
 Loads graphs from ../data/graphs directory.
@@ -93,23 +93,23 @@ def unitary_to_pauli(U, tolerance=1e-10):
     return SparsePauliOp(pauli_strings, coeffs)
 
 
-def trotterized_quantum_walk(graph, time, n_steps, matching_algorithm='first-fit'):
+def trotterized_quantum_walk(graph, time, n_steps, matching_algorithm='first-fit-greedy'):
     """Trotterized quantum walk using subgraph decomposition with matching algorithms
     
     Args:
         graph: NetworkX graph
         time: Evolution time
         n_steps: Number of Trotter steps
-        matching_algorithm: 'first-fit' or 'structure-aware'
+        matching_algorithm: 'first-fit-greedy' or 'hamming-distance-greedy'
     """
-    if matching_algorithm not in ['first-fit', 'structure-aware']:
+    if matching_algorithm not in ['first-fit-greedy', 'hamming-distance-greedy']:
         raise ValueError(f"Invalid matching algorithm: {matching_algorithm}. "
-                       f"Valid options are: 'first-fit', 'structure-aware'")
+                       f"Valid options are: 'first-fit-greedy', 'hamming-distance-greedy'")
     
     # Map new names to internal names
     algorithm_mapping = {
-        'first-fit': 'greedy',
-        'structure-aware': 'parallel'
+        'first-fit-greedy': 'greedy',
+        'hamming-distance-greedy': 'parallel'
     }
     internal_algorithm = algorithm_mapping[matching_algorithm]
     
@@ -272,196 +272,230 @@ def original_ctqw(graph, time):
     return Operator(time_evo_op)
 
 
-def compare_all_walks(graph, time, n_steps, matching_algorithm='first-fit'):
-    """Compare trotterized and pauli methods vs original
-    
-    Args:
-        graph: NetworkX graph
-        time: Evolution time
-        n_steps: Number of Trotter steps
-        matching_algorithm: 'first-fit' or 'structure-aware'
-    """
-    trotterized_op = trotterized_quantum_walk(graph, time, n_steps, matching_algorithm)
-    trotterized_pauli_op = trotterized_pauli_decomp(graph, time, n_steps)
-    original_op = original_ctqw(graph, time)
-    
-    # Calculate differences vs original only
-    qw_vs_original = np.linalg.norm((trotterized_op - original_op).data, ord=2)
-    pauli_vs_original = np.linalg.norm((trotterized_pauli_op - original_op).data, ord=2)
-    
-    return {
-        'qw_vs_original': qw_vs_original,
-        'pauli_vs_original': pauli_vs_original
-    }
-
-
-def plot_results(graphs, times, n_steps_list, title, save_dir, matching_algorithm='first-fit', verbose=True):
-    """Plot results comparing trotterized and pauli methods vs original
+def analyze_graphs(graphs, times, n_steps_list, verbose=True):
+    """Analyze graphs with all three methods and return results
     
     Args:
         graphs: List of NetworkX graphs
         times: List of evolution times
         n_steps_list: List of Trotter step counts
-        title: Plot title
+        verbose: Whether to print progress
+        
+    Returns:
+        dict: Results for all three methods
+    """
+    results = {
+        'first-fit-greedy': {
+            t: {N: [] for N in n_steps_list} for t in times
+        },
+        'hamming-distance-greedy': {
+            t: {N: [] for N in n_steps_list} for t in times
+        },
+        'pauli-decomposition': {
+            t: {N: [] for N in n_steps_list} for t in times
+        }
+    }
+    
+    if verbose:
+        print(f"Analyzing {len(graphs)} graphs...")
+    
+    for i, graph in enumerate(graphs):
+        if verbose and (i + 1) % 10 == 0:
+            print(f"  Processed {i + 1}/{len(graphs)} graphs")
+        
+        for t in times:
+            for N in n_steps_list:
+                # Get exact CTQW for comparison
+                original_op = original_ctqw(graph, t)
+                
+                # First-Fit Greedy
+                first_fit_op = trotterized_quantum_walk(graph, t, N, 'first-fit-greedy')
+                first_fit_diff = np.linalg.norm((first_fit_op - original_op).data, ord=2)
+                results['first-fit-greedy'][t][N].append(first_fit_diff)
+                
+                # Hamming Distance Greedy
+                hamming_op = trotterized_quantum_walk(graph, t, N, 'hamming-distance-greedy')
+                hamming_diff = np.linalg.norm((hamming_op - original_op).data, ord=2)
+                results['hamming-distance-greedy'][t][N].append(hamming_diff)
+                
+                # Pauli Decomposition
+                pauli_op = trotterized_pauli_decomp(graph, t, N)
+                pauli_diff = np.linalg.norm((pauli_op - original_op).data, ord=2)
+                results['pauli-decomposition'][t][N].append(pauli_diff)
+    
+    return results
+
+
+def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, save_dir, verbose=True):
+    """Create a 3x3 grid plot comparing all methods across all vertex sizes
+    
+    Args:
+        all_results: Dictionary of results for all vertex sizes
+        vertex_sizes: List of vertex sizes
+        times: List of evolution times  
+        n_steps_list: List of Trotter step counts
         save_dir: Directory to save plots
-        matching_algorithm: 'first-fit' or 'structure-aware'
         verbose: Whether to print progress
     """
     save_dir = Path(save_dir)
     save_dir.mkdir(parents=True, exist_ok=True)
     
+    # Set up plotting parameters
     plt.style.use('default')
     plt.rcParams.update({
-        'font.size': 16,
-        'axes.labelsize': 20,
-        'axes.titlesize': 22,
-        'xtick.labelsize': 16,
-        'ytick.labelsize': 16,
-        'legend.fontsize': 14,
-        'legend.title_fontsize': 16,
-        'figure.figsize': (18, 6),
+        'font.size': 12,
+        'axes.labelsize': 14,
+        'axes.titlesize': 16,
+        'xtick.labelsize': 12,
+        'ytick.labelsize': 12,
+        'legend.fontsize': 10,
+        'figure.figsize': (18, 12),
         'figure.dpi': 300,
-        'lines.linewidth': 2.5,
-        'lines.markersize': 8,
+        'lines.linewidth': 2,
+        'lines.markersize': 6,
         'axes.grid': True,
         'grid.linewidth': 0.5,
         'grid.alpha': 0.3,
-        'axes.linewidth': 1.5,
-        'xtick.major.width': 1.5,
-        'ytick.major.width': 1.5,
-        'xtick.major.size': 7,
-        'ytick.major.size': 7,
         'pdf.fonttype': 42,
         'ps.fonttype': 42,
         'figure.facecolor': 'white',
         'axes.facecolor': 'white',
-        'legend.frameon': True,
-        'legend.framealpha': 0.8,
-        'legend.edgecolor': '0.8',
     })
     
-    # Calculate results for both comparisons
-    results = {
-        t: {
-            N: {
-                'qw_vs_original': [],
-                'pauli_vs_original': []
-            } for N in n_steps_list
-        } for t in times
-    }
+    # Create 3x3 grid: rows=vertex sizes, columns=methods
+    fig, axes = plt.subplots(len(vertex_sizes), 3, figsize=(18, 6*len(vertex_sizes)))
+    if len(vertex_sizes) == 1:
+        axes = axes.reshape(1, 3)
     
-    # Map algorithm names to display names
-    algorithm_display_names = {
-        'first-fit': 'First-Fit Algorithm',
-        'structure-aware': 'Structure-Aware Algorithm'
-    }
-    display_name = algorithm_display_names.get(matching_algorithm, matching_algorithm)
-    
-    if verbose:
-        print(f"Analyzing {len(graphs)} graphs for {title} (matching: {display_name})...")
-    for i, graph in enumerate(graphs):
-        if verbose and (i + 1) % 10 == 0:
-            print(f"  Processed {i + 1}/{len(graphs)} graphs")
-        for t in times:
-            for N in n_steps_list:
-                comparison_results = compare_all_walks(graph, t, N, matching_algorithm)
-                for key, value in comparison_results.items():
-                    results[t][N][key].append(value)
-    
-    # Create figure with two subplots
-    fig, axes = plt.subplots(1, 2, figsize=(18, 6))
-    
-    # Color palette
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
-    
-    # Update comparison labels based on matching algorithm
-    trotter_label = f'{display_name} CTQW vs exact CTQW'
-    
-    # Comparison types and their labels
-    comparisons = [
-        ('qw_vs_original', trotter_label, axes[0]),
-        ('pauli_vs_original', 'Pauli Decomposition vs exact CTQW', axes[1])
+    # Method information
+    methods = [
+        ('first-fit-greedy', 'First-Fit Greedy vs Exact CTQW'),
+        ('hamming-distance-greedy', 'Hamming Distance Greedy vs Exact CTQW'),
+        ('pauli-decomposition', 'Pauli Decomposition vs Exact CTQW')
     ]
     
-    for comp_key, comp_label, ax in comparisons:
-        for i, t in enumerate(times):
-            N_values = sorted(n_steps_list)
-            mean_diff = [np.mean(results[t][N][comp_key]) for N in N_values]
-            std_diff = [np.std(results[t][N][comp_key]) for N in N_values]
-            
-            # Use standard deviation for error bars
-            yerr_low = []
-            yerr_high = []
-            for m, s in zip(mean_diff, std_diff):
-                yerr_high.append(s)
-                lower_limit = max(s, m - m*0.9)
-                yerr_low.append(lower_limit)
-            
-            ax.errorbar(N_values, mean_diff, 
-                       yerr=[yerr_low, yerr_high],
-                       fmt='-o',
-                       capsize=6,
-                       capthick=2,
-                       label=f't = {t}',
-                       color=colors[i],
-                       elinewidth=2,
-                       markeredgewidth=2)
+    # Color palette for different times
+    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    
+    # Plot each combination
+    for row, n_vertices in enumerate(vertex_sizes):
+        vertex_key = f"{n_vertices}-vertex"
         
-        ax.set_yscale('log')
-        ax.set_xlabel('Number of Trotter Steps (N)')
-        ax.set_ylabel('Operator Difference Norm')
-        ax.set_title(comp_label)
-        ax.grid(True, which='both', linestyle=':', alpha=0.2)
+        if vertex_key not in all_results:
+            continue
+            
+        vertex_results = all_results[vertex_key]
+        
+        for col, (method_key, method_label) in enumerate(methods):
+            ax = axes[row, col]
+            
+            # Plot each time value
+            for t_idx, t in enumerate(times):
+                N_values = sorted(n_steps_list)
+                mean_values = []
+                std_values = []
+                
+                for N in N_values:
+                    if method_key in vertex_results and t in vertex_results[method_key] and N in vertex_results[method_key][t]:
+                        data = vertex_results[method_key][t][N]
+                        if data:  # Check if data exists
+                            mean_values.append(np.mean(data))
+                            std_values.append(np.std(data))
+                        else:
+                            mean_values.append(np.nan)
+                            std_values.append(np.nan)
+                    else:
+                        mean_values.append(np.nan)
+                        std_values.append(np.nan)
+                
+                # Plot with error bars
+                ax.errorbar(N_values, mean_values,
+                           yerr=std_values,
+                           fmt='-o',
+                           capsize=4,
+                           capthick=1.5,
+                           label=f't = {t}',
+                           color=colors[t_idx],
+                           linewidth=2,
+                           markersize=6)
+            
+            # Format subplot
+            ax.set_yscale('log')
+            ax.set_xlabel('Number of Trotter Steps (N)')
+            # ax.set_ylabel('Operator Difference Norm')
+            ax.grid(True, which='both', linestyle=':', alpha=0.3)
+            
+            # Set title
+            if row == 0:
+                # Method name at top
+                ax.set_title(method_label, fontsize=16, fontweight='bold')
+            
+            # Add vertex size label on left
+            if col == 0:
+                ax.text(-0.5, 0.5, f'{n_vertices} Vertices', 
+                       transform=ax.transAxes, rotation=90, 
+                       verticalalignment='center', horizontalalignment='center',
+                       fontsize=16, fontweight='bold')
+            
+            # Add legend only to top-right subplot
+            if row == 0 and col == 2:
+                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
     
-    # Create a single legend outside the plot area
-    handles, labels = axes[0].get_legend_handles_labels()
-    fig.legend(handles, labels, 
-              loc='center right', 
-              bbox_to_anchor=(0.98, 0.5),
-              frameon=True, 
-              fancybox=True, 
-              shadow=True)
+    # Add overall title
+    fig.suptitle('Operator Difference Norms', fontsize=20, fontweight='bold', y=0.98)
     
-    # Add overall title with matching algorithm info
-    full_title = f"{title} ({display_name})"
-    fig.suptitle(full_title, fontsize=24, y=1.02)
+    # Adjust layout
+    plt.tight_layout()
+    plt.subplots_adjust(top=0.94, left=0.08, right=0.92)
     
-    # Adjust layout to make room for legend
-    plt.subplots_adjust(right=0.85)
-    
-    # Save the plot with matching algorithm in filename
-    filename = title.lower().replace(' ', '_').replace('-', '_')
-    filename += f"_{matching_algorithm.replace('-', '_')}.pdf"
+    # Save the plot
+    filename = 'comprehensive_operator_difference_analysis.pdf'
     filepath = save_dir / filename
-    fig.savefig(filepath, 
-                format='pdf', 
-                dpi=300, 
-                bbox_inches='tight',
-                pad_inches=0.1)
+    fig.savefig(filepath, format='pdf', dpi=300, bbox_inches='tight')
     
     if verbose:
-        print(f"Plot saved as: {filepath}")
-    plt.close(fig)  # Close to free memory
-    return results
+        print(f"Comprehensive plot saved as: {filepath}")
+    
+    plt.close(fig)
+    return filepath
 
 
-def print_summary_statistics(results_dict, verbose=True):
+def print_summary_statistics(all_results, verbose=True):
     """Print summary statistics for all results"""
     if not verbose:
         return
         
     print("\nSummary Statistics:")
-    print("==================")
+    print("=" * 80)
     
-    for graph_size, results in results_dict.items():
-        print(f"\n{graph_size} graphs:")
-        times = sorted(results.keys())
-        for t in times:
-            for N in [10, 50]:  # Show results for two representative step counts
-                if N in results[t]:
-                    trotter_orig = np.mean(results[t][N]['qw_vs_original'])
-                    pauli_orig = np.mean(results[t][N]['pauli_vs_original'])
-                    print(f"  t={t}, N={N}: Trotter-Original={trotter_orig:.2e}, Pauli-Original={pauli_orig:.2e}")
+    for vertex_key, vertex_results in all_results.items():
+        print(f"\n{vertex_key.upper()} GRAPHS:")
+        print("-" * 50)
+        
+        methods = [
+            ('first-fit-greedy', 'First-Fit Greedy'),
+            ('hamming-distance-greedy', 'Hamming Distance Greedy'),
+            ('pauli-decomposition', 'Pauli Decomposition')
+        ]
+        
+        # Show statistics for representative time and step values
+        for t in [0.1, 1.0]:  # Representative times
+            if any(t in vertex_results.get(method, {}) for method, _ in methods):
+                print(f"\n  Time t = {t}:")
+                for N in [10, 50]:  # Representative step counts
+                    print(f"    Trotter Steps N = {N}:")
+                    for method_key, method_name in methods:
+                        if (method_key in vertex_results and 
+                            t in vertex_results[method_key] and 
+                            N in vertex_results[method_key][t] and
+                            vertex_results[method_key][t][N]):
+                            
+                            data = vertex_results[method_key][t][N]
+                            mean_val = np.mean(data)
+                            std_val = np.std(data)
+                            print(f"      {method_name:>22}: {mean_val:.2e} ± {std_val:.2e}")
+                        else:
+                            print(f"      {method_name:>22}: No data")
 
 
 def main():
@@ -483,8 +517,6 @@ def main():
                         help='Time values for quantum walk (default: 0.1 0.5 1.0)')
     parser.add_argument('--n-steps', nargs='+', type=int, default=[5, 10, 20, 50, 100],
                         help='Number of Trotter steps (default: 5 10 20 50 100)')
-    parser.add_argument('--matching-algorithm', choices=['first-fit', 'structure-aware'], default='first-fit',
-                        help='Matching algorithm for Trotterized quantum walk (default: first-fit)')
     
     # Input/Output directories
     parser.add_argument('--graphs-dir', type=str, default=default_graphs_dir,
@@ -498,40 +530,29 @@ def main():
     
     args = parser.parse_args()
     
-    # Map algorithm names to display names
-    algorithm_display_names = {
-        'first-fit': 'First-Fit Algorithm',
-        'structure-aware': 'Structure-Aware Algorithm'
-    }
-    
     if args.verbose:
-        display_name = algorithm_display_names.get(args.matching_algorithm, args.matching_algorithm)
-        print(f"Analysis Configuration:")
+        print(f"Comprehensive Quantum Walk Analysis Configuration:")
         print(f"  Vertex sizes: {args.vertex_sizes}")
         print(f"  Number of graphs per size: {args.n_graphs}")
         print(f"  Times: {args.times}")
         print(f"  Trotter steps: {args.n_steps}")
-        print(f"  Matching algorithm: {display_name}")
         print(f"  Graphs directory: {args.graphs_dir}")
         print(f"  Plots directory: {args.plots_dir}")
     
     all_results = {}
     
+    # Process each vertex size
     for n_vertices in args.vertex_sizes:
-        print(f"\n{'='*50}")
-        print(f"Processing {n_vertices}-vertex graphs with {algorithm_display_names.get(args.matching_algorithm, args.matching_algorithm)}")
-        print(f"{'='*50}")
+        print(f"\n{'='*70}")
+        print(f"Processing {n_vertices}-vertex graphs")
+        print(f"{'='*70}")
         
         try:
             # Load graphs
             graphs = load_graphs(args.graphs_dir, n_vertices, args.n_graphs, args.verbose)
             
-            if args.verbose:
-                print(f"Running analysis on {len(graphs)} graphs...")
-            
-            title = f'{n_vertices}-Vertex Graphs'
-            results = plot_results(graphs, args.times, args.n_steps, title, args.plots_dir, 
-                                 matching_algorithm=args.matching_algorithm, verbose=args.verbose)
+            # Analyze with all three methods
+            results = analyze_graphs(graphs, args.times, args.n_steps, args.verbose)
             all_results[f"{n_vertices}-vertex"] = results
             
         except FileNotFoundError as e:
@@ -543,10 +564,21 @@ def main():
             continue
     
     if all_results:
-        # Print overall summary
-        print_summary_statistics(all_results, args.verbose)
+        # Create comprehensive plot
         if args.verbose:
-            print(f"\nOperator difference norm analysis complete! Plots saved to {args.plots_dir}")
+            print(f"\n{'='*70}")
+            print("Creating comprehensive analysis plot...")
+            print(f"{'='*70}")
+        
+        create_comprehensive_plot(all_results, args.vertex_sizes, args.times, 
+                                args.n_steps, args.plots_dir, args.verbose)
+        
+        # Print summary statistics
+        print_summary_statistics(all_results, args.verbose)
+        
+        if args.verbose:
+            print(f"\nComprehensive operator difference norm analysis complete!")
+            print(f"Results saved to {args.plots_dir}")
     else:
         print("\nNo graphs were successfully analyzed. Please check that graph files exist.")
 
