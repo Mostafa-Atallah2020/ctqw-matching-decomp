@@ -334,7 +334,7 @@ def analyze_graphs(graphs, times, n_steps_list, selected_methods, verbose=True):
 
 
 def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, selected_methods, save_dir, verbose=True):
-    """Create a grid plot comparing selected methods across all vertex sizes
+    """Create separate plots for each vertex size with all selected methods on the same plot
     
     Args:
         all_results: Dictionary of results for all vertex sizes
@@ -356,8 +356,8 @@ def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, se
         'axes.titlesize': 16,
         'xtick.labelsize': 12,
         'ytick.labelsize': 12,
-        'legend.fontsize': 10,
-        'figure.figsize': (6*len(selected_methods), 6*len(vertex_sizes)),
+        'legend.fontsize': 11,
+        'figure.figsize': (12, 8),
         'figure.dpi': 300,
         'lines.linewidth': 2,
         'lines.markersize': 6,
@@ -370,42 +370,45 @@ def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, se
         'axes.facecolor': 'white',
     })
     
-    # Create dynamic grid: rows=vertex sizes, columns=selected methods
-    fig, axes = plt.subplots(len(vertex_sizes), len(selected_methods), 
-                            figsize=(6*len(selected_methods), 6*len(vertex_sizes)))
-    
-    # Handle single row or single column cases
-    if len(vertex_sizes) == 1 and len(selected_methods) == 1:
-        axes = np.array([[axes]])
-    elif len(vertex_sizes) == 1:
-        axes = axes.reshape(1, -1)
-    elif len(selected_methods) == 1:
-        axes = axes.reshape(-1, 1)
-    
     # Method information
     method_info = {
-        'first-fit-greedy': 'First-Fit Greedy vs Exact CTQW',
-        'hamming-distance-greedy': 'Hamming Distance Greedy vs Exact CTQW',
-        'pauli-decomposition': 'Pauli Decomposition vs Exact CTQW'
+        'first-fit-greedy': 'First-Fit Greedy',
+        'hamming-distance-greedy': 'Hamming Distance Greedy',
+        'pauli-decomposition': 'Pauli Decomposition'
     }
     
-    # Color palette for different times
-    colors = ['#1f77b4', '#ff7f0e', '#2ca02c', '#d62728', '#9467bd']
+    # Color palettes for methods and times
+    method_colors = {
+        'first-fit-greedy': ['#1f77b4', '#4A90E2', '#87CEEB'],
+        'hamming-distance-greedy': ['#ff7f0e', '#FF8C42', '#FFA366'], 
+        'pauli-decomposition': ['#2ca02c', '#50C878', '#90EE90']
+    }
     
-    # Plot each combination
-    for row, n_vertices in enumerate(vertex_sizes):
+    # Line styles for different times
+    time_styles = ['-', '--', '-.', ':', (0, (3, 1, 1, 1))]
+    
+    saved_files = []
+    
+    # Create a separate plot for each vertex size
+    for n_vertices in vertex_sizes:
         vertex_key = f"{n_vertices}-vertex"
         
         if vertex_key not in all_results:
+            if verbose:
+                print(f"Warning: No results found for {vertex_key}")
             continue
             
         vertex_results = all_results[vertex_key]
         
-        for col, method_key in enumerate(selected_methods):
-            ax = axes[row, col]
+        # Create figure for this vertex size
+        fig, ax = plt.subplots(1, 1, figsize=(12, 8))
+        
+        # Plot each method
+        for method_idx, method_key in enumerate(selected_methods):
             method_label = method_info[method_key]
+            method_color_palette = method_colors[method_key]
             
-            # Plot each time value
+            # Plot each time value for this method
             for t_idx, t in enumerate(times):
                 N_values = sorted(n_steps_list)
                 mean_values = []
@@ -424,71 +427,71 @@ def create_comprehensive_plot(all_results, vertex_sizes, times, n_steps_list, se
                         mean_values.append(np.nan)
                         std_values.append(np.nan)
                 
+                # Choose color and style
+                color = method_color_palette[min(t_idx, len(method_color_palette)-1)]
+                linestyle = time_styles[t_idx % len(time_styles)]
+                
+                # Create label combining method and time
+                label = f'{method_label} (t={t})'
+                
                 # Plot with error bars
                 ax.errorbar(N_values, mean_values,
                            yerr=std_values,
-                           fmt='-o',
+                           fmt='o',
+                           linestyle=linestyle,
                            capsize=4,
                            capthick=1.5,
-                           label=f't = {t}',
-                           color=colors[t_idx],
+                           label=label,
+                           color=color,
                            linewidth=2,
                            markersize=6)
-            
-            # Format subplot
-            ax.set_yscale('log')
-            ax.set_xlabel('Number of Trotter Steps (N)')
-            ax.set_ylabel('Operator Difference Norm')
-            ax.grid(True, which='both', linestyle=':', alpha=0.3)
-            
-            # Set title (method name at top row)
-            if row == 0:
-                ax.set_title(method_label, fontsize=16, fontweight='bold')
-            
-            # Add vertex size label on leftmost column
-            if col == 0:
-                ax.text(1.15, 0.5, f'{n_vertices} Vertices', 
-                       transform=ax.transAxes, rotation=90, 
-                       verticalalignment='center', horizontalalignment='center',
-                       fontsize=16, fontweight='bold')
-            
-            # Add legend only to top-right subplot
-            if row == 0 and col == len(selected_methods) - 1:
-                ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left')
-    
-    # # Create title based on selected methods
-    # method_names = [method_info[m].split(' vs')[0] for m in selected_methods]
-    # if len(method_names) == 1:
-    #     title = f'Quantum Walk Analysis: {method_names[0]}'
-    # elif len(method_names) == 2:
-    #     title = f'Quantum Walk Analysis: {method_names[0]} vs {method_names[1]}'
-    # else:
-    #     title = 'Comprehensive Quantum Walk Operator Difference Norm Analysis'
-    
-    # fig.suptitle(title, fontsize=20, fontweight='bold', y=0.98)
-    
-    # Adjust layout
-    plt.tight_layout()
-    plt.subplots_adjust(top=0.94, left=0.08, right=0.92)
-    
-    # Create filename based on selected methods
-    method_short_names = {
-        'first-fit-greedy': 'first_fit',
-        'hamming-distance-greedy': 'hamming_distance', 
-        'pauli-decomposition': 'pauli'
-    }
-    filename_parts = [method_short_names[m] for m in selected_methods]
-    filename = f"operator_analysis_{'_vs_'.join(filename_parts)}.pdf"
-    filepath = save_dir / filename
-    
-    fig.savefig(filepath, format='pdf', dpi=300, bbox_inches='tight')
+        
+        # Format the plot
+        ax.set_yscale('log')
+        ax.set_xlabel('Number of Trotter Steps (N)', fontsize=14)
+        ax.set_ylabel('Operator Difference Norm', fontsize=14)
+        ax.grid(True, which='both', linestyle=':', alpha=0.3)
+        
+        # Set title
+        ax.set_title(f'Quantum Walk Analysis: {n_vertices} Vertices\nOperator Difference Norm vs Exact CTQW', 
+                    fontsize=16, fontweight='bold', pad=20)
+        
+        # Add legend with better positioning
+        legend = ax.legend(bbox_to_anchor=(1.05, 1), loc='upper left', 
+                          frameon=True, fancybox=True, shadow=True)
+        legend.get_frame().set_facecolor('white')
+        legend.get_frame().set_alpha(0.9)
+        
+        # Adjust layout to accommodate legend
+        plt.tight_layout()
+        plt.subplots_adjust(right=0.75)
+        
+        # Create filename for this vertex size
+        method_short_names = {
+            'first-fit-greedy': 'FFG',
+            'hamming-distance-greedy': 'HDG', 
+            'pauli-decomposition': 'PD'
+        }
+        filename_parts = [method_short_names[m] for m in selected_methods]
+        filename = f"operator_analysis_{n_vertices}v_{'_'.join(filename_parts)}.pdf"
+        filepath = save_dir / filename
+        
+        # Save the plot
+        fig.savefig(filepath, format='pdf', dpi=300, bbox_inches='tight')
+        saved_files.append(filepath)
+        
+        if verbose:
+            print(f"Analysis plot for {n_vertices} vertices saved as: {filepath}")
+        
+        plt.close(fig)
     
     if verbose:
-        print(f"Analysis plot saved as: {filepath}")
+        print(f"\nAll plots saved successfully!")
+        print(f"Generated {len(saved_files)} PDF files:")
+        for filepath in saved_files:
+            print(f"  - {filepath}")
     
-    plt.close(fig)
-    return filepath
-
+    return saved_files
 
 def print_summary_statistics(all_results, selected_methods, verbose=True):
     """Print summary statistics for selected results"""
