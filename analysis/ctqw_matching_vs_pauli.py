@@ -1,12 +1,14 @@
 #!/usr/bin/env python3
 """
-CTQW Analysis: Matching vs Pauli Decomposition with Degree-Based Heuristic Hypercube Labeling
-Standalone script for processing large quantum graph datasets with degree-based vertex labeling.
+CTQW Analysis: Matching vs Pauli Decomposition with Matching-Based Heuristic Hypercube Labeling
+Standalone script for processing large quantum graph datasets with matching-based vertex labeling.
 
-Implementation of the degree-based heuristic algorithm from pseudocode:
-- Start with vertex M having maximum degree Δ(G)
-- Assign labels to minimize Hamming distance while maximizing edges with Hamming distance 1
-- Use bit-flip tracking to maintain consistency across neighborhoods
+Implementation of the matching-based heuristic algorithm:
+- Find the biggest matching M in the graph
+- Label vertices so that for every edge in M, endpoints are 0abcd and 1abcd
+- For remaining edges, find matchings with structured bit patterns
+- Use Gray code ordering for matchings to reduce CX gate count
+- Move CX gates to end of circuit for optimization
 """
 
 import argparse
@@ -59,10 +61,15 @@ def calculate_graph_properties(graph: nx.Graph) -> dict:
     # Clustering coefficient
     properties["avg_clustering"] = nx.average_clustering(graph)
     
+    # Matching properties
+    max_matching = nx.max_weight_matching(graph, maxcardinality=True)
+    properties["max_matching_size"] = len(max_matching)
+    properties["matching_coverage"] = 2 * len(max_matching) / len(graph.nodes()) if graph.nodes() else 0
+    
     return properties
 
 
-class HypercubeHeuristicAnalyzer:
+class MatchingBasedHeuristicAnalyzer:
     def __init__(self, n_qubits: int, delta_t: float, matchings: str, logger: Logger):
         self.base_analyzer = BaseAnalyzer(n_qubits, delta_t, matchings)
         self.logger = logger
@@ -70,34 +77,41 @@ class HypercubeHeuristicAnalyzer:
     def analyze_graph(self, graph: nx.Graph, n_steps: int = 1) -> dict:
         start_time = time.time()
 
-        # Get original and hypercube edges
+        # Get original and matching-based edges
         original_edges = GraphProcessor.graph_to_bitstring(graph)
-        hypercube_edges = GraphProcessor.graph_to_bitstring_hypercube(graph)
+        matching_based_edges = GraphProcessor.graph_to_bitstring_hypercube(graph)
         
         # Calculate Hamming costs
         original_hamming_cost = sum(
-            DegreeBasedHypercubeLabeler.hamming_distance(u, v) 
+            MatchingBasedHypercubeLabeler.hamming_distance(u, v) 
             for u, v in original_edges
         )
-        hypercube_hamming_cost = sum(
-            DegreeBasedHypercubeLabeler.hamming_distance(u, v) 
-            for u, v in hypercube_edges
+        matching_based_hamming_cost = sum(
+            MatchingBasedHypercubeLabeler.hamming_distance(u, v) 
+            for u, v in matching_based_edges
         )
-        hamming_improvement = original_hamming_cost - hypercube_hamming_cost
+        hamming_improvement = original_hamming_cost - matching_based_hamming_cost
         
-        # Get hypercube labeling quality statistics
-        hypercube_labeling = HeuristicHypercubeLabeler.heuristic_hypercube_labeling(graph)
-        quality_stats = DegreeBasedHypercubeLabeler.analyze_labeling_quality(graph, hypercube_labeling)
+        # Get matching-based labeling quality statistics
+        matching_based_labeling = HeuristicHypercubeLabeler.heuristic_hypercube_labeling(graph)
+        quality_stats = MatchingBasedHypercubeLabeler.analyze_labeling_quality(graph, matching_based_labeling)
         
         # Debug: Compare labeling methods
         original_labeling = {node: format(node, f"0{max(1, len(bin(len(graph.nodes()) - 1)) - 2)}b") for node in graph.nodes()}
-        original_quality = DegreeBasedHypercubeLabeler.analyze_labeling_quality(graph, original_labeling)
+        original_quality = MatchingBasedHypercubeLabeler.analyze_labeling_quality(graph, original_labeling)
         
+        # Log matching analysis
+        max_matching = MatchingBasedHypercubeLabeler.find_maximum_matching(graph)
+        edge_disjoint_matchings = MatchingBasedHypercubeLabeler.find_edge_disjoint_matchings(graph, max_matchings=5)
+        
+        self.logger.log(f"Graph analysis: {len(graph.nodes())} nodes, {len(graph.edges())} edges")
+        self.logger.log(f"Maximum matching size: {len(max_matching)} (covers {2*len(max_matching)} vertices)")
+        self.logger.log(f"Found {len(edge_disjoint_matchings)} edge-disjoint matchings")
         self.logger.log(f"Original Hamming cost: {original_hamming_cost} (avg: {original_quality.get('avg_cost', 0):.2f})")
-        self.logger.log(f"Degree-based heuristic Hamming cost: {hypercube_hamming_cost} (avg: {quality_stats.get('avg_cost', 0):.2f})")
+        self.logger.log(f"Matching-based heuristic Hamming cost: {matching_based_hamming_cost} (avg: {quality_stats.get('avg_cost', 0):.2f})")
         self.logger.log(f"Hamming improvement: {hamming_improvement}")
         self.logger.log(f"Original edges with dist 1: {original_quality.get('edges_with_dist_1', 0)} ({original_quality.get('edges_with_dist_1_ratio', 0):.3f})")
-        self.logger.log(f"Degree-based edges with dist 1: {quality_stats.get('edges_with_dist_1', 0)} ({quality_stats.get('edges_with_dist_1_ratio', 0):.3f})")
+        self.logger.log(f"Matching-based edges with dist 1: {quality_stats.get('edges_with_dist_1', 0)} ({quality_stats.get('edges_with_dist_1_ratio', 0):.3f})")
         self.logger.log(f"Hamming distance distribution: {quality_stats.get('hamming_dist_distribution', {})}")
 
         # Analyze with original labeling
@@ -127,19 +141,19 @@ class HypercubeHeuristicAnalyzer:
             original_pauli_metrics.depth
         )
 
-        # Analyze with degree-based heuristic labeling (ONLY MATCHING)
-        self.logger.log("=== DEGREE-BASED HEURISTIC LABELING ANALYSIS (MATCHING ONLY) ===")
+        # Analyze with matching-based heuristic labeling (ONLY MATCHING)
+        self.logger.log("=== MATCHING-BASED HEURISTIC LABELING ANALYSIS (MATCHING ONLY) ===")
         
-        self.logger.log("Computing Degree-based Heuristic Matching Dynamic walk")
-        hypercube_matching_metrics = self.base_analyzer.analyze_matching(hypercube_edges, n_steps)
-        if not hypercube_matching_metrics:
-            self.logger.log("Failed to get degree-based heuristic matching metrics")
+        self.logger.log("Computing Matching-based Heuristic Matching Dynamic walk")
+        matching_based_matching_metrics = self.base_analyzer.analyze_matching(matching_based_edges, n_steps)
+        if not matching_based_matching_metrics:
+            self.logger.log("Failed to get matching-based heuristic matching metrics")
             return None
         self.logger.log_metrics(
-            "Degree-based Heuristic Matching",
-            hypercube_matching_metrics.cx_count,
-            hypercube_matching_metrics.u3_count,
-            hypercube_matching_metrics.depth,
+            "Matching-based Heuristic Matching",
+            matching_based_matching_metrics.cx_count,
+            matching_based_matching_metrics.u3_count,
+            matching_based_matching_metrics.depth,
         )
 
         # Calculate differences for original labeling (Matching vs Pauli)
@@ -153,21 +167,21 @@ class HypercubeHeuristicAnalyzer:
         else:
             original_category = "draw"
 
-        # Calculate main comparison: Degree-based Heuristic Matching vs Original Pauli
-        hypercube_vs_pauli_cx_diff = hypercube_matching_metrics.cx_count - original_pauli_metrics.cx_count
-        hypercube_vs_pauli_u3_diff = hypercube_matching_metrics.u3_count - original_pauli_metrics.u3_count
+        # Calculate main comparison: Matching-based Heuristic Matching vs Original Pauli
+        matching_based_vs_pauli_cx_diff = matching_based_matching_metrics.cx_count - original_pauli_metrics.cx_count
+        matching_based_vs_pauli_u3_diff = matching_based_matching_metrics.u3_count - original_pauli_metrics.u3_count
 
-        if hypercube_vs_pauli_cx_diff < 0:
-            hypercube_vs_pauli_category = "win"
-        elif hypercube_vs_pauli_cx_diff > 0:
-            hypercube_vs_pauli_category = "lose"
+        if matching_based_vs_pauli_cx_diff < 0:
+            matching_based_vs_pauli_category = "win"
+        elif matching_based_vs_pauli_cx_diff > 0:
+            matching_based_vs_pauli_category = "lose"
         else:
-            hypercube_vs_pauli_category = "draw"
+            matching_based_vs_pauli_category = "draw"
 
-        # Calculate improvements from degree-based heuristic labeling
-        matching_cx_improvement = original_matching_metrics.cx_count - hypercube_matching_metrics.cx_count
-        matching_u3_improvement = original_matching_metrics.u3_count - hypercube_matching_metrics.u3_count
-        matching_depth_improvement = original_matching_metrics.depth - hypercube_matching_metrics.depth
+        # Calculate improvements from matching-based heuristic labeling
+        matching_cx_improvement = original_matching_metrics.cx_count - matching_based_matching_metrics.cx_count
+        matching_u3_improvement = original_matching_metrics.u3_count - matching_based_matching_metrics.u3_count
+        matching_depth_improvement = original_matching_metrics.depth - matching_based_matching_metrics.depth
 
         # Calculate graph properties
         graph_properties = calculate_graph_properties(graph)
@@ -175,13 +189,13 @@ class HypercubeHeuristicAnalyzer:
         analysis_time = time.time() - start_time
         self.logger.log(f"Analysis completed in {analysis_time:.2f}s")
         self.logger.log(f"Original Matching vs Pauli category: {original_category}")
-        self.logger.log(f"Degree-based Heuristic Matching vs Original Pauli category: {hypercube_vs_pauli_category}")
-        self.logger.log(f"Matching CX improvement from degree-based heuristic: {matching_cx_improvement}")
+        self.logger.log(f"Matching-based Heuristic Matching vs Original Pauli category: {matching_based_vs_pauli_category}")
+        self.logger.log(f"Matching CX improvement from matching-based heuristic: {matching_cx_improvement}")
         
         # Additional debug info
         if matching_cx_improvement < 0:
-            self.logger.log(f"WARNING: Degree-based heuristic labeling made CX count WORSE by {-matching_cx_improvement}")
-            self.logger.log(f"Graph properties: edges={len(graph.edges())}, max_degree={graph_properties.get('max_degree', 0)}")
+            self.logger.log(f"WARNING: Matching-based heuristic labeling made CX count WORSE by {-matching_cx_improvement}")
+            self.logger.log(f"Graph properties: edges={len(graph.edges())}, max_matching_size={graph_properties.get('max_matching_size', 0)}")
 
         return {
             # Primary category (based on original matching vs pauli for consistency)
@@ -198,27 +212,27 @@ class HypercubeHeuristicAnalyzer:
             "original_u3_diff": original_u3_diff,
             "original_category": original_category,
             
-            # Degree-based heuristic labeling results (matching only)
-            "degree_based_matching_cx": hypercube_matching_metrics.cx_count,
-            "degree_based_matching_u3": hypercube_matching_metrics.u3_count,
-            "degree_based_matching_depth": hypercube_matching_metrics.depth,
+            # Matching-based heuristic labeling results (matching only)
+            "matching_based_matching_cx": matching_based_matching_metrics.cx_count,
+            "matching_based_matching_u3": matching_based_matching_metrics.u3_count,
+            "matching_based_matching_depth": matching_based_matching_metrics.depth,
             
-            # Degree-based Heuristic Matching vs Original Pauli comparison
-            "degree_based_vs_pauli_cx_diff": hypercube_vs_pauli_cx_diff,
-            "degree_based_vs_pauli_u3_diff": hypercube_vs_pauli_u3_diff,
-            "degree_based_vs_pauli_category": hypercube_vs_pauli_category,
+            # Matching-based Heuristic Matching vs Original Pauli comparison
+            "matching_based_vs_pauli_cx_diff": matching_based_vs_pauli_cx_diff,
+            "matching_based_vs_pauli_u3_diff": matching_based_vs_pauli_u3_diff,
+            "matching_based_vs_pauli_category": matching_based_vs_pauli_category,
             
             # Labeling comparison
             "original_hamming_cost": original_hamming_cost,
-            "degree_based_hamming_cost": hypercube_hamming_cost,
+            "matching_based_hamming_cost": matching_based_hamming_cost,
             "hamming_improvement": hamming_improvement,
             
-            # Circuit improvements from degree-based heuristic labeling
+            # Circuit improvements from matching-based heuristic labeling
             "matching_cx_improvement": matching_cx_improvement,
             "matching_u3_improvement": matching_u3_improvement,
             "matching_depth_improvement": matching_depth_improvement,
             
-            # Quality metrics for degree-based heuristic labeling
+            # Quality metrics for matching-based heuristic labeling
             "edges_with_hamming_dist_1": quality_stats.get('edges_with_dist_1', 0),
             "edges_with_dist_1_ratio": quality_stats.get('edges_with_dist_1_ratio', 0),
             "avg_edge_hamming_cost": quality_stats.get('avg_cost', 0),
@@ -227,6 +241,11 @@ class HypercubeHeuristicAnalyzer:
             # Quality comparison metrics
             "original_edges_with_dist_1_ratio": original_quality.get('edges_with_dist_1_ratio', 0),
             "original_avg_edge_hamming_cost": original_quality.get('avg_cost', 0),
+            
+            # Matching-specific metrics
+            "max_matching_size": graph_properties.get('max_matching_size', 0),
+            "matching_coverage": graph_properties.get('matching_coverage', 0),
+            "num_edge_disjoint_matchings": len(edge_disjoint_matchings),
             
             # Meta information
             "analysis_time": analysis_time,
@@ -269,7 +288,7 @@ def setup_paths(script_dir):
     data_dir = script_dir.parent / "data" / "graphs"
 
     # Output directory - default to script_dir/outputs
-    output_dir = script_dir / "outputs" / "degree_based_heuristic_analysis"
+    output_dir = script_dir / "outputs" / "matching_based_heuristic_analysis"
 
     # Create output directory if it doesn't exist
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -280,7 +299,7 @@ def setup_paths(script_dir):
 def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
-        description="CTQW Analysis: Matching vs Pauli Decomposition using Degree-Based Heuristic Hypercube Labeling",
+        description="CTQW Analysis: Matching vs Pauli Decomposition using Matching-Based Heuristic Hypercube Labeling",
         formatter_class=argparse.ArgumentDefaultsHelpFormatter
     )
     
@@ -370,7 +389,7 @@ def main():
         args.n_graphs = 11117
     
     print("=" * 80)
-    print("🚀 CTQW ANALYSIS - MATCHING VS PAULI WITH DEGREE-BASED HEURISTIC HYPERCUBE LABELING")
+    print("🚀 CTQW ANALYSIS - MATCHING VS PAULI WITH MATCHING-BASED HEURISTIC HYPERCUBE LABELING")
     print("=" * 80)
 
     # Calculate derived values
@@ -388,7 +407,7 @@ def main():
     print(f"💾 Output directory: {output_dir}")
     print(f"📈 Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)")
     print(f"🔧 Using {args.matchings} matching algorithm")
-    print(f"🎯 Using degree-based heuristic hypercube embedding labeling")
+    print(f"🎯 Using matching-based heuristic hypercube embedding labeling")
     print(f"⏱️  Delta t: {args.delta_t}")
 
     # Verify input file exists
@@ -401,15 +420,15 @@ def main():
     # Setup directories and logging
     try:
         dirs = setup_directories(str(output_dir))
-        log_filename = f"degree_based_heuristic_analysis_{args.matchings}_{args.graph_type}_{n_vertices}c.log"
+        log_filename = f"matching_based_heuristic_analysis_{args.matchings}_{args.graph_type}_{n_vertices}c.log"
         logger = Logger(os.path.join(dirs["logs"], log_filename))
-        checkpoint_file = output_dir / f"checkpoint_degree_based_{args.matchings}_{args.graph_type}_{n_vertices}c.json"
+        checkpoint_file = output_dir / f"checkpoint_matching_based_{args.matchings}_{args.graph_type}_{n_vertices}c.json"
     except Exception as e:
         print(f"❌ Error setting up directories: {e}")
         return 1
 
     # Log initial parameters
-    logger.log(f"\n\nStarting degree-based heuristic hypercube labeling analysis with:")
+    logger.log(f"\n\nStarting matching-based heuristic hypercube labeling analysis with:")
     logger.log(f"Script location: {script_dir}")
     logger.log(f"Number of qubits: {n_qubits}")
     logger.log(f"Number of vertices: {n_vertices}")
@@ -419,14 +438,14 @@ def main():
     logger.log(f"Input file: {graph_file}")
     logger.log(f"Output directory: {output_dir}")
     logger.log(f"Checkpoint interval: {args.checkpoint_interval}")
-    logger.log(f"Using degree-based heuristic hypercube embedding labeling")
+    logger.log(f"Using matching-based heuristic hypercube embedding labeling")
 
     try:
         # Parse graph info and setup analyzer
         graph_info = GraphProcessor.parse_graph_filename(str(graph_file))
         logger.log(f"Parsed graph info: {graph_info}")
 
-        analyzer = HypercubeHeuristicAnalyzer(n_qubits, args.delta_t, args.matchings, logger)
+        analyzer = MatchingBasedHeuristicAnalyzer(n_qubits, args.delta_t, args.matchings, logger)
         results_manager = ResultsManager(dirs["results"], graph_info)
         plot_manager = PlotManager(dirs["plots"])
 
@@ -456,9 +475,11 @@ def main():
             "total_hamming_improvement": 0,
             "total_matching_cx_improvement": 0,
             "total_matching_u3_improvement": 0,
-            "total_degree_based_vs_pauli_wins": 0,  # Degree-based heuristic matching better than original Pauli
+            "total_matching_based_vs_pauli_wins": 0,  # Matching-based heuristic matching better than original Pauli
             "total_edges_with_dist_1": 0,
             "total_edges_with_dist_1_ratio": 0,
+            "total_matching_coverage": 0,
+            "total_max_matching_size": 0,
             "graphs_with_improvements": 0,
             "graphs_processed": 0
         }
@@ -496,17 +517,19 @@ def main():
                                 avg_time = sum(recent_times) / len(recent_times)
                                 current_avg_time = f" | Avg: {avg_time:.1f}s/graph"
                         
-                        # Show degree-based heuristic improvements
+                        # Show matching-based heuristic improvements
                         avg_hamming_improvement = labeling_stats["total_hamming_improvement"] / max(1, labeling_stats["graphs_processed"])
                         avg_cx_improvement = labeling_stats["total_matching_cx_improvement"] / max(1, labeling_stats["graphs_processed"])
-                        degree_based_win_rate = (labeling_stats["total_degree_based_vs_pauli_wins"] / max(1, labeling_stats["graphs_processed"])) * 100
+                        matching_based_win_rate = (labeling_stats["total_matching_based_vs_pauli_wins"] / max(1, labeling_stats["graphs_processed"])) * 100
                         avg_dist_1_ratio = labeling_stats["total_edges_with_dist_1_ratio"] / max(1, labeling_stats["graphs_processed"])
+                        avg_matching_coverage = labeling_stats["total_matching_coverage"] / max(1, labeling_stats["graphs_processed"])
                         
                         print(
                             f"📊 Progress: {progress:.1f}% ({i}/{total_lines}) | "
                             f"Speed: {speed:.1f}/min | ETA: {eta_hours:.1f}h{current_avg_time} | "
                             f"Results: W{categories['win']} L{categories['lose']} D{categories['draw']} | "
-                            f"Hamming↓{avg_hamming_improvement:.1f} CX↓{avg_cx_improvement:.1f} DvP:{degree_based_win_rate:.0f}% Dist1:{avg_dist_1_ratio:.2f}"
+                            f"Hamming↓{avg_hamming_improvement:.1f} CX↓{avg_cx_improvement:.1f} MvP:{matching_based_win_rate:.0f}% "
+                            f"Dist1:{avg_dist_1_ratio:.2f} Match:{avg_matching_coverage:.2f}"
                         )
 
                 logger.log(f"\nProcessing graph {i}/{total_lines}")
@@ -533,9 +556,11 @@ def main():
                         labeling_stats["total_matching_u3_improvement"] += result["matching_u3_improvement"]
                         labeling_stats["total_edges_with_dist_1"] += result.get("edges_with_hamming_dist_1", 0)
                         labeling_stats["total_edges_with_dist_1_ratio"] += result.get("edges_with_dist_1_ratio", 0)
+                        labeling_stats["total_matching_coverage"] += result.get("matching_coverage", 0)
+                        labeling_stats["total_max_matching_size"] += result.get("max_matching_size", 0)
                         
-                        if result["degree_based_vs_pauli_category"] == "win":
-                            labeling_stats["total_degree_based_vs_pauli_wins"] += 1
+                        if result["matching_based_vs_pauli_category"] == "win":
+                            labeling_stats["total_matching_based_vs_pauli_wins"] += 1
                         labeling_stats["graphs_processed"] += 1
                         
                         if (result["hamming_improvement"] > 0 or 
@@ -555,8 +580,10 @@ def main():
                         logger.log(
                             f"Improvements: Hamming: {result['hamming_improvement']}, "
                             f"Matching CX: {result['matching_cx_improvement']}, "
-                            f"Degree-based vs Pauli: {result['degree_based_vs_pauli_category']}, "
-                            f"Edges with dist 1 ratio: {result.get('edges_with_dist_1_ratio', 0):.3f}"
+                            f"Matching-based vs Pauli: {result['matching_based_vs_pauli_category']}, "
+                            f"Edges with dist 1 ratio: {result.get('edges_with_dist_1_ratio', 0):.3f}, "
+                            f"Max matching size: {result.get('max_matching_size', 0)}, "
+                            f"Matching coverage: {result.get('matching_coverage', 0):.3f}"
                         )
                     else:
                         logger.log(f"Failed to analyze graph {i}")
@@ -581,7 +608,7 @@ def main():
 
         # Final Results
         print("\n" + "=" * 80)
-        print("🏁 DEGREE-BASED HEURISTIC HYPERCUBE LABELING ANALYSIS COMPLETE")
+        print("🏁 MATCHING-BASED HEURISTIC HYPERCUBE LABELING ANALYSIS COMPLETE")
         print("=" * 80)
 
         total_processed = sum(categories.values())
@@ -591,27 +618,31 @@ def main():
         logger.log(f"Total graphs in file: {total_lines}")
         logger.log(f"Successfully processed: {total_processed}")
         logger.log(f"Matching algorithm used: {args.matchings}")
-        logger.log(f"Using degree-based heuristic hypercube embedding labeling")
+        logger.log(f"Using matching-based heuristic hypercube embedding labeling")
         logger.log_final_stats(categories, total_processed)
 
-        # Log degree-based heuristic labeling improvements
+        # Log matching-based heuristic labeling improvements
         if labeling_stats["graphs_processed"] > 0:
             avg_hamming_improvement = labeling_stats["total_hamming_improvement"] / labeling_stats["graphs_processed"]
             avg_matching_cx_improvement = labeling_stats["total_matching_cx_improvement"] / labeling_stats["graphs_processed"]
             avg_matching_u3_improvement = labeling_stats["total_matching_u3_improvement"] / labeling_stats["graphs_processed"]
-            degree_based_vs_pauli_win_rate = (labeling_stats["total_degree_based_vs_pauli_wins"] / labeling_stats["graphs_processed"]) * 100
+            matching_based_vs_pauli_win_rate = (labeling_stats["total_matching_based_vs_pauli_wins"] / labeling_stats["graphs_processed"]) * 100
             avg_edges_with_dist_1 = labeling_stats["total_edges_with_dist_1"] / labeling_stats["graphs_processed"]
             avg_edges_with_dist_1_ratio = labeling_stats["total_edges_with_dist_1_ratio"] / labeling_stats["graphs_processed"]
+            avg_matching_coverage = labeling_stats["total_matching_coverage"] / labeling_stats["graphs_processed"]
+            avg_max_matching_size = labeling_stats["total_max_matching_size"] / labeling_stats["graphs_processed"]
             
             improvement_rate = (labeling_stats["graphs_with_improvements"] / labeling_stats["graphs_processed"]) * 100
             
-            logger.log("\nDegree-Based Heuristic Hypercube Labeling Improvement Summary:")
+            logger.log("\nMatching-Based Heuristic Hypercube Labeling Improvement Summary:")
             logger.log(f"Average Hamming cost improvement: {avg_hamming_improvement:.2f}")
             logger.log(f"Average Matching CX improvement: {avg_matching_cx_improvement:.2f}")
             logger.log(f"Average Matching U3 improvement: {avg_matching_u3_improvement:.2f}")
-            logger.log(f"Degree-based Heuristic Matching vs Original Pauli win rate: {degree_based_vs_pauli_win_rate:.1f}%")
+            logger.log(f"Matching-based Heuristic Matching vs Original Pauli win rate: {matching_based_vs_pauli_win_rate:.1f}%")
             logger.log(f"Average edges with Hamming distance 1: {avg_edges_with_dist_1:.2f}")
             logger.log(f"Average ratio of edges with Hamming distance 1: {avg_edges_with_dist_1_ratio:.3f}")
+            logger.log(f"Average maximum matching size: {avg_max_matching_size:.2f}")
+            logger.log(f"Average matching coverage: {avg_matching_coverage:.3f}")
             logger.log(f"Graphs with any improvement: {labeling_stats['graphs_with_improvements']} ({improvement_rate:.1f}%)")
 
         # Calculate overall timing statistics
@@ -656,6 +687,19 @@ def main():
                                   f"Max: {max(max_degrees)}, "
                                   f"Mean: {np.mean(max_degrees):.2f}")
                     
+                    # Matching properties
+                    if props.get("max_matching_size"):
+                        matching_sizes = props["max_matching_size"]
+                        logger.log(f"Max matching size - Min: {min(matching_sizes)}, "
+                                  f"Max: {max(matching_sizes)}, "
+                                  f"Mean: {np.mean(matching_sizes):.2f}")
+                    
+                    if props.get("matching_coverage"):
+                        matching_coverages = props["matching_coverage"]
+                        logger.log(f"Matching coverage - Min: {min(matching_coverages):.3f}, "
+                                  f"Max: {max(matching_coverages):.3f}, "
+                                  f"Mean: {np.mean(matching_coverages):.3f}")
+                    
                     # Bipartite classification
                     if props.get("is_bipartite"):
                         bipartite_count = sum(props["is_bipartite"])
@@ -666,7 +710,7 @@ def main():
         print(f"📊 Total graphs: {total_lines}")
         print(f"✅ Successfully processed: {total_processed} ({success_rate:.1f}%)")
         print(f"🔧 Matching algorithm: {args.matchings}")
-        print(f"🎯 Using degree-based heuristic hypercube embedding labeling")
+        print(f"🎯 Using matching-based heuristic hypercube embedding labeling")
         print(f"🏆 Results breakdown:")
         print(f"   🟢 Win (Matching better):  {categories['win']}")
         print(f"   🔴 Lose (Pauli better):    {categories['lose']}")
@@ -676,15 +720,17 @@ def main():
         if labeling_stats["graphs_processed"] > 0:
             avg_hamming_improvement = labeling_stats["total_hamming_improvement"] / labeling_stats["graphs_processed"]
             avg_matching_cx_improvement = labeling_stats["total_matching_cx_improvement"] / labeling_stats["graphs_processed"]
-            degree_based_vs_pauli_win_rate = (labeling_stats["total_degree_based_vs_pauli_wins"] / labeling_stats["graphs_processed"]) * 100
+            matching_based_vs_pauli_win_rate = (labeling_stats["total_matching_based_vs_pauli_wins"] / labeling_stats["graphs_processed"]) * 100
             avg_edges_with_dist_1_ratio = labeling_stats["total_edges_with_dist_1_ratio"] / labeling_stats["graphs_processed"]
+            avg_matching_coverage = labeling_stats["total_matching_coverage"] / labeling_stats["graphs_processed"]
             improvement_rate = (labeling_stats["graphs_with_improvements"] / labeling_stats["graphs_processed"]) * 100
             
-            print(f"🎯 Degree-Based Heuristic Hypercube Labeling Improvements:")
+            print(f"🎯 Matching-Based Heuristic Hypercube Labeling Improvements:")
             print(f"   📉 Average Hamming reduction: {avg_hamming_improvement:.2f}")
             print(f"   🚀 Average Matching CX reduction: {avg_matching_cx_improvement:.2f}")
-            print(f"   🏆 Degree-based Heuristic Matching vs Original Pauli win rate: {degree_based_vs_pauli_win_rate:.1f}%")
+            print(f"   🏆 Matching-based Heuristic Matching vs Original Pauli win rate: {matching_based_vs_pauli_win_rate:.1f}%")
             print(f"   🎯 Average ratio of edges with Hamming distance 1: {avg_edges_with_dist_1_ratio:.3f}")
+            print(f"   🤝 Average matching coverage: {avg_matching_coverage:.3f}")
             print(f"   ✨ Graphs with improvements: {labeling_stats['graphs_with_improvements']} ({improvement_rate:.1f}%)")
 
         # Display timing statistics
@@ -707,7 +753,7 @@ def main():
             lose_results = [r for r in results if r["category"] == "lose"]
             draw_results = [r for r in results if r["category"] == "draw"]
 
-            # Calculate category averages including degree-based heuristic improvements
+            # Calculate category averages including matching-based heuristic improvements
             def calc_category_avgs(cat_results, prefix):
                 if not cat_results:
                     return {}
@@ -716,12 +762,13 @@ def main():
                 metrics = [
                     "original_matching_cx", "original_matching_u3", "original_matching_depth",
                     "original_pauli_cx", "original_pauli_u3", "original_pauli_depth",
-                    "degree_based_matching_cx", "degree_based_matching_u3", "degree_based_matching_depth", 
-                    "original_hamming_cost", "degree_based_hamming_cost", "hamming_improvement",
+                    "matching_based_matching_cx", "matching_based_matching_u3", "matching_based_matching_depth", 
+                    "original_hamming_cost", "matching_based_hamming_cost", "hamming_improvement",
                     "matching_cx_improvement", "matching_u3_improvement", "matching_depth_improvement",
-                    "degree_based_vs_pauli_cx_diff", "degree_based_vs_pauli_u3_diff",
+                    "matching_based_vs_pauli_cx_diff", "matching_based_vs_pauli_u3_diff",
                     "edges_with_hamming_dist_1", "edges_with_dist_1_ratio", "avg_edge_hamming_cost",
                     "max_edge_hamming_dist", "original_edges_with_dist_1_ratio", "original_avg_edge_hamming_cost",
+                    "max_matching_size", "matching_coverage", "num_edge_disjoint_matchings",
                     "analysis_time"
                 ]
                     
@@ -774,9 +821,11 @@ def main():
                     "labeling_avg_hamming_improvement": labeling_stats["total_hamming_improvement"] / labeling_stats["graphs_processed"],
                     "labeling_avg_matching_cx_improvement": labeling_stats["total_matching_cx_improvement"] / labeling_stats["graphs_processed"],
                     "labeling_avg_matching_u3_improvement": labeling_stats["total_matching_u3_improvement"] / labeling_stats["graphs_processed"],
-                    "labeling_degree_based_vs_pauli_win_rate": (labeling_stats["total_degree_based_vs_pauli_wins"] / labeling_stats["graphs_processed"]) * 100,
+                    "labeling_matching_based_vs_pauli_win_rate": (labeling_stats["total_matching_based_vs_pauli_wins"] / labeling_stats["graphs_processed"]) * 100,
                     "labeling_avg_edges_with_dist_1": labeling_stats["total_edges_with_dist_1"] / labeling_stats["graphs_processed"],
                     "labeling_avg_edges_with_dist_1_ratio": labeling_stats["total_edges_with_dist_1_ratio"] / labeling_stats["graphs_processed"],
+                    "labeling_avg_matching_coverage": labeling_stats["total_matching_coverage"] / labeling_stats["graphs_processed"],
+                    "labeling_avg_max_matching_size": labeling_stats["total_max_matching_size"] / labeling_stats["graphs_processed"],
                     "labeling_improvement_rate": (labeling_stats["graphs_with_improvements"] / labeling_stats["graphs_processed"]) * 100
                 }
                 avg_stats.update(labeling_improvement_stats)
@@ -788,12 +837,12 @@ def main():
                 "config_matchings": args.matchings,
                 "config_graph_type": args.graph_type,
                 "config_n_steps": args.n_steps,
-                "config_using_degree_based_heuristic_hypercube_labeling": True
+                "config_using_matching_based_heuristic_hypercube_labeling": True
             })
             avg_stats.update(timing_stats)
 
             # Log averages and timing
-            logger.log("\nAverage Metrics by Category (with Degree-Based Heuristic Hypercube Labeling):")
+            logger.log("\nAverage Metrics by Category (with Matching-Based Heuristic Hypercube Labeling):")
             for metric, value in avg_stats.items():
                 if isinstance(value, (int, float)):
                     logger.log(f"{metric}: {value:.2f}")
@@ -809,17 +858,17 @@ def main():
                 summary_with_enhancements.update(timing_stats)
             summary_with_enhancements.update(labeling_stats)
             
-            results_manager.save_results(summary_with_enhancements, f"summary_degree_based_{args.matchings}")
-            results_manager.save_results({"detailed_results": results}, f"detailed_degree_based_{args.matchings}")
-            results_manager.save_results(avg_stats, f"averages_degree_based_{args.matchings}")
+            results_manager.save_results(summary_with_enhancements, f"summary_matching_based_{args.matchings}")
+            results_manager.save_results({"detailed_results": results}, f"detailed_matching_based_{args.matchings}")
+            results_manager.save_results(avg_stats, f"averages_matching_based_{args.matchings}")
 
             # Save categorized graphs
             results_manager.save_categorized_graphs(results, original_graphs)
 
             # Create visualization
-            title = f"Degree-Based Heuristic Hypercube Labeling: Matching ({args.matchings}) vs Pauli Results ({n_qubits} qubits)"
+            title = f"Matching-Based Heuristic Hypercube Labeling: Matching ({args.matchings}) vs Pauli Results ({n_qubits} qubits)"
             pie_chart = plot_manager.create_pie_chart(categories, title)
-            chart_filename = f'pie_chart_degree_based_{args.matchings}_{graph_info["size"]}_{graph_info["vertices"]}c.png'
+            chart_filename = f'pie_chart_matching_based_{args.matchings}_{graph_info["size"]}_{graph_info["vertices"]}c.png'
             plot_manager.save_plot(pie_chart, chart_filename)
 
             # Clean up checkpoint
