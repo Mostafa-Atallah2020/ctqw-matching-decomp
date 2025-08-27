@@ -1,5 +1,7 @@
 import itertools
 from typing import Dict, Union
+from collections import defaultdict
+
 
 import networkx as nx
 import numpy as np
@@ -112,147 +114,134 @@ def graph_matchings_greedy(edges):
 def graph_matchings_parallel(edges):
     """
     Create optimal parallel matchings by finding the best relabeling strategy.
-    
+
     Tries multiple approaches and returns the one with minimum total hamming distance.
-    
+
     Args:
         edges: Set/list of tuples representing edges (u, v)
-    
+
     Returns:
         List of sets, where each set is a matching using optimized binary labels
     """
-    from collections import defaultdict
-    import itertools
-    
     edges = list(edges)
     if not edges:
         return []
-    
+
     # Get all vertices
     vertices = list(set(v for edge in edges for v in edge))
     n_bits = max(2, (len(vertices) - 1).bit_length())
-    
+
     def hamming_distance(u, v):
         """Calculate hamming distance between binary strings"""
         try:
             u_int = int(u, 2)
             v_int = int(v, 2)
-            return bin(u_int ^ v_int).count('1')
+            return bin(u_int ^ v_int).count("1")
         except ValueError:
             return len(u)  # Fallback for non-binary
-    
+
     def calculate_total_cost(edge_list):
         """Calculate total hamming distance for a list of edges"""
         return sum(hamming_distance(u, v) for u, v in edge_list)
-    
+
     def find_all_maximum_matchings(edge_list):
-        """Find all possible maximum matchings"""
-        def is_valid_matching(matching):
-            used_vertices = set()
-            for u, v in matching:
-                if u in used_vertices or v in used_vertices:
-                    return False
-                used_vertices.add(u)
-                used_vertices.add(v)
-            return True
-        
-        max_size = 0
-        best_matchings = []
-        
-        # Try all possible combinations
-        for size in range(len(vertices) // 2, 0, -1):
-            found_any = False
-            for matching_edges in itertools.combinations(edge_list, size):
-                if is_valid_matching(matching_edges):
-                    if size > max_size:
-                        max_size = size
-                        best_matchings = [list(matching_edges)]
-                        found_any = True
-                    elif size == max_size:
-                        best_matchings.append(list(matching_edges))
-            if found_any:
-                break
-        
-        return best_matchings
-    
+        """Find maximum matching using Edmonds' Blossom algorithm via NetworkX"""
+        # Create graph
+        G = nx.Graph()
+        G.add_edges_from(edge_list)
+
+        # Find maximum matching using Edmonds' Blossom
+        max_matching = nx.max_weight_matching(G)
+
+        # Convert to list format consistent with original function
+        return [list(max_matching)]
+
     def create_relabeling_from_matching(matching, all_vertices):
         """Create vertex relabeling based on a matching"""
         vertex_mapping = {}
         used_labels = set()
-        
+
         # Label matching edges to flip bit 0
         counter = 0
         for u, v in matching:
             if u not in vertex_mapping and v not in vertex_mapping:
                 if n_bits == 1:
-                    label1, label2 = '0', '1'
+                    label1, label2 = "0", "1"
                 else:
-                    base = format(counter, f'0{n_bits-1}b')
-                    label1 = base + '0'
-                    label2 = base + '1'
-                
+                    base = format(counter, f"0{n_bits-1}b")
+                    label1 = base + "0"
+                    label2 = base + "1"
+
                 vertex_mapping[u] = label1
                 vertex_mapping[v] = label2
                 used_labels.update([label1, label2])
                 counter += 1
-        
+
         # Label remaining vertices
         remaining = [v for v in all_vertices if v not in vertex_mapping]
         label_int = 0
         for vertex in remaining:
             while True:
-                label = format(label_int, f'0{n_bits}b')
+                label = format(label_int, f"0{n_bits}b")
                 if label not in used_labels:
                     vertex_mapping[vertex] = label
                     used_labels.add(label)
                     break
                 label_int += 1
-        
+
         return vertex_mapping
-    
+
     def try_simple_swaps():
         """Try simple vertex swaps to find better labelings"""
         # Start with identity mapping
-        current_mapping = {vertices[i]: format(i, f'0{n_bits}b') for i in range(len(vertices))}
-        
+        current_mapping = {vertices[i]: format(i, f"0{n_bits}b") for i in range(len(vertices))}
+
         best_mapping = current_mapping.copy()
-        best_cost = calculate_total_cost([(current_mapping[u], current_mapping[v]) for u, v in edges])
-        
+        best_cost = calculate_total_cost(
+            [(current_mapping[u], current_mapping[v]) for u, v in edges]
+        )
+
         # Try all pairwise swaps
         for i in range(len(vertices)):
             for j in range(i + 1, len(vertices)):
                 # Swap labels of vertices[i] and vertices[j]
                 test_mapping = current_mapping.copy()
-                test_mapping[vertices[i]], test_mapping[vertices[j]] = test_mapping[vertices[j]], test_mapping[vertices[i]]
-                
-                test_cost = calculate_total_cost([(test_mapping[u], test_mapping[v]) for u, v in edges])
-                
+                test_mapping[vertices[i]], test_mapping[vertices[j]] = (
+                    test_mapping[vertices[j]],
+                    test_mapping[vertices[i]],
+                )
+
+                test_cost = calculate_total_cost(
+                    [(test_mapping[u], test_mapping[v]) for u, v in edges]
+                )
+
                 if test_cost < best_cost:
                     best_cost = test_cost
                     best_mapping = test_mapping.copy()
-        
+
         return best_mapping, best_cost
-    
+
     def edges_to_matchings(relabeled_edges):
         """Convert edges to parallel matchings grouped by bit flip"""
+
         def get_bit_flip_position(u, v):
             u_int = int(u, 2)
             v_int = int(v, 2)
             diff = u_int ^ v_int
-            
+
             if diff == 0:
                 return -1
-            elif bin(diff).count('1') == 1:
+            elif bin(diff).count("1") == 1:
                 return (diff & -diff).bit_length() - 1
             else:
                 return -2
-        
+
         # Group by bit flip position
         groups = defaultdict(list)
         for u, v in relabeled_edges:
             bit_pos = get_bit_flip_position(u, v)
             groups[bit_pos].append((u, v))
-        
+
         # Create matchings for each group
         matchings = []
         for group_edges in groups.values():
@@ -261,53 +250,52 @@ def graph_matchings_parallel(edges):
                 matching = set()
                 used_vertices = set()
                 next_remaining = []
-                
+
                 for u, v in remaining:
                     if u not in used_vertices and v not in used_vertices:
                         matching.add((u, v))
                         used_vertices.update([u, v])
                     else:
                         next_remaining.append((u, v))
-                
+
                 if matching:
                     matchings.append(matching)
-                
+
                 if len(next_remaining) == len(remaining):
                     break
                 remaining = next_remaining
-        
+
         return matchings
-    
+
     # Strategy 1: Try all maximum matchings
     all_max_matchings = find_all_maximum_matchings(edges)
-    best_cost = float('inf')
+    best_cost = float("inf")
     best_strategy = None
-    
+
     for matching in all_max_matchings:
         mapping = create_relabeling_from_matching(matching, vertices)
         relabeled_edges = [(mapping[u], mapping[v]) for u, v in edges]
         cost = calculate_total_cost(relabeled_edges)
-        
+
         if cost < best_cost:
             best_cost = cost
-            best_strategy = ('matching', mapping, relabeled_edges)
-    
+            best_strategy = ("matching", mapping, relabeled_edges)
+
     # Strategy 2: Try simple swaps
     swap_mapping, swap_cost = try_simple_swaps()
     swap_edges = [(swap_mapping[u], swap_mapping[v]) for u, v in edges]
-    
+
     if swap_cost < best_cost:
         best_cost = swap_cost
-        best_strategy = ('swap', swap_mapping, swap_edges)
-    
+        best_strategy = ("swap", swap_mapping, swap_edges)
+
     # Use the best strategy found
     _, best_mapping, best_edges = best_strategy
-    
+
     # Convert to matchings
     matchings = edges_to_matchings(best_edges)
-    
-    return matchings
 
+    return matchings
 
 
 def graph_to_bitstring_edges(graph):

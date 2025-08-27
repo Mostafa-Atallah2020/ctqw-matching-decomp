@@ -234,7 +234,7 @@ class IntersectingEdgesGraph(StaticGraph):
     def __init__(self, edges, matchings=""):
         """
         Initialize IntersectingEdgesGraph with specified matching algorithm.
-        
+
         Args:
             edges: The edges for the graph
             matchings: Matching algorithm to use. Options:
@@ -249,13 +249,15 @@ class IntersectingEdgesGraph(StaticGraph):
         decomposed_subgraphs = []
 
         # Select the appropriate matching function
-        if self.matchings == 'greedy':
+        if self.matchings == "greedy":
             subgraphs = graph_matchings_greedy(self.edges)
-        elif self.matchings == 'parallel':
+        elif self.matchings == "parallel":
             subgraphs = graph_matchings_parallel(self.edges)
         else:
-            raise ValueError(f"Invalid matchings value: '{self.matchings}'. "
-                           f"Valid options are: 'greedy', 'parallel'")
+            raise ValueError(
+                f"Invalid matchings value: '{self.matchings}'. "
+                f"Valid options are: 'greedy', 'parallel'"
+            )
 
         for sg in subgraphs:
             g = MultiEdgeGraph(sg)

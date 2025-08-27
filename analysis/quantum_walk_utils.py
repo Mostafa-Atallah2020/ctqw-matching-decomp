@@ -265,12 +265,14 @@ class BaseAnalyzer:
                 P = Pauli(pauli_string)
                 P_op = Operator(P).data
                 coeff = np.trace(P_op.conj().T @ H) / (2**n)
-                
+
                 # For real symmetric matrices, coefficients should be real
                 # Check that imaginary part is negligible
                 if not np.isclose(np.imag(coeff), 0, atol=1e-10):
-                    print(f"Warning: Non-negligible imaginary coefficient {np.imag(coeff)} for Pauli string {pauli_string}")
-                
+                    print(
+                        f"Warning: Non-negligible imaginary coefficient {np.imag(coeff)} for Pauli string {pauli_string}"
+                    )
+
                 real_coeff = float(np.real(coeff))
                 if not np.isclose(real_coeff, 0, atol=1e-10):
                     pauli_strings.append(pauli_string)
@@ -292,6 +294,7 @@ class BaseAnalyzer:
         except Exception as e:
             print(f"Pauli analysis error: {str(e)}")
             return None
+
 
 class ResultsManager:
     def __init__(self, base_dir: str, graph_info: Dict[str, str]):

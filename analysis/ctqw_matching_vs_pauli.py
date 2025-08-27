@@ -26,45 +26,45 @@ from quantum_walk_utils import *
 def calculate_graph_properties(graph: nx.Graph) -> dict:
     """Calculate various graph properties for analysis"""
     properties = {}
-    
+
     # Basic properties
     properties["edge_count"] = len(graph.edges())
     properties["edge_density"] = nx.density(graph)
     properties["is_bipartite"] = nx.is_bipartite(graph)
-    
+
     # Connected graph properties
     if nx.is_connected(graph):
         properties["diameter"] = nx.diameter(graph)
     else:
         properties["diameter"] = None
-        
+
     # Clique number (maximum clique size)
     try:
         properties["clique_number"] = len(max(nx.find_cliques(graph), key=len))
     except:
         properties["clique_number"] = 1
-    
+
     # Degree properties
     degrees = [graph.degree(node) for node in graph.nodes()]
     properties["max_degree"] = max(degrees) if degrees else 0
     properties["avg_degree"] = sum(degrees) / len(degrees) if degrees else 0
-    
+
     # Clustering coefficient
     properties["avg_clustering"] = nx.average_clustering(graph)
-    
+
     # Automorphism group size estimation (simplified)
     try:
         # This is a rough estimate - exact calculation is computationally expensive
         properties["estimated_group_size"] = estimate_group_size(graph)
     except:
         properties["estimated_group_size"] = 1
-        
+
     # Orbit count estimation (simplified)
     try:
         properties["estimated_orbit_count"] = estimate_orbit_count(graph)
     except:
         properties["estimated_orbit_count"] = len(graph.nodes())
-    
+
     return properties
 
 
@@ -74,7 +74,7 @@ def estimate_group_size(graph: nx.Graph) -> int:
     n = len(graph.nodes())
     if n <= 1:
         return 1
-    
+
     # Check for some common symmetric structures
     if nx.is_regular(graph):
         degree = list(graph.degree())[0][1]
@@ -85,7 +85,7 @@ def estimate_group_size(graph: nx.Graph) -> int:
         elif degree == 1:  # Matching or path-like
             # Rough estimate for matching-like structures
             return 2 ** (n // 2)
-    
+
     # Default conservative estimate
     return max(1, n // 4)
 
@@ -95,7 +95,7 @@ def estimate_orbit_count(graph: nx.Graph) -> int:
     # Group nodes by degree sequence and other simple invariants
     degree_sequence = sorted([graph.degree(node) for node in graph.nodes()])
     unique_degrees = len(set(degree_sequence))
-    
+
     # Very rough heuristic
     return min(len(graph.nodes()), max(1, unique_degrees))
 
@@ -207,94 +207,87 @@ def parse_arguments():
     """Parse command line arguments"""
     parser = argparse.ArgumentParser(
         description="CTQW Analysis: Matching vs Pauli Decomposition",
-        formatter_class=argparse.ArgumentDefaultsHelpFormatter
+        formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
-    
+
     # Core parameters
     parser.add_argument(
-        "--n-vertices", "-v",
+        "--n-vertices",
+        "-v",
         type=int,
         default=8,
-        help="Number of vertices (determines number of qubits as log2(n_vertices))"
+        help="Number of vertices (determines number of qubits as log2(n_vertices))",
     )
-    
+
     parser.add_argument(
-        "--delta-t", "-dt",
-        type=float,
-        default=0.1,
-        help="Time step for quantum walk evolution"
+        "--delta-t", "-dt", type=float, default=0.1, help="Time step for quantum walk evolution"
     )
-    
+
     parser.add_argument(
-        "--n-graphs", "-n",
+        "--n-graphs",
+        "-n",
         type=int,
         default=100,
-        help="Number of graphs to process (overridden to 11117 when using BM graphs)"
+        help="Number of graphs to process (overridden to 11117 when using BM graphs)",
     )
-    
+
     parser.add_argument(
-        "--graph-type", "-t",
+        "--graph-type",
+        "-t",
         type=str,
         default="random",
         choices=["BM", "random"],
-        help="Type of graphs to process"
+        help="Type of graphs to process",
     )
-    
+
     parser.add_argument(
-        "--matchings", "-m",
+        "--matchings",
+        "-m",
         type=str,
         default="parallel",
         choices=["greedy", "parallel"],
-        help="Matching algorithm to use"
+        help="Matching algorithm to use",
     )
-    
+
     # Processing options
     parser.add_argument(
-        "--checkpoint-interval",
-        type=int,
-        default=50,
-        help="Save checkpoint every N graphs"
+        "--checkpoint-interval", type=int, default=50, help="Save checkpoint every N graphs"
     )
-    
+
     parser.add_argument(
-        "--progress-interval",
-        type=int,
-        default=10,
-        help="Show progress every N graphs"
+        "--progress-interval", type=int, default=10, help="Show progress every N graphs"
     )
-    
-    parser.add_argument(
-        "--n-steps",
-        type=int,
-        default=1,
-        help="Number of Trotter steps"
-    )
-    
+
+    parser.add_argument("--n-steps", type=int, default=1, help="Number of Trotter steps")
+
     return parser.parse_args()
 
 
 def main():
     """Main execution function"""
     args = parse_arguments()
-    
+
     # Calculate n_qubits from n_vertices and validate it's a power of 2
     import math
+
     if args.n_vertices <= 0:
         print(f"❌ Error: n_vertices must be positive, got {args.n_vertices}")
         return 1
-    
+
     # Check if n_vertices is a power of 2
     if (args.n_vertices & (args.n_vertices - 1)) != 0:
-        print(f"❌ Error: n_vertices must be a power of 2 (2, 4, 8, 16, 32, ...), got {args.n_vertices}")
+        print(
+            f"❌ Error: n_vertices must be a power of 2 (2, 4, 8, 16, 32, ...), got {args.n_vertices}"
+        )
         print(f"💡 Valid values: {[2**i for i in range(1, 8)]}")
         return 1
-    
+
     n_qubits = int(math.log2(args.n_vertices))
-    
+
     # Override n_graphs to 11117 for BM graphs
     if args.graph_type == "BM":
         args.n_graphs = 11117
-    
+
     print("=" * 70)
     print("🚀 CTQW ANALYSIS - MATCHING VS PAULI DECOMPOSITION")
     print("=" * 70)
@@ -312,7 +305,9 @@ def main():
     print(f"📁 Script location: {script_dir}")
     print(f"📊 Input file: {graph_file}")
     print(f"💾 Output directory: {output_dir}")
-    print(f"📈 Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)")
+    print(
+        f"📈 Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)"
+    )
     print(f"🔧 Using {args.matchings} matching algorithm")
     print(f"⏱️  Delta t: {args.delta_t}")
 
@@ -328,7 +323,9 @@ def main():
         dirs = setup_directories(str(output_dir))
         log_filename = f"analysis_{args.matchings}_{args.graph_type}_{n_vertices}c.log"
         logger = Logger(os.path.join(dirs["logs"], log_filename))
-        checkpoint_file = output_dir / f"checkpoint_{args.matchings}_{args.graph_type}_{n_vertices}c.json"
+        checkpoint_file = (
+            output_dir / f"checkpoint_{args.matchings}_{args.graph_type}_{n_vertices}c.json"
+        )
     except Exception as e:
         print(f"❌ Error setting up directories: {e}")
         return 1
@@ -371,8 +368,8 @@ def main():
         # Initialize property collections by category
         properties_by_category = {
             "win": defaultdict(list),
-            "lose": defaultdict(list), 
-            "draw": defaultdict(list)
+            "lose": defaultdict(list),
+            "draw": defaultdict(list),
         }
 
         # Count total graphs
@@ -399,15 +396,17 @@ def main():
                     if i > start_index:
                         speed = (i - start_index) / (elapsed / 60)  # graphs per minute
                         eta_hours = (total_lines - i) / speed / 60 if speed > 0 else 0
-                        
+
                         # Calculate current average analysis time
                         current_avg_time = ""
                         if results:
-                            recent_times = [r["analysis_time"] for r in results[-10:] if "analysis_time" in r]
+                            recent_times = [
+                                r["analysis_time"] for r in results[-10:] if "analysis_time" in r
+                            ]
                             if recent_times:
                                 avg_time = sum(recent_times) / len(recent_times)
                                 current_avg_time = f" | Avg: {avg_time:.1f}s/graph"
-                        
+
                         print(
                             f"📊 Progress: {progress:.1f}% ({i}/{total_lines}) | "
                             f"Speed: {speed:.1f}/min | ETA: {eta_hours:.1f}h{current_avg_time} | "
@@ -434,14 +433,14 @@ def main():
                         categories[result["category"]] += 1
                         results.append({"index": i, **result})
                         original_graphs.append(graph)
-                        
+
                         # Collect graph properties by category
                         category = result["category"]
                         graph_props = result["graph_properties"]
                         for prop_name, prop_value in graph_props.items():
                             if prop_value is not None:
                                 properties_by_category[category][prop_name].append(prop_value)
-                        
+
                         logger.log(
                             f"Successfully processed graph {i} - Category: {result['category']} - Time: {result['analysis_time']:.2f}s"
                         )
@@ -494,81 +493,101 @@ def main():
 
         # Log detailed graph properties by category
         logger.log("\nDetailed Graph Properties by Category:\n")
-        
+
         for category in ["win", "lose", "draw"]:
             if category in properties_by_category and properties_by_category[category]:
                 props = properties_by_category[category]
                 if len(props.get("edge_count", [])) > 0:  # Only log if we have data
                     logger.log(f"\n{category.upper()} Graphs Statistics:")
                     logger.log(f"Total graphs processed: {len(props['edge_count'])}")
-                    
+
                     # Edge properties
                     if props.get("edge_count"):
                         edge_counts = props["edge_count"]
-                        logger.log(f"Edge count - Min: {min(edge_counts)}, "
-                                  f"Max: {max(edge_counts)}, "
-                                  f"Mean: {np.mean(edge_counts):.2f}")
-                    
+                        logger.log(
+                            f"Edge count - Min: {min(edge_counts)}, "
+                            f"Max: {max(edge_counts)}, "
+                            f"Mean: {np.mean(edge_counts):.2f}"
+                        )
+
                     if props.get("edge_density"):
                         edge_densities = props["edge_density"]
-                        logger.log(f"Edge density - Min: {min(edge_densities):.4f}, "
-                                  f"Max: {max(edge_densities):.4f}, "
-                                  f"Mean: {np.mean(edge_densities):.4f}")
-                    
+                        logger.log(
+                            f"Edge density - Min: {min(edge_densities):.4f}, "
+                            f"Max: {max(edge_densities):.4f}, "
+                            f"Mean: {np.mean(edge_densities):.4f}"
+                        )
+
                     # Bipartite classification
                     if props.get("is_bipartite"):
                         bipartite_count = sum(props["is_bipartite"])
                         non_bipartite_count = len(props["is_bipartite"]) - bipartite_count
-                        logger.log(f"Bipartite graphs: {bipartite_count}, "
-                                  f"Non-bipartite graphs: {non_bipartite_count}")
-                    
+                        logger.log(
+                            f"Bipartite graphs: {bipartite_count}, "
+                            f"Non-bipartite graphs: {non_bipartite_count}"
+                        )
+
                     # Diameter (only for connected graphs)
                     diameters = [d for d in props.get("diameter", []) if d is not None]
                     if diameters:
-                        logger.log(f"Diameter (connected graphs) - Min: {min(diameters)}, "
-                                  f"Max: {max(diameters)}, "
-                                  f"Mean: {np.mean(diameters):.2f}")
-                    
+                        logger.log(
+                            f"Diameter (connected graphs) - Min: {min(diameters)}, "
+                            f"Max: {max(diameters)}, "
+                            f"Mean: {np.mean(diameters):.2f}"
+                        )
+
                     # Clique number
                     if props.get("clique_number"):
                         clique_numbers = props["clique_number"]
-                        logger.log(f"Clique number - Min: {min(clique_numbers)}, "
-                                  f"Max: {max(clique_numbers)}, "
-                                  f"Mean: {np.mean(clique_numbers):.2f}")
-                    
+                        logger.log(
+                            f"Clique number - Min: {min(clique_numbers)}, "
+                            f"Max: {max(clique_numbers)}, "
+                            f"Mean: {np.mean(clique_numbers):.2f}"
+                        )
+
                     # Degree properties
                     if props.get("max_degree"):
                         max_degrees = props["max_degree"]
-                        logger.log(f"Maximum degree - Min: {min(max_degrees)}, "
-                                  f"Max: {max(max_degrees)}, "
-                                  f"Mean: {np.mean(max_degrees):.2f}")
-                    
+                        logger.log(
+                            f"Maximum degree - Min: {min(max_degrees)}, "
+                            f"Max: {max(max_degrees)}, "
+                            f"Mean: {np.mean(max_degrees):.2f}"
+                        )
+
                     if props.get("avg_degree"):
                         avg_degrees = props["avg_degree"]
-                        logger.log(f"Average degree - Min: {min(avg_degrees):.2f}, "
-                                  f"Max: {max(avg_degrees):.2f}, "
-                                  f"Mean: {np.mean(avg_degrees):.2f}")
-                    
+                        logger.log(
+                            f"Average degree - Min: {min(avg_degrees):.2f}, "
+                            f"Max: {max(avg_degrees):.2f}, "
+                            f"Mean: {np.mean(avg_degrees):.2f}"
+                        )
+
                     # Clustering coefficient
                     if props.get("avg_clustering"):
                         clustering_coeffs = props["avg_clustering"]
-                        logger.log(f"Clustering coefficient - Min: {min(clustering_coeffs):.4f}, "
-                                  f"Max: {max(clustering_coeffs):.4f}, "
-                                  f"Mean: {np.mean(clustering_coeffs):.4f}")
-                    
+                        logger.log(
+                            f"Clustering coefficient - Min: {min(clustering_coeffs):.4f}, "
+                            f"Max: {max(clustering_coeffs):.4f}, "
+                            f"Mean: {np.mean(clustering_coeffs):.4f}"
+                        )
+
                     # Group size estimation
                     if props.get("estimated_group_size"):
                         group_sizes = props["estimated_group_size"]
-                        logger.log(f"Estimated group size - Min: {min(group_sizes)}, "
-                                  f"Max: {max(group_sizes)}, "
-                                  f"Mean: {np.mean(group_sizes):.2f}")
-                    
+                        logger.log(
+                            f"Estimated group size - Min: {min(group_sizes)}, "
+                            f"Max: {max(group_sizes)}, "
+                            f"Mean: {np.mean(group_sizes):.2f}"
+                        )
+
                     # Orbit count estimation
                     if props.get("estimated_orbit_count"):
                         orbit_counts = props["estimated_orbit_count"]
-                        logger.log(f"Estimated orbit count - Min: {min(orbit_counts)}, "
-                                  f"Max: {max(orbit_counts)}, "
-                                  f"Mean: {np.mean(orbit_counts):.2f}")
+                        logger.log(
+                            f"Estimated orbit count - Min: {min(orbit_counts)}, "
+                            f"Max: {max(orbit_counts)}, "
+                            f"Mean: {np.mean(orbit_counts):.2f}"
+                        )
 
         print(f"📊 Total graphs: {total_lines}")
         print(f"✅ Successfully processed: {total_processed} ({success_rate:.1f}%)")
@@ -590,7 +609,9 @@ def main():
                 print(f"   📊 Average time per graph: {avg_time_per_graph:.2f}s")
                 print(f"   ⚡ Fastest graph: {min_time:.2f}s")
                 print(f"   🐌 Slowest graph: {max_time:.2f}s")
-                print(f"   🕐 Total analysis time: {total_analysis_time:.2f}s ({total_analysis_time/60:.1f}m)")
+                print(
+                    f"   🕐 Total analysis time: {total_analysis_time:.2f}s ({total_analysis_time/60:.1f}m)"
+                )
 
         if total_processed > 0:
             # Separate results by category
@@ -612,17 +633,17 @@ def main():
                 ]
                 if cat_results and "analysis_time" in cat_results[0]:
                     metrics.append("analysis_time")
-                    
+
                 totals = defaultdict(float)
                 counts = defaultdict(int)
-                
+
                 for r in cat_results:
                     # Regular metrics
                     for metric in metrics:
                         if metric in r:
                             totals[metric] += r[metric]
                             counts[metric] += 1
-                    
+
                     # Graph properties
                     if "graph_properties" in r:
                         graph_props = r["graph_properties"]
@@ -630,13 +651,13 @@ def main():
                             if prop_value is not None:
                                 totals[f"graph_{prop_name}"] += prop_value
                                 counts[f"graph_{prop_name}"] += 1
-                
+
                 # Calculate averages
                 result = {}
                 for metric in totals:
                     if counts[metric] > 0:
                         result[f"{prefix}_{metric}"] = totals[metric] / counts[metric]
-                
+
                 return result
 
             avg_stats = {}
@@ -653,17 +674,19 @@ def main():
                         "timing_avg_per_graph": sum(analysis_times) / len(analysis_times),
                         "timing_min_per_graph": min(analysis_times),
                         "timing_max_per_graph": max(analysis_times),
-                        "timing_total_analysis": sum(analysis_times)
+                        "timing_total_analysis": sum(analysis_times),
                     }
-            
-            avg_stats.update({
-                "config_n_qubits": n_qubits,
-                "config_n_vertices": n_vertices,
-                "config_delta_t": args.delta_t,
-                "config_matchings": args.matchings,
-                "config_graph_type": args.graph_type,
-                "config_n_steps": args.n_steps
-            })
+
+            avg_stats.update(
+                {
+                    "config_n_qubits": n_qubits,
+                    "config_n_vertices": n_vertices,
+                    "config_delta_t": args.delta_t,
+                    "config_matchings": args.matchings,
+                    "config_graph_type": args.graph_type,
+                    "config_n_steps": args.n_steps,
+                }
+            )
             avg_stats.update(timing_stats)
 
             # Log averages and timing
@@ -674,16 +697,18 @@ def main():
                 else:
                     logger.log(f"{metric}: {value}")
                     # End log with two solid lines
-            
+
             logger.log("=" * 70 + "\n" + "=" * 70 + "\n")
             print(f"\n💾 Saving results...")
             # Save results with timing information
             summary_with_timing = {**categories}
             if timing_stats:
                 summary_with_timing.update(timing_stats)
-            
+
             results_manager.save_results(summary_with_timing, f"summary_{args.matchings}")
-            results_manager.save_results({"detailed_results": results}, f"detailed_{args.matchings}")
+            results_manager.save_results(
+                {"detailed_results": results}, f"detailed_{args.matchings}"
+            )
             results_manager.save_results(avg_stats, f"averages_{args.matchings}")
 
             # Save categorized graphs
@@ -692,7 +717,9 @@ def main():
             # Create visualization
             title = f"Matching ({args.matchings}) vs Pauli Results ({n_qubits} qubits)"
             pie_chart = plot_manager.create_pie_chart(categories, title)
-            chart_filename = f'pie_chart_{args.matchings}_{graph_info["size"]}_{graph_info["vertices"]}c.png'
+            chart_filename = (
+                f'pie_chart_{args.matchings}_{graph_info["size"]}_{graph_info["vertices"]}c.png'
+            )
             plot_manager.save_plot(pie_chart, chart_filename)
 
             # Clean up checkpoint
