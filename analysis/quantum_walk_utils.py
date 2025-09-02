@@ -168,7 +168,7 @@ class BaseAnalyzer:
     #     # Return the minimum metrics found
     #     return min_metrics if min_metrics.cx_count != float("inf") else None
 
-    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
+    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 1) -> CircuitMetrics:
         """Analyze circuit with fixed transpilation settings over multiple runs and return the average counts."""
         total_metrics = CircuitMetrics(cx_count=0, u3_count=0, depth=0)
 
@@ -178,9 +178,9 @@ class BaseAnalyzer:
                     qc,
                     basis_gates=["cx", "u3"],
                     # seed_transpiler=self.seed,
+                    # routing_method="basic",
+                    # layout_method="trivial",
                     optimization_level=3,
-                    routing_method="basic",
-                    layout_method="trivial",
                 )
 
                 counts = transpiled_qc.count_ops()

@@ -1,7 +1,6 @@
 import itertools
-from typing import Dict, Union
 from collections import defaultdict
-
+from typing import Dict, Union
 
 import networkx as nx
 import numpy as np

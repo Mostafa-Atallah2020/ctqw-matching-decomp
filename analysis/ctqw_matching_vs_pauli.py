@@ -236,7 +236,7 @@ def parse_arguments():
         "-t",
         type=str,
         default="random",
-        choices=["BM", "random"],
+        choices=["BM", "random", "bipartite"],
         help="Type of graphs to process",
     )
 
