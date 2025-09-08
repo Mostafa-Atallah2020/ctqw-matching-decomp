@@ -30,6 +30,9 @@ class CTQWLogParser:
             'win_graph_clique_number', 'win_graph_max_degree', 'win_graph_avg_degree',
             'win_graph_avg_clustering', 'win_graph_estimated_group_size', 'win_graph_estimated_orbit_count',
             
+            # Win graph structure statistics
+            'win_graph_bipartite_count', 'win_graph_nonbipartite_count',
+            
             # Lose category averages
             'lose_matching_cx', 'lose_matching_u3', 'lose_pauli_cx', 'lose_pauli_u3',
             'lose_matching_depth', 'lose_pauli_depth', 'lose_analysis_time',
@@ -37,12 +40,18 @@ class CTQWLogParser:
             'lose_graph_clique_number', 'lose_graph_max_degree', 'lose_graph_avg_degree',
             'lose_graph_avg_clustering', 'lose_graph_estimated_group_size', 'lose_graph_estimated_orbit_count',
             
+            # Lose graph structure statistics
+            'lose_graph_bipartite_count', 'lose_graph_nonbipartite_count',
+            
             # Draw category averages
             'draw_matching_cx', 'draw_matching_u3', 'draw_pauli_cx', 'draw_pauli_u3',
             'draw_matching_depth', 'draw_pauli_depth', 'draw_analysis_time',
             'draw_graph_edge_count', 'draw_graph_edge_density', 'draw_graph_diameter',
             'draw_graph_clique_number', 'draw_graph_max_degree', 'draw_graph_avg_degree',
             'draw_graph_avg_clustering', 'draw_graph_estimated_group_size', 'draw_graph_estimated_orbit_count',
+            
+            # Draw graph structure statistics
+            'draw_graph_bipartite_count', 'draw_graph_nonbipartite_count',
         ]
         
         # Configuration parameters to extract (these should be consistent across runs)
@@ -126,12 +135,117 @@ class CTQWLogParser:
         
         return config_data
 
+    def parse_graph_statistics_section(self, lines: List[str], start_idx: int, category: str) -> Dict:
+        """Parse a graph statistics section (WIN/LOSE/DRAW)"""
+        stats = {}
+        
+        # Look for the section header
+        section_found = False
+        i = start_idx
+        
+        while i < len(lines):
+            line = lines[i].strip()
+            
+            # Remove timestamp prefix if present
+            if line.startswith('[2025-'):
+                bracket_end = line.find('] ')
+                if bracket_end != -1:
+                    line = line[bracket_end + 2:].strip()
+            
+            # Check if we found the right section
+            if f"{category} Graphs Statistics:" in line:
+                section_found = True
+                i += 1
+                continue
+            
+            # If we haven't found the section yet, keep looking
+            if not section_found:
+                i += 1
+                continue
+            
+            # Stop if we hit another section or empty line after statistics
+            if (("Graphs Statistics:" in line and category not in line) or 
+                (line == "" and i > start_idx + 10)):
+                break
+            
+            # Skip empty lines
+            if not line:
+                i += 1
+                continue
+            
+            # Parse specific statistics
+            if "Total graphs processed:" in line:
+                match = re.search(r'Total graphs processed:\s*(\d+)', line)
+                if match:
+                    stats[f'{category.lower()}_graph_total_processed'] = int(match.group(1))
+                    
+            elif "Bipartite graphs:" in line and "Non-bipartite graphs:" in line:
+                # Parse: "Bipartite graphs: 11, Non-bipartite graphs: 0"
+                bipartite_match = re.search(r'Bipartite graphs:\s*(\d+)', line)
+                nonbipartite_match = re.search(r'Non-bipartite graphs:\s*(\d+)', line)
+                
+                if bipartite_match:
+                    stats[f'{category.lower()}_graph_bipartite_count'] = int(bipartite_match.group(1))
+                if nonbipartite_match:
+                    stats[f'{category.lower()}_graph_nonbipartite_count'] = int(nonbipartite_match.group(1))
+            
+            # Parse mean values from existing patterns
+            elif "Mean:" in line:
+                if "Edge count" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_edge_count'] = float(match.group(1))
+                        
+                elif "Edge density" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_edge_density'] = float(match.group(1))
+                        
+                elif "Diameter" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_diameter'] = float(match.group(1))
+                        
+                elif "Clique number" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_clique_number'] = float(match.group(1))
+                        
+                elif "Maximum degree" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_max_degree'] = float(match.group(1))
+                        
+                elif "Average degree" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_avg_degree'] = float(match.group(1))
+                        
+                elif "Clustering coefficient" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_avg_clustering'] = float(match.group(1))
+                        
+                elif "Estimated group size" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_estimated_group_size'] = float(match.group(1))
+                        
+                elif "Estimated orbit count" in line:
+                    match = re.search(r'Mean:\s*([0-9.]+)', line)
+                    if match:
+                        stats[f'{category.lower()}_graph_estimated_orbit_count'] = float(match.group(1))
+            
+            i += 1
+        
+        return stats
+
     def parse_run(self, run_content: str) -> Optional[Dict]:
         """Parse a single run and extract all relevant metrics"""
         data = {}
         lines = run_content.split('\n')
         
-        for line in lines:
+        for i, line in enumerate(lines):
             original_line = line
             line = line.strip()
             
@@ -192,6 +306,19 @@ class CTQWLogParser:
                 if match:
                     data['timing_total_analysis'] = float(match.group(1))
             
+            # Parse graph statistics sections
+            elif "WIN Graphs Statistics:" in line:
+                win_stats = self.parse_graph_statistics_section(lines, i, "WIN")
+                data.update(win_stats)
+                
+            elif "LOSE Graphs Statistics:" in line:
+                lose_stats = self.parse_graph_statistics_section(lines, i, "LOSE")
+                data.update(lose_stats)
+                
+            elif "DRAW Graphs Statistics:" in line:
+                draw_stats = self.parse_graph_statistics_section(lines, i, "DRAW")
+                data.update(draw_stats)
+            
             # Category averages - look for exact metric patterns
             else:
                 # Check for any of our key metrics
@@ -211,7 +338,7 @@ class CTQWLogParser:
             if metric not in data:
                 data[metric] = 0.0
         
-        # print what we found
+        # Print what we found
         print(f"  Extracted {len(data)} metrics")
         
         # Return None if we didn't extract meaningful data
@@ -488,6 +615,29 @@ class CTQWLogParser:
                 print(f"    Matching: {matching_stat['mean']:.2f} ± {matching_stat['std']:.2f}")
                 print(f"    Pauli:    {pauli_stat['mean']:.2f} ± {pauli_stat['std']:.2f}")
                 print(f"    Diff:     {diff:+.2f} (Matching - Pauli)")
+        
+        # Print bipartite graph statistics if available
+        print(f"\n🔗 Graph Structure Statistics:")
+        for category in categories:
+            bipartite_metric = f"{category}_graph_bipartite_count"
+            nonbipartite_metric = f"{category}_graph_nonbipartite_count"
+            bipartite_pct_metric = f"{category}_graph_bipartite_percentage"
+            nonbipartite_pct_metric = f"{category}_graph_nonbipartite_percentage"
+            
+            if bipartite_metric in stats and nonbipartite_metric in stats:
+                bipartite_stat = stats[bipartite_metric]
+                nonbipartite_stat = stats[nonbipartite_metric]
+                
+                print(f"  {category.upper()} graphs:")
+                print(f"    Bipartite:     {bipartite_stat['mean']:.1f} ± {bipartite_stat['std']:.1f}")
+                print(f"    Non-bipartite: {nonbipartite_stat['mean']:.1f} ± {nonbipartite_stat['std']:.1f}")
+                
+                # Print percentages if available
+                if bipartite_pct_metric in stats and nonbipartite_pct_metric in stats:
+                    bipartite_pct_stat = stats[bipartite_pct_metric]
+                    nonbipartite_pct_stat = stats[nonbipartite_pct_metric]
+                    print(f"    Bipartite %:     {bipartite_pct_stat['mean']:.1f}% ± {bipartite_pct_stat['std']:.1f}%")
+                    print(f"    Non-bipartite %: {nonbipartite_pct_stat['mean']:.1f}% ± {nonbipartite_pct_stat['std']:.1f}%")
 
 
 def main():
