@@ -17,6 +17,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.quantum_info import Operator, Pauli, SparsePauliOp
 from scipy.linalg import expm
+from src.misc import graph_matchings_parallel
 
 from src.graphs import IntersectingEdgesGraph, MultiEdgeGraph, StaticGraph
 
@@ -253,9 +254,16 @@ class BaseAnalyzer:
     def analyze_pauli(self, edges: Set[Tuple[str, str]]) -> Optional[CircuitMetrics]:
         """Analyze circuit using Pauli decomposition method."""
         try:
-            static_G = StaticGraph(edges)
-            H = static_G.get_adj_mat()
-            n = static_G.n_qubits
+            matchings = graph_matchings_parallel(edges)
+
+            relabeled_edges = set()
+            for m in matchings:
+                relabeled_edges = relabeled_edges.union(m)
+
+            relabeled_G = StaticGraph(relabeled_edges)
+
+            H = relabeled_G.get_adj_mat()
+            n = relabeled_G.n_qubits
 
             # Decompose the Hamiltonian into Pauli basis
             pauli_strings = []
