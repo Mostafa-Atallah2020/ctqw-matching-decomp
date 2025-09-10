@@ -333,10 +333,8 @@ class CTQWLogParser:
                             data[metric] = float(match.group(1))
                             break
         
-        # Ensure all key metrics are present with default values
-        for metric in self.key_metrics:
-            if metric not in data:
-                data[metric] = 0.0
+        # DO NOT set default values for missing metrics - leave them out of the data dict
+        # This allows calculate_statistics to properly handle missing values
         
         # Print what we found
         print(f"  Extracted {len(data)} metrics")
@@ -424,7 +422,7 @@ class CTQWLogParser:
         return runs_data, config_data
 
     def calculate_statistics(self, runs_data: List[Dict]) -> Dict:
-        """Calculate mean ± std for all metrics across runs"""
+        """Calculate mean ± std for all metrics across runs, excluding missing (0.0) values"""
         if not runs_data:
             return {}
         
@@ -435,9 +433,15 @@ class CTQWLogParser:
             values = []
             for run in runs_data:
                 if metric in run and run[metric] is not None:
-                    values.append(run[metric])
-                else:
-                    values.append(0.0)  # Use 0.0 as default instead of None
+                    value = run[metric]
+                    # Only include non-zero values for statistics calculation
+                    # Exception: percentages and counts can legitimately be 0
+                    if (value != 0.0 or 
+                        metric.endswith('_percentage') or 
+                        metric.endswith('_count') or 
+                        metric == 'total_processed' or
+                        metric.startswith('timing_')):
+                        values.append(value)
             
             if values:
                 mean_val = statistics.mean(values)
@@ -488,18 +492,20 @@ class CTQWLogParser:
         summary_file = output_path / f"{prefix}_summary.csv"
         with open(summary_file, 'w', newline='') as f:
             writer = csv.writer(f)
-            writer.writerow(['Metric', 'Mean', 'Std', 'Values'])
+            writer.writerow(['Metric', 'Mean', 'Std', 'Count', 'Values'])
             
             for metric, stat_data in stats.items():
                 if metric not in exclude_from_summary:
                     mean_str = f"{stat_data['mean']:.3f}"
                     std_str = f"{stat_data['std']:.3f}"
+                    count_str = f"{stat_data['count']}"
                     values_str = ', '.join([f"{v:.3f}" for v in stat_data['values']])
                     
                     writer.writerow([
                         metric, 
                         mean_str, 
                         std_str, 
+                        count_str,
                         values_str
                     ])
         
@@ -543,10 +549,8 @@ class CTQWLogParser:
                             row.append(i + 1)  # Always use sequential numbering
                         elif col in run:
                             row.append(run[col])
-                        elif col in self.key_metrics:
-                            row.append(0.0)  # Default for metrics
                         else:
-                            row.append('')  # Empty for missing values
+                            row.append('')  # Empty for missing values (don't use 0.0 as default)
                     
                     writer.writerow(row)
         
@@ -592,16 +596,16 @@ class CTQWLogParser:
             'timing_avg_per_graph'
         ]
         
-        print(f"\n🎯 Key Results (Mean ± Std):")
+        print(f"\n🎯 Key Results (Mean ± Std from actual log values only):")
         for metric in key_results:
             if metric in stats:
                 stat = stats[metric]
-                print(f"  {metric}: {stat['mean']:.3f} ± {stat['std']:.3f}")
+                print(f"  {metric}: {stat['mean']:.3f} ± {stat['std']:.3f} (n={stat['count']})")
         
         # Print win/lose/draw averages comparison
         categories = ['win', 'lose', 'draw']
         
-        print(f"\n🔄 Gate Count Comparison (CX gates):")
+        print(f"\n🔄 Gate Count Comparison (CX gates, actual log values only):")
         for category in categories:
             matching_metric = f"{category}_matching_cx"
             pauli_metric = f"{category}_pauli_cx"
@@ -612,32 +616,23 @@ class CTQWLogParser:
                 diff = matching_stat['mean'] - pauli_stat['mean']
                 
                 print(f"  {category.upper()}:")
-                print(f"    Matching: {matching_stat['mean']:.2f} ± {matching_stat['std']:.2f}")
-                print(f"    Pauli:    {pauli_stat['mean']:.2f} ± {pauli_stat['std']:.2f}")
+                print(f"    Matching: {matching_stat['mean']:.2f} ± {matching_stat['std']:.2f} (n={matching_stat['count']})")
+                print(f"    Pauli:    {pauli_stat['mean']:.2f} ± {pauli_stat['std']:.2f} (n={pauli_stat['count']})")
                 print(f"    Diff:     {diff:+.2f} (Matching - Pauli)")
         
         # Print bipartite graph statistics if available
-        print(f"\n🔗 Graph Structure Statistics:")
+        print(f"\n🔗 Graph Structure Statistics (actual log values only):")
         for category in categories:
             bipartite_metric = f"{category}_graph_bipartite_count"
             nonbipartite_metric = f"{category}_graph_nonbipartite_count"
-            bipartite_pct_metric = f"{category}_graph_bipartite_percentage"
-            nonbipartite_pct_metric = f"{category}_graph_nonbipartite_percentage"
             
             if bipartite_metric in stats and nonbipartite_metric in stats:
                 bipartite_stat = stats[bipartite_metric]
                 nonbipartite_stat = stats[nonbipartite_metric]
                 
                 print(f"  {category.upper()} graphs:")
-                print(f"    Bipartite:     {bipartite_stat['mean']:.1f} ± {bipartite_stat['std']:.1f}")
-                print(f"    Non-bipartite: {nonbipartite_stat['mean']:.1f} ± {nonbipartite_stat['std']:.1f}")
-                
-                # Print percentages if available
-                if bipartite_pct_metric in stats and nonbipartite_pct_metric in stats:
-                    bipartite_pct_stat = stats[bipartite_pct_metric]
-                    nonbipartite_pct_stat = stats[nonbipartite_pct_metric]
-                    print(f"    Bipartite %:     {bipartite_pct_stat['mean']:.1f}% ± {bipartite_pct_stat['std']:.1f}%")
-                    print(f"    Non-bipartite %: {nonbipartite_pct_stat['mean']:.1f}% ± {nonbipartite_pct_stat['std']:.1f}%")
+                print(f"    Bipartite:     {bipartite_stat['mean']:.1f} ± {bipartite_stat['std']:.1f} (n={bipartite_stat['count']})")
+                print(f"    Non-bipartite: {nonbipartite_stat['mean']:.1f} ± {nonbipartite_stat['std']:.1f} (n={nonbipartite_stat['count']})")
 
 
 def main():

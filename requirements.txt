@@ -6,3 +6,4 @@ black[jupyter]
 pyzx
 pytest
 isort
+pandas
