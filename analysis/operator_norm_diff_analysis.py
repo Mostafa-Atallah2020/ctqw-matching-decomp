@@ -1,16 +1,20 @@
 #!/usr/bin/env python3
 """
-Fixed Operator 2-norm Difference Between Matching and Pauli Decompositions for G6 Files
+Operator Norm Difference Analysis Between Matching/Pauli Decompositions and Exact CTQW
 
-Compares Matching and Pauli decompositions with proper sign conventions across all graphs in a G6 file.
-Uses only 2-norm (spectral norm) for operator differences.
-Fixed sign convention issues that were causing large artificial differences.
+Compares both Matching and Pauli decompositions against exact CTQW for graphs in G6 files.
+Analyzes operator difference norms (2-norm) between:
+1. Trotterized matching decomposition vs exact CTQW
+2. Trotterized Pauli decomposition vs exact CTQW
+
+Creates convergence analysis showing how both methods approach the exact solution.
 
 Usage: python operator_norm_diff_analysis.py <g6_file> [options]
 Examples:
   python operator_norm_diff_analysis.py graphs.g6
-  python operator_norm_diff_analysis.py graphs.g6 -N 15 -t 0.1 0.5 1.0 2.0
-  python operator_norm_diff_analysis.py graphs.g6 --max_trotter_steps 20 --time_values 0.01 0.1 1.0
+  python operator_norm_diff_analysis.py graphs.g6 -m 1 -M 20 -s 2 -t 0.1 0.5 1.0
+  python operator_norm_diff_analysis.py graphs.g6 --min_steps 5 --max_steps 100 --step_inc 10 --time_values 0.01 0.1 1.0
+  python operator_norm_diff_analysis.py graphs.g6 -m 1 -M 50 -s 5 -t 0.1 1.0 -o custom_output
 """
 
 import sys
@@ -23,6 +27,7 @@ from pathlib import Path
 import re
 from collections import defaultdict
 import pandas as pd
+from scipy.linalg import expm
 
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
@@ -185,9 +190,24 @@ def analyze_graph_properties(edges):
         "avg_degree": np.mean(list(degrees.values())) if degrees else 0
     }
 
+def create_exact_ctqw_operator(edges, time):
+    """Create exact CTQW operator using matrix exponentiation."""
+    # Get relabeled graph for consistent vertex labeling
+    matchings = graph_matchings_parallel(edges)
+    relabeled_edges = set()
+    for m in matchings:
+        relabeled_edges = relabeled_edges.union(m)
+    
+    relabeled_G = StaticGraph(relabeled_edges)
+    H = relabeled_G.get_adj_mat()
+    
+    # Exact time evolution: U(t) = exp(-iHt)
+    exact_op = expm(-1j * H * time)
+    return Operator(exact_op)
+
 def create_matching_circuit(edges, n_steps, time_step):
     """Create quantum circuit using matching decomposition with Trotterization."""
-    # Use relabeled graph for consistency (same as Pauli method)
+    # Use relabeled graph for consistency
     matchings = graph_matchings_parallel(edges)
     relabeled_edges = set()
     for m in matchings:
@@ -201,15 +221,14 @@ def create_matching_circuit(edges, n_steps, time_step):
     for step in range(n_steps):
         for subgraph in intersecting_G.subgraphs:
             G = MultiEdgeGraph(subgraph.edges)
-            # Fixed: Use consistent positive time evolution
             G.rot_angle = time_step / n_steps
             sub_qc = G.get_qc(simplified=True)
             full_qc = full_qc.compose(sub_qc)
     
     return full_qc
 
-def create_pauli_circuit(edges, time_step):
-    """Create quantum circuit using Pauli decomposition (exact evolution)."""
+def create_pauli_circuit(edges, n_steps, time_step):
+    """Create quantum circuit using Pauli decomposition with Trotterization."""
     # Get relabeled graph for consistent vertex labeling
     matchings = graph_matchings_parallel(edges)
     relabeled_edges = set()
@@ -234,91 +253,81 @@ def create_pauli_circuit(edges, time_step):
             pauli_strings.append(pauli_string)
             coeffs.append(real_coeff)
     
-    # Create exact Pauli evolution circuit (no Trotterization for reference)
+    # Create Trotterized Pauli evolution circuit
     pauli_qc = QuantumCircuit(n)
     
     if coeffs:
         pauli_op = SparsePauliOp(pauli_strings, coeffs)
-        # Fixed: Use consistent positive time evolution
-        evo_gate = PauliEvolutionGate(pauli_op, time=time_step)
-        pauli_qc.append(evo_gate, range(n))
+        
+        # First-order Trotter decomposition
+        dt = time_step / n_steps
+        for step in range(n_steps):
+            # Apply each Pauli term separately (first-order Trotter)
+            for pauli_string, coeff in zip(pauli_strings, coeffs):
+                single_pauli_op = SparsePauliOp([pauli_string], [coeff])
+                evo_gate = PauliEvolutionGate(single_pauli_op, time=dt)
+                pauli_qc.append(evo_gate, range(n))
     
     # Decompose to get actual gates
     decomposed_qc = pauli_qc.decompose().decompose().decompose()
     return decomposed_qc
 
-def compute_operator_difference(edges, trotter_steps_list, time_values):
-    """Compute 2-norm differences between matching and Pauli operators."""
+def compute_operator_differences(edges, trotter_steps_list, time_values):
+    """Compute 2-norm differences between matching/Pauli and exact CTQW."""
     results = {
         'trotter_steps': trotter_steps_list,
         'time_values': time_values,
-        'differences': {},
+        'matching_differences': {},
+        'pauli_differences': {},
         'properties': analyze_graph_properties(edges)
     }
     
     for time_val in time_values:
-        differences = []
-        
-        # Get exact Pauli reference (computed once per time_val)
+        # Get exact CTQW reference (computed once per time_val)
         try:
-            pauli_qc = create_pauli_circuit(edges, time_val)
-            pauli_op = Operator(pauli_qc)
+            exact_op = create_exact_ctqw_operator(edges, time_val)
         except Exception as e:
-            print(f"Error creating Pauli circuit for time {time_val}: {e}")
-            results['differences'][time_val] = [np.nan] * len(trotter_steps_list)
+            print(f"Error creating exact CTQW for time {time_val}: {e}")
+            results['matching_differences'][time_val] = [np.nan] * len(trotter_steps_list)
+            results['pauli_differences'][time_val] = [np.nan] * len(trotter_steps_list)
             continue
         
+        matching_diffs = []
+        pauli_diffs = []
+        
         for n_steps in trotter_steps_list:
+            # Matching decomposition comparison
             try:
-                # Create matching circuit with n_steps Trotter steps
                 matching_qc = create_matching_circuit(edges, n_steps, time_val)
                 matching_op = Operator(matching_qc)
                 
-                # Calculate 2-norm difference (spectral norm)
-                diff = matching_op - pauli_op
+                # Calculate 2-norm difference
+                diff = matching_op - exact_op
                 two_norm = np.linalg.norm(diff.data, ord=2)
-                differences.append(two_norm)
+                matching_diffs.append(two_norm)
                 
             except Exception as e:
-                print(f"Error for time {time_val}, steps {n_steps}: {e}")
-                differences.append(np.nan)
+                print(f"Error for matching, time {time_val}, steps {n_steps}: {e}")
+                matching_diffs.append(np.nan)
+            
+            # Pauli decomposition comparison
+            try:
+                pauli_qc = create_pauli_circuit(edges, n_steps, time_val)
+                pauli_op = Operator(pauli_qc)
+                
+                # Calculate 2-norm difference
+                diff = pauli_op - exact_op
+                two_norm = np.linalg.norm(diff.data, ord=2)
+                pauli_diffs.append(two_norm)
+                
+            except Exception as e:
+                print(f"Error for Pauli, time {time_val}, steps {n_steps}: {e}")
+                pauli_diffs.append(np.nan)
         
-        results['differences'][time_val] = differences
+        results['matching_differences'][time_val] = matching_diffs
+        results['pauli_differences'][time_val] = pauli_diffs
     
     return results
-
-def generate_trotter_steps(max_steps=None, min_steps=None, increment=None, steps_list=None):
-    """Generate Trotter steps list with appropriate increments or custom list."""
-    
-    # If custom list is provided, use it directly
-    if steps_list is not None:
-        return sorted(list(set(steps_list)))  # Remove duplicates and sort
-    
-    # If min/max/increment are provided, use them
-    if min_steps is not None and max_steps is not None and increment is not None:
-        return list(range(min_steps, max_steps + 1, increment))
-    
-    # Default intelligent increments based on max_steps
-    if max_steps is None:
-        max_steps = 10  # Default fallback
-    
-    if max_steps <= 20:
-        # For small max_steps, use increment of 1
-        return list(range(1, max_steps + 1))
-    elif max_steps <= 50:
-        # For medium max_steps, use increment of 5
-        steps = list(range(5, max_steps + 1, 5))
-        if 1 not in steps:
-            steps = [1] + steps
-        return sorted(steps)
-    else:
-        # For large max_steps, use increment of 10
-        steps = list(range(10, max_steps + 1, 10))
-        if 1 not in steps:
-            steps = [1] + steps
-        if 5 not in steps and max_steps > 5:
-            steps = [1, 5] + [s for s in steps if s > 5]
-        return sorted(steps)
 
 def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertices=None):
     """Process all graphs and compute operator differences."""
@@ -360,7 +369,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
             print(f"    WARNING: {n_qubits} qubits will create large operators (2^{n_qubits} = {2**n_qubits} dimensions)")
         
         try:
-            results = compute_operator_difference(edges, trotter_steps_list, time_values)
+            results = compute_operator_differences(edges, trotter_steps_list, time_values)
             results['graph_index'] = i
             results['n_qubits'] = n_qubits
             all_results.append(results)
@@ -382,7 +391,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
     return all_results
 
 def create_convergence_plots(all_results, metadata, output_dir):
-    """Create convergence analysis plot with all times in one plot."""
+    """Create convergence analysis plots comparing both methods to exact CTQW."""
     if not all_results:
         print("No results to plot")
         return
@@ -390,55 +399,82 @@ def create_convergence_plots(all_results, metadata, output_dir):
     time_values = all_results[0]['time_values']
     trotter_steps = all_results[0]['trotter_steps']
     
-    # Create single convergence plot
-    plt.figure(figsize=(10, 8))
+    # Create single convergence plot with both methods
+    plt.figure(figsize=(12, 8))
     
     colors = plt.cm.tab10(np.linspace(0, 1, len(time_values)))
     
     for color, time_val in zip(colors, time_values):
-        # Calculate mean and std for each Trotter step
-        means = []
-        stds = []
+        # Calculate statistics for matching decomposition
+        matching_means = []
+        matching_stds = []
+        pauli_means = []
+        pauli_stds = []
         
         for step_idx in range(len(trotter_steps)):
-            step_diffs = []
-            for result in all_results:
-                if step_idx < len(result['differences'][time_val]):
-                    diff = result['differences'][time_val][step_idx]
-                    if not np.isnan(diff):
-                        step_diffs.append(diff)
+            # Matching statistics
+            matching_step_diffs = []
+            pauli_step_diffs = []
             
-            if step_diffs:
-                means.append(np.mean(step_diffs))
-                stds.append(np.std(step_diffs))
+            for result in all_results:
+                # Matching differences
+                if step_idx < len(result['matching_differences'][time_val]):
+                    diff = result['matching_differences'][time_val][step_idx]
+                    if not np.isnan(diff):
+                        matching_step_diffs.append(diff)
+                
+                # Pauli differences
+                if step_idx < len(result['pauli_differences'][time_val]):
+                    diff = result['pauli_differences'][time_val][step_idx]
+                    if not np.isnan(diff):
+                        pauli_step_diffs.append(diff)
+            
+            # Calculate means and stds
+            if matching_step_diffs:
+                matching_means.append(np.mean(matching_step_diffs))
+                matching_stds.append(np.std(matching_step_diffs))
             else:
-                means.append(np.nan)
-                stds.append(np.nan)
+                matching_means.append(np.nan)
+                matching_stds.append(np.nan)
+            
+            if pauli_step_diffs:
+                pauli_means.append(np.mean(pauli_step_diffs))
+                pauli_stds.append(np.std(pauli_step_diffs))
+            else:
+                pauli_means.append(np.nan)
+                pauli_stds.append(np.nan)
         
         # Filter out NaN values for plotting
-        valid_indices = [i for i, (m, s) in enumerate(zip(means, stds)) 
-                        if not np.isnan(m) and not np.isnan(s)]
+        valid_indices = [i for i, (m_m, m_s, p_m, p_s) in enumerate(zip(matching_means, matching_stds, pauli_means, pauli_stds)) 
+                        if not np.isnan(m_m) and not np.isnan(m_s) and not np.isnan(p_m) and not np.isnan(p_s)]
         
         if valid_indices:
             valid_steps = [trotter_steps[i] for i in valid_indices]
-            valid_means = [means[i] for i in valid_indices]
-            valid_stds = [stds[i] for i in valid_indices]
+            valid_matching_means = [matching_means[i] for i in valid_indices]
+            valid_matching_stds = [matching_stds[i] for i in valid_indices]
+            valid_pauli_means = [pauli_means[i] for i in valid_indices]
+            valid_pauli_stds = [pauli_stds[i] for i in valid_indices]
             
-            # Plot mean with error bars
-            plt.errorbar(valid_steps, valid_means, yerr=valid_stds, 
+            # Plot matching decomposition
+            plt.errorbar(valid_steps, valid_matching_means, yerr=valid_matching_stds, 
                         marker='o', linewidth=2, capsize=5, capthick=2,
-                        label=f'Time = {time_val}', color=color)
+                        label=f'Matching t={time_val}', color=color, linestyle='-')
+            
+            # Plot Pauli decomposition  
+            plt.errorbar(valid_steps, valid_pauli_means, yerr=valid_pauli_stds, 
+                        marker='s', linewidth=2, capsize=5, capthick=2,
+                        label=f'Pauli t={time_val}', color=color, linestyle='--')
     
     plt.xlabel('Trotter Steps', fontsize=12)
-    plt.ylabel('2-norm Difference', fontsize=12)
-    plt.title(f'2-norm Difference Between Matching and Pauli Decompositions\n{metadata["type"]} graphs, {metadata["vertices"]} vertices', 
+    plt.ylabel('2-norm Difference from Exact CTQW', fontsize=12)
+    plt.title(f'Convergence to Exact CTQW: Matching vs Pauli Decompositions\n{metadata["type"]} graphs, {metadata["vertices"]} vertices', 
               fontsize=14)
     plt.yscale('log')
-    plt.legend(fontsize=11)
+    plt.legend(fontsize=10, ncol=2)
     plt.grid(True, alpha=0.3)
     plt.tight_layout()
     
-    plot_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_convergence.pdf'
+    plot_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_ctqw_convergence.pdf'
     plt.savefig(plot_file, format='pdf', bbox_inches='tight')
     plt.close()
     print(f"Convergence plot saved to {plot_file}")
@@ -451,37 +487,50 @@ def create_summary_statistics(all_results, metadata, output_dir):
     time_values = all_results[0]['time_values']
     trotter_steps = all_results[0]['trotter_steps']
     
-    # Compile statistics
+    # Compile statistics for both methods
     stats_data = []
     
     for time_val in time_values:
-        # Final convergence values
-        final_values = []
-        for result in all_results:
-            differences = result['differences'][time_val]
-            if differences and not np.isnan(differences[-1]):
-                final_values.append(differences[-1])
+        # Final convergence values for both methods
+        matching_final_values = []
+        pauli_final_values = []
         
-        if final_values:
+        for result in all_results:
+            # Matching final values
+            matching_differences = result['matching_differences'][time_val]
+            if matching_differences and not np.isnan(matching_differences[-1]):
+                matching_final_values.append(matching_differences[-1])
+            
+            # Pauli final values
+            pauli_differences = result['pauli_differences'][time_val]
+            if pauli_differences and not np.isnan(pauli_differences[-1]):
+                pauli_final_values.append(pauli_differences[-1])
+        
+        if matching_final_values and pauli_final_values:
             stats_data.append({
                 'time': time_val,
-                'n_graphs': len(final_values),
-                'mean_final_diff': np.mean(final_values),
-                'std_final_diff': np.std(final_values),
-                'median_final_diff': np.median(final_values),
-                'min_final_diff': np.min(final_values),
-                'max_final_diff': np.max(final_values)
+                'n_graphs': len(all_results),
+                'matching_mean_final': np.mean(matching_final_values),
+                'matching_std_final': np.std(matching_final_values),
+                'matching_median_final': np.median(matching_final_values),
+                'pauli_mean_final': np.mean(pauli_final_values),
+                'pauli_std_final': np.std(pauli_final_values),
+                'pauli_median_final': np.median(pauli_final_values),
+                'matching_min': np.min(matching_final_values),
+                'matching_max': np.max(matching_final_values),
+                'pauli_min': np.min(pauli_final_values),
+                'pauli_max': np.max(pauli_final_values)
             })
     
     # Save as CSV
     if stats_data:
         df = pd.DataFrame(stats_data)
-        csv_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_statistics.csv'
+        csv_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_ctqw_comparison_statistics.csv'
         df.to_csv(csv_file, index=False)
         print(f"Statistics saved to {csv_file}")
     
     # Save detailed results
-    results_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_detailed_results.npz'
+    results_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_ctqw_detailed_results.npz'
     
     # Prepare data for saving
     save_data = {
@@ -491,12 +540,15 @@ def create_summary_statistics(all_results, metadata, output_dir):
         'n_graphs_processed': len(all_results)
     }
     
-    # Add difference arrays for each time value
+    # Add difference arrays for each time value and method
     for time_val in time_values:
-        differences_array = []
+        matching_differences_array = []
+        pauli_differences_array = []
         for result in all_results:
-            differences_array.append(result['differences'][time_val])
-        save_data[f'differences_time_{time_val}'] = differences_array
+            matching_differences_array.append(result['matching_differences'][time_val])
+            pauli_differences_array.append(result['pauli_differences'][time_val])
+        save_data[f'matching_differences_time_{time_val}'] = matching_differences_array
+        save_data[f'pauli_differences_time_{time_val}'] = pauli_differences_array
     
     # Add graph properties
     properties_list = [result['properties'] for result in all_results]
@@ -506,9 +558,9 @@ def create_summary_statistics(all_results, metadata, output_dir):
     print(f"Detailed results saved to {results_file}")
     
     # Create text summary
-    summary_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_summary.txt'
+    summary_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_ctqw_summary.txt'
     with open(summary_file, 'w') as f:
-        f.write(f"Operator 2-norm Difference Between Matching and Pauli Decompositions Summary\n")
+        f.write(f"Operator Norm Difference Analysis Summary\n")
         f.write(f"{'='*70}\n\n")
         f.write(f"Dataset: {metadata['filename']}\n")
         f.write(f"Graph type: {metadata['type']}\n")
@@ -520,49 +572,48 @@ def create_summary_statistics(all_results, metadata, output_dir):
         f.write(f"  Trotter steps: {min(trotter_steps)} to {max(trotter_steps)} (steps: {trotter_steps})\n")
         f.write(f"  Time values: {time_values}\n\n")
         
+        f.write(f"Methods compared:\n")
+        f.write(f"  1. Matching decomposition vs Exact CTQW\n")
+        f.write(f"  2. Pauli decomposition vs Exact CTQW\n\n")
+        
         if stats_data:
-            f.write(f"Summary statistics:\n")
+            f.write(f"Summary statistics (final Trotter step convergence):\n")
             for stat in stats_data:
                 f.write(f"  Time {stat['time']}:\n")
-                f.write(f"    Mean final 2-norm difference: {stat['mean_final_diff']:.2e}\n")
-                f.write(f"    Std final 2-norm difference: {stat['std_final_diff']:.2e}\n")
-                f.write(f"    Median final 2-norm difference: {stat['median_final_diff']:.2e}\n")
-                f.write(f"    Range: [{stat['min_final_diff']:.2e}, {stat['max_final_diff']:.2e}]\n\n")
+                f.write(f"    Matching vs CTQW:\n")
+                f.write(f"      Mean: {stat['matching_mean_final']:.2e} ± {stat['matching_std_final']:.2e}\n")
+                f.write(f"      Median: {stat['matching_median_final']:.2e}\n")
+                f.write(f"      Range: [{stat['matching_min']:.2e}, {stat['matching_max']:.2e}]\n")
+                f.write(f"    Pauli vs CTQW:\n")
+                f.write(f"      Mean: {stat['pauli_mean_final']:.2e} ± {stat['pauli_std_final']:.2e}\n")
+                f.write(f"      Median: {stat['pauli_median_final']:.2e}\n")
+                f.write(f"      Range: [{stat['pauli_min']:.2e}, {stat['pauli_max']:.2e}]\n\n")
     
     print(f"Summary report saved to {summary_file}")
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Analyze 2-norm difference between matching and Pauli decompositions for all graphs in G6 file',
+        description='Analyze operator norm differences between matching/Pauli decompositions and exact CTQW',
         formatter_class=argparse.RawDescriptionHelpFormatter,
         epilog="""
 Examples:
   %(prog)s graphs.g6
-  %(prog)s graphs.g6 -N 15 -t 0.1 0.5 1.0 2.0
-  %(prog)s graphs.g6 --max_trotter_steps 100 --time_values 0.01 0.1 1.0
-  %(prog)s graphs.g6 --trotter_steps 10 20 30 40 50 -t 0.1 1.0
-  %(prog)s graphs.g6 -m 5 -M 50 -i 10 -t 0.1
-  %(prog)s graphs.g6 -N 80 -t 0.1 1.0 -o custom_output
+  %(prog)s graphs.g6 -m 1 -M 20 -s 2 -t 0.1 0.5 1.0
+  %(prog)s graphs.g6 --min_steps 5 --max_steps 100 --step_inc 10 --time_values 0.01 0.1 1.0
+  %(prog)s graphs.g6 -m 1 -M 50 -s 5 -t 0.1 1.0 -o custom_output
         """
     )
     
     # Positional argument
     parser.add_argument('g6_file', help='Path to G6 file')
     
-    # Trotter steps arguments (mutually exclusive groups)
-    trotter_group = parser.add_mutually_exclusive_group()
-    trotter_group.add_argument('-N', '--max_trotter_steps', type=int, default=10, 
-                              help='Maximum number of Trotter steps with intelligent increments (default: 10)')
-    trotter_group.add_argument('--trotter_steps', nargs='+', type=int, 
-                              help='Custom list of Trotter steps (e.g., --trotter_steps 10 20 30 40)')
-    
-    # Min/max/increment for Trotter steps (only valid when used together)
-    parser.add_argument('--min_trotter', '-m', type=int, 
-                       help='Minimum Trotter steps (use with --max_trotter and --trotter_inc)')
-    parser.add_argument('--max_trotter', '-M', type=int, 
-                       help='Maximum Trotter steps (use with --min_trotter and --trotter_inc)')
-    parser.add_argument('--trotter_inc', '-i', type=int, 
-                       help='Trotter steps increment (use with --min_trotter and --max_trotter)')
+    # Trotter steps arguments with shortcuts
+    parser.add_argument('--min_steps', '-m', type=int, default=1,
+                       help='Minimum number of Trotter steps (default: 1)')
+    parser.add_argument('--max_steps', '-M', type=int, default=20,
+                       help='Maximum number of Trotter steps (default: 20)')
+    parser.add_argument('--step_inc', '-s', type=int, default=1,
+                       help='Increment for Trotter steps (default: 1)')
     
     # Other arguments
     parser.add_argument('-t', '--time_values', nargs='+', type=float, default=[0.1, 0.5, 1.0], 
@@ -572,21 +623,16 @@ Examples:
     
     args = parser.parse_args()
     
-    # Validate min/max/increment arguments
-    min_max_inc_args = [args.min_trotter, args.max_trotter, args.trotter_inc]
-    min_max_inc_provided = sum(x is not None for x in min_max_inc_args)
+    # Validate arguments
+    if args.min_steps < 1:
+        parser.error("--min_steps must be at least 1")
+    if args.max_steps < args.min_steps:
+        parser.error("--max_steps must be greater than or equal to --min_steps")
+    if args.step_inc < 1:
+        parser.error("--step_inc must be at least 1")
     
-    if min_max_inc_provided > 0 and min_max_inc_provided < 3:
-        parser.error("--min_trotter, --max_trotter, and --trotter_inc must all be provided together")
-    
-    if args.trotter_steps and min_max_inc_provided > 0:
-        parser.error("Cannot use --trotter_steps with --min_trotter/--max_trotter/--trotter_inc")
-    
-    if args.max_trotter_steps != 10 and min_max_inc_provided > 0:  # 10 is the default
-        parser.error("Cannot use -N/--max_trotter_steps with --min_trotter/--max_trotter/--trotter_inc")
-    
-    if args.max_trotter_steps != 10 and args.trotter_steps:  # 10 is the default
-        parser.error("Cannot use -N/--max_trotter_steps with --trotter_steps")
+    # Generate Trotter steps list
+    trotter_steps_list = list(range(args.min_steps, args.max_steps + 1, args.step_inc))
     
     # Load all graphs
     graphs, metadata = load_all_graphs(args.g6_file)
@@ -622,31 +668,17 @@ Examples:
         # Create output directory in analysis/outputs/plots
         base_output_dir = Path("analysis") / "outputs" / "plots"
         base_output_dir.mkdir(parents=True, exist_ok=True)
-        output_dir = base_output_dir / f"{graph_type}_{vertices}v"
+        output_dir = base_output_dir / f"{graph_type}_{vertices}v_ctqw_comparison"
     
     output_dir.mkdir(exist_ok=True)
     print(f"Results will be saved to: {output_dir}")
     
-    # Generate Trotter steps list based on arguments
-    if args.trotter_steps:
-        trotter_steps_list = generate_trotter_steps(steps_list=args.trotter_steps)
-        print(f"Using custom Trotter steps: {trotter_steps_list}")
-    elif min_max_inc_provided == 3:
-        trotter_steps_list = generate_trotter_steps(
-            min_steps=args.min_trotter, 
-            max_steps=args.max_trotter, 
-            increment=args.trotter_inc
-        )
-        print(f"Using min/max/increment - Steps: {args.min_trotter} to {args.max_trotter} by {args.trotter_inc}")
-        print(f"Generated steps: {trotter_steps_list}")
-    else:
-        trotter_steps_list = generate_trotter_steps(max_steps=args.max_trotter_steps)
-        print(f"Using intelligent increments up to {args.max_trotter_steps}")
-        print(f"Generated steps: {trotter_steps_list}")
-    
     print(f"\nAnalysis parameters:")
-    print(f"  Trotter steps: {trotter_steps_list}")
+    print(f"  Trotter steps: {args.min_steps} to {args.max_steps} (increment: {args.step_inc})")
+    print(f"  Generated steps: {trotter_steps_list}")
     print(f"  Time values: {args.time_values}")
+    print(f"  Comparison reference: Exact CTQW")
+    print(f"  Methods: Matching decomposition, Pauli decomposition")
     
     # Process all graphs
     all_results = process_all_graphs(graphs, trotter_steps_list, args.time_values, expected_vertices)
@@ -666,6 +698,7 @@ Examples:
     
     print(f"\nAnalysis complete!")
     print(f"Processed {len(all_results)} graphs successfully")
+    print(f"Both matching and Pauli decompositions compared against exact CTQW")
     print(f"Results saved to: {output_dir}")
 
 if __name__ == "__main__":
