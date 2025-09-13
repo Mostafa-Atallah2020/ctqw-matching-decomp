@@ -7,8 +7,6 @@ Analyzes operator difference norms (2-norm) between:
 1. Trotterized matching decomposition vs exact CTQW
 2. Trotterized Pauli decomposition vs exact CTQW
 
-Creates convergence analysis showing how both methods approach the exact solution.
-
 Usage: python operator_norm_diff_analysis.py <g6_file> [options]
 Examples:
   python operator_norm_diff_analysis.py graphs.g6
@@ -205,8 +203,8 @@ def create_exact_ctqw_operator(edges, time):
     exact_op = expm(-1j * H * time)
     return Operator(exact_op)
 
-def create_matching_circuit(edges, n_steps, time_step):
-    """Create quantum circuit using matching decomposition with Trotterization."""
+def create_matching_circuit(edges, n_steps, total_time):
+    """Create quantum circuit using matching decomposition with proper Trotterization."""
     # Use relabeled graph for consistency
     matchings = graph_matchings_parallel(edges)
     relabeled_edges = set()
@@ -218,17 +216,23 @@ def create_matching_circuit(edges, n_steps, time_step):
     
     full_qc = QuantumCircuit(relabeled_G.n_qubits)
     
+    # Time per Trotter step
+    dt = total_time / n_steps
+    
+    # Apply n_steps of Trotterized evolution
     for step in range(n_steps):
+        # For each Trotter step, apply all subgraphs sequentially
         for subgraph in intersecting_G.subgraphs:
             G = MultiEdgeGraph(subgraph.edges)
-            G.rot_angle = time_step / n_steps
+            # Set rotation angle for this time slice
+            G.rot_angle = dt
             sub_qc = G.get_qc(simplified=True)
             full_qc = full_qc.compose(sub_qc)
     
     return full_qc
 
-def create_pauli_circuit(edges, n_steps, time_step):
-    """Create quantum circuit using Pauli decomposition with Trotterization."""
+def create_pauli_circuit(edges, n_steps, total_time):
+    """Create quantum circuit using Pauli decomposition with proper Trotterization."""
     # Get relabeled graph for consistent vertex labeling
     matchings = graph_matchings_parallel(edges)
     relabeled_edges = set()
@@ -257,10 +261,10 @@ def create_pauli_circuit(edges, n_steps, time_step):
     pauli_qc = QuantumCircuit(n)
     
     if coeffs:
-        pauli_op = SparsePauliOp(pauli_strings, coeffs)
+        # Time per Trotter step
+        dt = total_time / n_steps
         
         # First-order Trotter decomposition
-        dt = time_step / n_steps
         for step in range(n_steps):
             # Apply each Pauli term separately (first-order Trotter)
             for pauli_string, coeff in zip(pauli_strings, coeffs):
@@ -391,7 +395,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
     return all_results
 
 def create_convergence_plots(all_results, metadata, output_dir):
-    """Create convergence analysis plots comparing both methods to exact CTQW."""
+    """Create convergence analysis plots with improved color scheme."""
     if not all_results:
         print("No results to plot")
         return
@@ -402,9 +406,19 @@ def create_convergence_plots(all_results, metadata, output_dir):
     # Create single convergence plot with both methods
     plt.figure(figsize=(12, 8))
     
-    colors = plt.cm.tab10(np.linspace(0, 1, len(time_values)))
+    # Define colors and line styles
+    matching_color = '#1f77b4'  # Blue for matching
+    pauli_color = '#ff7f0e'     # Orange for Pauli
     
-    for color, time_val in zip(colors, time_values):
+    # Define line styles for different time values
+    line_styles = ['-', '--', '-.', ':']
+    if len(time_values) > len(line_styles):
+        # Extend line styles if needed
+        line_styles = (line_styles * ((len(time_values) // len(line_styles)) + 1))[:len(time_values)]
+    
+    for time_idx, time_val in enumerate(time_values):
+        line_style = line_styles[time_idx]
+        
         # Calculate statistics for matching decomposition
         matching_means = []
         matching_stds = []
@@ -455,15 +469,17 @@ def create_convergence_plots(all_results, metadata, output_dir):
             valid_pauli_means = [pauli_means[i] for i in valid_indices]
             valid_pauli_stds = [pauli_stds[i] for i in valid_indices]
             
-            # Plot matching decomposition
+            # Plot matching decomposition with consistent color and varied line style
             plt.errorbar(valid_steps, valid_matching_means, yerr=valid_matching_stds, 
                         marker='o', linewidth=2, capsize=5, capthick=2,
-                        label=f'Matching t={time_val}', color=color, linestyle='-')
+                        label=f'Matching t={time_val}', color=matching_color, 
+                        linestyle=line_style, markersize=6)
             
-            # Plot Pauli decomposition  
+            # Plot Pauli decomposition with consistent color and varied line style
             plt.errorbar(valid_steps, valid_pauli_means, yerr=valid_pauli_stds, 
                         marker='s', linewidth=2, capsize=5, capthick=2,
-                        label=f'Pauli t={time_val}', color=color, linestyle='--')
+                        label=f'Pauli t={time_val}', color=pauli_color, 
+                        linestyle=line_style, markersize=6)
     
     plt.xlabel('Trotter Steps', fontsize=12)
     plt.ylabel('2-norm Difference from Exact CTQW', fontsize=12)
@@ -478,6 +494,106 @@ def create_convergence_plots(all_results, metadata, output_dir):
     plt.savefig(plot_file, format='pdf', bbox_inches='tight')
     plt.close()
     print(f"Convergence plot saved to {plot_file}")
+    
+    # Also create separate plots for each method
+    fig, (ax1, ax2) = plt.subplots(1, 2, figsize=(16, 6))
+    
+    # Matching decomposition plot
+    for time_idx, time_val in enumerate(time_values):
+        line_style = line_styles[time_idx]
+        
+        # Calculate matching statistics
+        matching_means = []
+        matching_stds = []
+        
+        for step_idx in range(len(trotter_steps)):
+            matching_step_diffs = []
+            
+            for result in all_results:
+                if step_idx < len(result['matching_differences'][time_val]):
+                    diff = result['matching_differences'][time_val][step_idx]
+                    if not np.isnan(diff):
+                        matching_step_diffs.append(diff)
+            
+            if matching_step_diffs:
+                matching_means.append(np.mean(matching_step_diffs))
+                matching_stds.append(np.std(matching_step_diffs))
+            else:
+                matching_means.append(np.nan)
+                matching_stds.append(np.nan)
+        
+        # Filter out NaN values
+        valid_indices = [i for i, (m_m, m_s) in enumerate(zip(matching_means, matching_stds)) 
+                        if not np.isnan(m_m) and not np.isnan(m_s)]
+        
+        if valid_indices:
+            valid_steps = [trotter_steps[i] for i in valid_indices]
+            valid_matching_means = [matching_means[i] for i in valid_indices]
+            valid_matching_stds = [matching_stds[i] for i in valid_indices]
+            
+            ax1.errorbar(valid_steps, valid_matching_means, yerr=valid_matching_stds, 
+                        marker='o', linewidth=2, capsize=5, capthick=2,
+                        label=f't={time_val}', color=matching_color, 
+                        linestyle=line_style, markersize=6)
+    
+    ax1.set_xlabel('Trotter Steps', fontsize=12)
+    ax1.set_ylabel('2-norm Difference from Exact CTQW', fontsize=12)
+    ax1.set_title('Matching Decomposition Convergence', fontsize=12)
+    ax1.set_yscale('log')
+    ax1.legend()
+    ax1.grid(True, alpha=0.3)
+    
+    # Pauli decomposition plot
+    for time_idx, time_val in enumerate(time_values):
+        line_style = line_styles[time_idx]
+        
+        # Calculate Pauli statistics
+        pauli_means = []
+        pauli_stds = []
+        
+        for step_idx in range(len(trotter_steps)):
+            pauli_step_diffs = []
+            
+            for result in all_results:
+                if step_idx < len(result['pauli_differences'][time_val]):
+                    diff = result['pauli_differences'][time_val][step_idx]
+                    if not np.isnan(diff):
+                        pauli_step_diffs.append(diff)
+            
+            if pauli_step_diffs:
+                pauli_means.append(np.mean(pauli_step_diffs))
+                pauli_stds.append(np.std(pauli_step_diffs))
+            else:
+                pauli_means.append(np.nan)
+                pauli_stds.append(np.nan)
+        
+        # Filter out NaN values
+        valid_indices = [i for i, (p_m, p_s) in enumerate(zip(pauli_means, pauli_stds)) 
+                        if not np.isnan(p_m) and not np.isnan(p_s)]
+        
+        if valid_indices:
+            valid_steps = [trotter_steps[i] for i in valid_indices]
+            valid_pauli_means = [pauli_means[i] for i in valid_indices]
+            valid_pauli_stds = [pauli_stds[i] for i in valid_indices]
+            
+            ax2.errorbar(valid_steps, valid_pauli_means, yerr=valid_pauli_stds, 
+                        marker='s', linewidth=2, capsize=5, capthick=2,
+                        label=f't={time_val}', color=pauli_color, 
+                        linestyle=line_style, markersize=6)
+    
+    ax2.set_xlabel('Trotter Steps', fontsize=12)
+    ax2.set_ylabel('2-norm Difference from Exact CTQW', fontsize=12)
+    ax2.set_title('Pauli Decomposition Convergence', fontsize=12)
+    ax2.set_yscale('log')
+    ax2.legend()
+    ax2.grid(True, alpha=0.3)
+    
+    plt.tight_layout()
+    
+    separate_plot_file = output_dir / f'{metadata["type"]}_{metadata["vertices"]}v_ctqw_separate_convergence.pdf'
+    plt.savefig(separate_plot_file, format='pdf', bbox_inches='tight')
+    plt.close()
+    print(f"Separate convergence plots saved to {separate_plot_file}")
 
 def create_summary_statistics(all_results, metadata, output_dir):
     """Create summary statistics and save to files."""
