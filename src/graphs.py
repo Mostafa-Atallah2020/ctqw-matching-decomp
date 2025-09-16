@@ -290,13 +290,13 @@ class ParallelEdgeGraph(StaticGraph):
             if hamming_distance(i, j) != 1:
                 raise ValueError("The Graph is not a Parallel Edge Graph.")
 
-    def get_qc(self, simplified=False):
+    def get_qc(self, simplified=False, angle=None):
         if self.expr.expr.simplify() == True:
             qc = QuantumCircuit(self.n_qubits)
-            qc.rx(self.rot_angle, self.target)
+            qc.rx(angle if angle is not None else self.rot_angle, self.target)
             return qc
         else:
-            mcrx = MCRX(self.n_qubits, self.expr, self.target, self.rot_angle)
+            mcrx = MCRX(self.n_qubits, self.expr, self.target, angle if angle is not None else self.rot_angle)
             if simplified:
                 return mcrx.simplify().qc
             else:
@@ -358,7 +358,7 @@ class NonDiagonalEdgeGraph(StaticGraph):
             if count > 2:
                 raise ValueError(f"Vertex {vertex} appears in {count} edges, maximum allowed is 2")
 
-    def get_qc(self, simplified=False):
+    def get_qc(self, simplified=False, angle=None):
         """
         Generate a quantum circuit implementing the graph transformations.
 
@@ -373,7 +373,7 @@ class NonDiagonalEdgeGraph(StaticGraph):
         # Build subcircuits for each edge set
         for idx, edges in self.edge_sets.items():
             G = ParallelEdgeGraph(edges)
-            qc = G.get_qc(simplified=simplified)
+            qc = G.get_qc(simplified=simplified, angle=angle if angle is not None else self.rot_angle)
             qc_dict[idx] = qc
 
         # Combine subcircuits in order
@@ -554,7 +554,7 @@ class DiagonalEdgeGraph(StaticGraph):
 
         return best
 
-    def get_qc(self, simplified=False):
+    def get_qc(self, simplified=False, angle=None):
         """Generate quantum circuit for the graph."""
         if not self.best_candidate:
             return QuantumCircuit(self.n_qubits)
@@ -567,7 +567,7 @@ class DiagonalEdgeGraph(StaticGraph):
                 if cx not in cnots_lists:
                     cnots_lists.append(cx)
 
-        unsimplified_qc = self.best_candidate.get_qc()
+        unsimplified_qc = self.best_candidate.get_qc(angle=angle if angle is not None else self.rot_angle)
         n_qubits = self.best_candidate.n_qubits
 
         # Build the circuit
