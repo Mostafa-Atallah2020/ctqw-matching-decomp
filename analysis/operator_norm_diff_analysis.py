@@ -30,6 +30,9 @@ from scipy.linalg import expm
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
 
+np.random.seed(123456789)
+np.set_printoptions(floatmode='maxprec')
+
 # Custom imports - adjust paths as needed
 try:
     from src.graphs import StaticGraph, IntersectingEdgesGraph, MultiEdgeGraph
@@ -51,7 +54,7 @@ except ImportError:
         sys.exit(1)
 
 # Qiskit imports
-from qiskit import QuantumCircuit
+from qiskit import QuantumCircuit, transpile
 from qiskit.quantum_info import Operator, Pauli, SparsePauliOp
 from qiskit.circuit.library import PauliEvolutionGate
 
@@ -203,36 +206,44 @@ def create_exact_ctqw_operator(edges, time):
     exact_op = expm(-1j * H * time)
     return Operator(exact_op)
 
-def create_matching_circuit(edges, n_steps, total_time):
-    """Create quantum circuit using matching decomposition with proper Trotterization."""
+def create_matching_circuit_operator(edges, n_steps, total_time):
+    """Create quantum operator using matching decomposition with proper Trotterization."""
     # Use relabeled graph for consistency
     matchings = graph_matchings_parallel(edges)
     relabeled_edges = set()
     for m in matchings:
         relabeled_edges = relabeled_edges.union(m)
     
-    relabeled_G = StaticGraph(relabeled_edges)
+    static_G = StaticGraph(relabeled_edges)
     intersecting_G = IntersectingEdgesGraph(edges, matchings='parallel')
     
-    full_qc = QuantumCircuit(relabeled_G.n_qubits)
+    # Start with identity operator of appropriate dimension
+    n_qubits = static_G.n_qubits
+    identity_op = Operator(np.eye(2**n_qubits, dtype=complex))
+    accumulated_operator = identity_op
     
     # Time per Trotter step
     dt = total_time / n_steps
     
-    # Apply n_steps of Trotterized evolution
+    # Apply n_steps of Trotterized evolution using operator composition
     for step in range(n_steps):
         # For each Trotter step, apply all subgraphs sequentially
         for subgraph in intersecting_G.subgraphs:
             G = MultiEdgeGraph(subgraph.edges)
-            # Set rotation angle for this time slice
-            G.rot_angle = dt
-            sub_qc = G.get_qc(simplified=True)
-            full_qc = full_qc.compose(sub_qc)
-    
-    return full_qc
+            sub_qc = G.get_qc(simplified=True, angle=2 * dt)
+            sub_qc = transpile(sub_qc, basis_gates=['cx', 'u3'], optimization_level=3)
+            # Convert subcircuit to operator and accumulate
+            sub_operator = Operator(sub_qc)
+            
+            # Matrix multiplication: new_op @ old_op (right-to-left composition)
+            # accumulated_operator = sub_operator @ accumulated_operator
+            accumulated_operator = accumulated_operator @ sub_operator 
 
-def create_pauli_circuit(edges, n_steps, total_time):
-    """Create quantum circuit using Pauli decomposition with proper Trotterization."""
+    
+    return accumulated_operator
+
+def create_pauli_circuit_operator(edges, n_steps, total_time):
+    """Create quantum operator using Pauli decomposition with proper Trotterization."""
     # Get relabeled graph for consistent vertex labeling
     matchings = graph_matchings_parallel(edges)
     relabeled_edges = set()
@@ -257,24 +268,33 @@ def create_pauli_circuit(edges, n_steps, total_time):
             pauli_strings.append(pauli_string)
             coeffs.append(real_coeff)
     
-    # Create Trotterized Pauli evolution circuit
-    pauli_qc = QuantumCircuit(n)
+    # Initialize with identity operator
+    identity_dim = 2**n
+    pauli_operator = Operator(np.eye(identity_dim, dtype=complex))
     
     if coeffs:
         # Time per Trotter step
         dt = total_time / n_steps
         
-        # First-order Trotter decomposition
+        # Accumulate operators in the loop (first-order Trotter decomposition)
         for step in range(n_steps):
             # Apply each Pauli term separately (first-order Trotter)
             for pauli_string, coeff in zip(pauli_strings, coeffs):
                 single_pauli_op = SparsePauliOp([pauli_string], [coeff])
                 evo_gate = PauliEvolutionGate(single_pauli_op, time=dt)
-                pauli_qc.append(evo_gate, range(n))
+                
+                # Convert to circuit and then to operator
+                temp_qc = QuantumCircuit(n)
+                temp_qc.append(evo_gate, range(n))
+                
+                # Decompose to get actual gates and convert to operator
+                decomposed_qc = transpile(temp_qc, basis_gates=['cx', 'u3'], optimization_level=3)
+                step_operator = Operator(decomposed_qc)
+                
+                # Compose with accumulated operator
+                pauli_operator = step_operator @ pauli_operator
     
-    # Decompose to get actual gates
-    decomposed_qc = pauli_qc.decompose().decompose().decompose()
-    return decomposed_qc
+    return pauli_operator
 
 def compute_operator_differences(edges, trotter_steps_list, time_values):
     """Compute 2-norm differences between matching/Pauli and exact CTQW."""
@@ -287,11 +307,13 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
     }
     
     for time_val in time_values:
+        print(f"    Processing time value: {time_val}")
+        
         # Get exact CTQW reference (computed once per time_val)
         try:
             exact_op = create_exact_ctqw_operator(edges, time_val)
         except Exception as e:
-            print(f"Error creating exact CTQW for time {time_val}: {e}")
+            print(f"      Error creating exact CTQW for time {time_val}: {e}")
             results['matching_differences'][time_val] = [np.nan] * len(trotter_steps_list)
             results['pauli_differences'][time_val] = [np.nan] * len(trotter_steps_list)
             continue
@@ -300,33 +322,39 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
         pauli_diffs = []
         
         for n_steps in trotter_steps_list:
+            print(f"      Trotter steps: {n_steps}", end=" ")
+            
             # Matching decomposition comparison
             try:
-                matching_qc = create_matching_circuit(edges, n_steps, time_val)
-                matching_op = Operator(matching_qc)
+                matching_op = create_matching_circuit_operator(edges, n_steps, time_val)
                 
                 # Calculate 2-norm difference
                 diff = matching_op - exact_op
                 two_norm = np.linalg.norm(diff.data, ord=2)
                 matching_diffs.append(two_norm)
                 
+                print(f"|| Matching - Exact ||_2 = {two_norm:.6f}", end=", ")
+                
             except Exception as e:
                 print(f"Error for matching, time {time_val}, steps {n_steps}: {e}")
                 matching_diffs.append(np.nan)
+                print("Matching: NaN", end=", ")
             
             # Pauli decomposition comparison
             try:
-                pauli_qc = create_pauli_circuit(edges, n_steps, time_val)
-                pauli_op = Operator(pauli_qc)
+                pauli_op = create_pauli_circuit_operator(edges, n_steps, time_val)
                 
                 # Calculate 2-norm difference
                 diff = pauli_op - exact_op
                 two_norm = np.linalg.norm(diff.data, ord=2)
                 pauli_diffs.append(two_norm)
                 
+                print(f"|| Pauli - Exact ||_2 = {two_norm:.6f}")
+                
             except Exception as e:
                 print(f"Error for Pauli, time {time_val}, steps {n_steps}: {e}")
                 pauli_diffs.append(np.nan)
+                print("Pauli: NaN")
         
         results['matching_differences'][time_val] = matching_diffs
         results['pauli_differences'][time_val] = pauli_diffs
