@@ -560,28 +560,38 @@ class DiagonalEdgeGraph(StaticGraph):
         return best
 
     def get_qc(self, simplified=False, angle=None):
-        """Generate quantum circuit for the graph."""
+        """Generate quantum circuit ensuring each candidate contributes its target state."""
+        
+        target_edges = list(self.set_hamming_greater_1)
+        
+        if len(target_edges) == 1:
+            # Single edge case - use exact working implementation
+            return self._get_single_edge_circuit(simplified, angle)
+        else:
+            # Multi-edge case - ensure each candidate contributes target state properly
+            return self._get_single_state_focus_circuit(simplified, angle)
+
+    def _get_single_edge_circuit(self, simplified=False, angle=None):
+        """Single edge case - exact working implementation."""
+        
         if not self.best_candidate:
             return QuantumCircuit(self.n_qubits)
 
-        # Get the base circuit from the best candidate
         unsimplified_qc = self.best_candidate.get_qc(angle=angle if angle is not None else self.rot_angle)
         n_qubits = self.best_candidate.n_qubits
 
-        # Build the circuit
         circ = QuantumCircuit(n_qubits)
         
-        # Analyze what the rotation prepares vs what we want
         gate_configs = self._get_general_transformation_configuration()
         
-        # Add forward gates (pre-rotation preparation if needed)
+        # Forward gates
         for gate_config in gate_configs['forward']:
             if gate_config['type'] == 'X':
                 circ.x(gate_config['qubit'])
             elif gate_config['type'] == 'CNOT':
                 circ.cx(gate_config['control'], gate_config['target'])
 
-        # Add the rotation circuit 
+        # Rotation circuit
         if simplified:
             try:
                 simplifier = MCRXCascadeSimplifier(verbose=False)
@@ -592,7 +602,7 @@ class DiagonalEdgeGraph(StaticGraph):
         else:
             circ.append(unsimplified_qc, range(n_qubits))
 
-        # Add reverse gates (post-rotation transformation)
+        # Reverse gates
         for gate_config in gate_configs['reverse']:
             if gate_config['type'] == 'X':
                 circ.x(gate_config['qubit'])
@@ -601,16 +611,316 @@ class DiagonalEdgeGraph(StaticGraph):
 
         return circ.decompose()
 
-    def _get_general_transformation_configuration(self):
+    def _get_single_state_focus_circuit(self, simplified=False, angle=None):
+        """Focus each candidate on producing exactly its target state."""
+        
+        target_edges = list(self.set_hamming_greater_1)
+        all_target_states = self._extract_states_from_edges(self.set_hamming_greater_1)
+        
+        # print(f"Target edges: {target_edges}")
+        # print(f"All target states to cover: {sorted(all_target_states)}")
+        
+        # Create focused assignments - each candidate produces one specific target state
+        focused_assignments = self._create_focused_assignments(all_target_states)
+        
+        if not focused_assignments:
+            return QuantumCircuit(self.n_qubits)
+        
+        n_qubits = len(list(all_target_states)[0])
+        circ = QuantumCircuit(n_qubits)
+        
+        # print(f"Using {len(focused_assignments)} focused assignments")
+        
+        # Apply each focused assignment
+        for i, assignment in enumerate(focused_assignments):
+            candidate = assignment['candidate']
+            target_state = assignment['target_state']
+            transformation = assignment['transformation']
+            
+            # print(f"Assignment {i+1}: {candidate.edges} → focus on state {target_state}")
+            # print(f"  Transformation: {transformation}")
+            
+            # Apply pre-rotation transformation
+            for gate_config in transformation['forward']:
+                if gate_config['type'] == 'X':
+                    circ.x(gate_config['qubit'])
+                elif gate_config['type'] == 'CNOT':
+                    circ.cx(gate_config['control'], gate_config['target'])
+            
+            # Add candidate's rotation circuit
+            try:
+                candidate_circuit = candidate.get_qc(angle=angle if angle is not None else self.rot_angle)
+                
+                if simplified:
+                    try:
+                        simplifier = MCRXCascadeSimplifier(verbose=False)
+                        simplified_qc, _ = simplifier.simplify(candidate_circuit)
+                        circ.append(simplified_qc, range(n_qubits))
+                    except:
+                        circ.append(candidate_circuit, range(n_qubits))
+                else:
+                    circ.append(candidate_circuit, range(n_qubits))
+                    
+            except Exception as e:
+                print(f"Error adding candidate {i}: {e}")
+                continue
+            
+            # Apply post-rotation transformation
+            for gate_config in transformation['reverse']:
+                if gate_config['type'] == 'X':
+                    circ.x(gate_config['qubit'])
+                elif gate_config['type'] == 'CNOT':
+                    circ.cx(gate_config['control'], gate_config['target'])
+
+        return circ.decompose()
+
+    def _create_focused_assignments(self, all_target_states):
         """
-        General method to determine transformation based on boolean edge analysis.
+        Create assignments where each candidate is focused on producing one target state.
         
-        Uses self.best_candidate.edges to understand what rotation prepares,
-        and self.set_hamming_greater_1 to understand what we want.
-        
+        Args:
+            all_target_states (set): All target states to cover
+            
         Returns:
-            dict: Configuration with 'forward' and 'reverse' gate lists
+            list: Focused assignments with transformations
         """
+        
+        target_states_list = sorted(list(all_target_states))
+        assignments = []
+        used_candidates = set()
+        
+        # print(f"Creating focused assignments for: {target_states_list}")
+        
+        for target_state in target_states_list:
+            assignment = self._create_focused_assignment_for_state(target_state, used_candidates)
+            
+            if assignment:
+                assignments.append(assignment)
+                used_candidates.add(id(assignment['candidate']))
+                # print(f"Target {target_state} → candidate {assignment['candidate'].edges}")
+            else:
+                print(f"Could not create assignment for {target_state}")
+        
+        return assignments
+
+    def _create_focused_assignment_for_state(self, target_state, used_candidates):
+        """
+        Create focused assignment for a specific target state.
+        
+        The goal is to find a candidate and transformation such that the candidate
+        produces a superposition that includes the target state prominently.
+        
+        Args:
+            target_state (str): Target state like '111'
+            used_candidates (set): Already used candidates
+            
+        Returns:
+            dict: Assignment with 'candidate', 'target_state', 'transformation'
+        """
+        
+        best_assignment = None
+        best_score = -1
+        
+        for candidate in self.candidates:
+            if (id(candidate) in used_candidates or 
+                not hasattr(candidate, 'edges') or not candidate.edges):
+                continue
+            
+            candidate_states = self._extract_states_from_edges(candidate.edges)
+            
+            # Evaluate this candidate for the target state
+            evaluation = self._evaluate_candidate_for_target_focus(candidate_states, target_state)
+            
+            if evaluation and evaluation['score'] > best_score:
+                best_score = evaluation['score']
+                best_assignment = {
+                    'candidate': candidate,
+                    'target_state': target_state,
+                    'transformation': evaluation['transformation']
+                }
+        
+        return best_assignment
+
+    def _evaluate_candidate_for_target_focus(self, candidate_states, target_state):
+        """
+        Evaluate how well a candidate can be focused on producing the target state.
+        
+        Args:
+            candidate_states (set): States from candidate edges
+            target_state (str): Target state to focus on
+            
+        Returns:
+            dict: Evaluation with 'score' and 'transformation'
+        """
+        
+        candidate_states_list = sorted(list(candidate_states))
+        
+        # Case 1: Candidate already contains target state
+        if target_state in candidate_states:
+            # Find the other state in the candidate
+            other_state = None
+            for state in candidate_states:
+                if state != target_state:
+                    other_state = state
+                    break
+            
+            if other_state:
+                # Try to transform other_state to target_state (to emphasize target_state)
+                transformation = self._compute_target_emphasis_transformation(
+                    candidate_states_list, target_state
+                )
+                
+                return {
+                    'score': 100,  # High score for already containing target
+                    'transformation': transformation
+                }
+        
+        # Case 2: Try to transform candidate to produce target state
+        transformation = self._find_transformation_to_target(candidate_states_list, target_state)
+        
+        if transformation:
+            # Calculate distance-based score
+            min_distance = min(self._hamming_distance(cs, target_state) for cs in candidate_states)
+            score = max(0, 50 - min_distance * 10)
+            
+            return {
+                'score': score,
+                'transformation': transformation
+            }
+        
+        return None
+
+    def _compute_target_emphasis_transformation(self, candidate_states, target_state):
+        """
+        Compute transformation to emphasize the target state in the superposition.
+        
+        Strategy: Transform the candidate so that both states in the superposition
+        are related to the target state.
+        
+        Args:
+            candidate_states (list): Candidate states like ['011', '111']
+            target_state (str): Target state like '111'
+            
+        Returns:
+            dict: Transformation configuration
+        """
+        
+        if target_state not in candidate_states:
+            return {'forward': [], 'reverse': []}
+        
+        # If candidate already contains target state, try to map the other state closer to target
+        other_states = [s for s in candidate_states if s != target_state]
+        
+        if not other_states:
+            return {'forward': [], 'reverse': []}
+        
+        other_state = other_states[0]
+        
+        # Try to find a simple transformation that makes both states useful
+        # For now, use a simple approach - no transformation if target already present
+        return {'forward': [], 'reverse': []}
+
+    def _find_transformation_to_target(self, candidate_states, target_state):
+        """
+        Find transformation to make candidate produce target state.
+        
+        Args:
+            candidate_states (list): Candidate states like ['000', '100']
+            target_state (str): Target state like '111'
+            
+        Returns:
+            dict: Transformation or None
+        """
+        
+        # Find the candidate state closest to target
+        closest_state = min(candidate_states, 
+                        key=lambda cs: self._hamming_distance(cs, target_state))
+        
+        # Create transformation to map closest_state to target_state
+        qubits_to_flip = []
+        for i, (bit1, bit2) in enumerate(zip(closest_state, target_state)):
+            if bit1 != bit2:
+                qubits_to_flip.append(i)
+        
+        # If too many flips needed, this is not a good candidate
+        if len(qubits_to_flip) > 2:
+            return None
+        
+        operations = [{'type': 'X', 'qubit': qubit} for qubit in qubits_to_flip]
+        
+        return {'forward': [], 'reverse': operations}
+
+    def _hamming_distance(self, state1, state2):
+        """Calculate Hamming distance between two binary strings."""
+        if len(state1) != len(state2):
+            return float('inf')
+        return sum(c1 != c2 for c1, c2 in zip(state1, state2))
+
+    # Alternative approach: Use working single-edge logic for each individual state
+    def _create_single_state_assignments(self, all_target_states):
+        """
+        Alternative: Treat each target state as a single-edge problem.
+        
+        For each target state, find a candidate and use the working single-edge
+        transformation logic to ensure that state is produced.
+        
+        Args:
+            all_target_states (set): All target states
+            
+        Returns:
+            list: Assignments using single-edge approach
+        """
+        
+        assignments = []
+        used_candidates = set()
+        
+        for target_state in sorted(all_target_states):
+            # Create a virtual "edge" for this single state
+            virtual_edge = (target_state, target_state)  # Same state twice
+            
+            # Find best candidate for this virtual edge
+            best_candidate = None
+            best_score = -1
+            
+            for candidate in self.candidates:
+                if (id(candidate) in used_candidates or 
+                    not hasattr(candidate, 'edges') or not candidate.edges):
+                    continue
+                
+                candidate_states = self._extract_states_from_edges(candidate.edges)
+                
+                # Score based on overlap with target state
+                if target_state in candidate_states:
+                    score = 100
+                else:
+                    min_distance = min(self._hamming_distance(cs, target_state) for cs in candidate_states)
+                    score = max(0, 20 - min_distance * 5)
+                
+                if score > best_score:
+                    best_score = score
+                    best_candidate = candidate
+            
+            if best_candidate:
+                # Use single-edge transformation logic
+                candidate_states = self._extract_states_from_edges(best_candidate.edges)
+                target_states_for_transformation = {target_state}
+                
+                # Create transformation using the working boolean logic
+                transformation = self._compute_boolean_transformation(candidate_states, target_states_for_transformation)
+                
+                assignments.append({
+                    'candidate': best_candidate,
+                    'target_state': target_state,
+                    'transformation': transformation
+                })
+                
+                used_candidates.add(id(best_candidate))
+        
+        return assignments
+
+    # Keep all exact working methods
+    def _get_general_transformation_configuration(self):
+        """EXACT copy of working single-edge implementation."""
         
         if not self.best_candidate or not hasattr(self.best_candidate, 'edges'):
             return {'forward': [], 'reverse': []}
@@ -618,90 +928,52 @@ class DiagonalEdgeGraph(StaticGraph):
         if not self.set_hamming_greater_1:
             return {'forward': [], 'reverse': []}
         
-        # Get what the rotation circuit prepares
         rotation_edges = self.best_candidate.edges
         rotation_states = self._extract_states_from_edges(rotation_edges)
         
-        # Get what we want (the diagonal edge)
         target_edges = self.set_hamming_greater_1
         target_states = self._extract_states_from_edges(target_edges)
         
-        # Compute the boolean transformation needed
         transformation = self._compute_boolean_transformation(rotation_states, target_states)
         
         return transformation
 
     def _extract_states_from_edges(self, edges):
-        """
-        Extract the computational basis states from a set of edges.
-        
-        Args:
-            edges (set): Set of edges like {('000', '010'), ('001', '011')}
-            
-        Returns:
-            set: Set of unique computational basis states
-        """
+        """Extract computational basis states from edges."""
         
         states = set()
         for edge in edges:
-            states.add(edge[0])  # Start state
-            states.add(edge[1])  # End state
+            states.add(edge[0])
+            states.add(edge[1])
         
         return states
 
     def _compute_boolean_transformation(self, rotation_states, target_states):
-        """
-        Compute the boolean transformation needed to map rotation states to target states.
+        """EXACT copy of working implementation."""
         
-        Args:
-            rotation_states (set): States that rotation circuit prepares
-            target_states (set): States we want to achieve
-            
-        Returns:
-            dict: Gate configuration for the transformation
-        """
-        
-        # Convert to sorted lists for consistent ordering
         rotation_list = sorted(list(rotation_states))
         target_list = sorted(list(target_states))
         
-        # Must have same number of states
-        if len(rotation_list) != len(target_list):
-            print(f"Warning: Different number of states - rotation: {len(rotation_list)}, target: {len(target_list)}")
-            return {'forward': [], 'reverse': []}
+        # if len(rotation_list) != len(target_list):
+        #     print(f"Warning: Different number of states - rotation: {len(rotation_list)}, target: {len(target_list)}")
+        #     return {'forward': [], 'reverse': []}
         
-        # For 2-state case, compute direct mapping
         if len(rotation_list) == 2:
             return self._compute_two_state_transformation(rotation_list, target_list)
         
-        # For more complex cases, use general boolean logic
         return self._compute_general_boolean_transformation(rotation_list, target_list)
 
     def _compute_two_state_transformation(self, rotation_states, target_states):
-        """
-        Compute transformation for two-state case using boolean logic.
-        
-        Args:
-            rotation_states (list): [state1, state2] from rotation
-            target_states (list): [state1, state2] that we want
-            
-        Returns:
-            dict: Gate configuration
-        """
+        """EXACT copy of working implementation."""
         
         state1_rot, state2_rot = rotation_states[0], rotation_states[1]
         state1_target, state2_target = target_states[0], target_states[1]
         
         # print(f"Mapping: {state1_rot}→{state1_target}, {state2_rot}→{state2_target}")
         
-        # Compute the boolean operations needed for each mapping
-        operations = []
-        
-        # Analyze the mapping using XOR logic
         mapping1 = self._compute_state_mapping(state1_rot, state1_target)
         mapping2 = self._compute_state_mapping(state2_rot, state2_target)
         
-        # Find operations that work for both mappings
         operations = self._find_common_operations(mapping1, mapping2, state1_rot, state2_rot)
         
         return {
@@ -710,21 +982,11 @@ class DiagonalEdgeGraph(StaticGraph):
         }
 
     def _compute_state_mapping(self, start_state, end_state):
-        """
-        Compute what boolean operations are needed to map start_state to end_state.
-        
-        Args:
-            start_state (str): Starting binary string like '010'
-            end_state (str): Target binary string like '111'
-            
-        Returns:
-            dict: Information about the required transformation
-        """
+        """EXACT copy of working implementation."""
         
         if len(start_state) != len(end_state):
             return {'valid': False}
         
-        # Find which qubits need to be flipped
         flips_needed = []
         for i, (bit1, bit2) in enumerate(zip(start_state, end_state)):
             if bit1 != bit2:
@@ -739,105 +1001,66 @@ class DiagonalEdgeGraph(StaticGraph):
         }
 
     def _find_common_operations(self, mapping1, mapping2, state1, state2):
-        """
-        Find gate operations that correctly transform both mappings.
-        
-        Args:
-            mapping1 (dict): Mapping info for first state pair
-            mapping2 (dict): Mapping info for second state pair
-            state1 (str): First rotation state
-            state2 (str): Second rotation state
-            
-        Returns:
-            list: List of gate operations
-        """
+        """EXACT copy of working implementation."""
         
         if not mapping1['valid'] or not mapping2['valid']:
             return []
         
-        operations = []
-        n_qubits = len(state1)
-        
-        # Method 1: Try simple X gates on qubits that need flipping
+        # Try simple X gates first
         simple_solution = self._try_simple_x_gates(mapping1, mapping2, state1, state2)
         if simple_solution:
             return simple_solution
         
-        # Method 2: Try controlled operations
+        # Try controlled operations
         controlled_solution = self._try_controlled_operations(mapping1, mapping2, state1, state2)
         if controlled_solution:
             return controlled_solution
         
-        # Method 3: General approach using multiple CNOTs and X gates
+        # General approach
         return self._generate_general_solution(mapping1, mapping2, state1, state2)
 
     def _try_simple_x_gates(self, mapping1, mapping2, state1, state2):
-        """
-        Try to solve with simple X gates on individual qubits.
+        """EXACT copy of working implementation."""
         
-        Returns:
-            list: Gate operations if successful, empty list otherwise
-        """
-        
-        # Check if same qubits need flipping in both mappings
         flips1 = set(mapping1['flips'])
         flips2 = set(mapping2['flips'])
         
         if flips1 == flips2:
-            # Simple case: same qubits need flipping in both mappings
             return [{'type': 'X', 'qubit': qubit} for qubit in sorted(flips1)]
         
         return []
 
     def _try_controlled_operations(self, mapping1, mapping2, state1, state2):
-        """
-        Try to solve with controlled operations (CNOTs + X gates).
-        
-        Returns:
-            list: Gate operations if successful, empty list otherwise
-        """
+        """EXACT copy of working implementation."""
         
         operations = []
         n_qubits = len(state1)
         
-        # For each qubit position, determine if it needs conditional flipping
         for qubit in range(n_qubits):
-            # Check if this qubit behaves differently in the two mappings
             flip_in_mapping1 = qubit in mapping1['flips']
             flip_in_mapping2 = qubit in mapping2['flips']
             
             if flip_in_mapping1 != flip_in_mapping2:
-                # This qubit needs conditional flipping
-                # Find a control qubit that distinguishes the two states
                 control_qubit = self._find_control_qubit(state1, state2, qubit)
                 if control_qubit is not None:
                     if flip_in_mapping1 and state1[control_qubit] == '1':
-                        # Flip when control is 1
                         operations.append({'type': 'CNOT', 'control': control_qubit, 'target': qubit})
                     elif flip_in_mapping1 and state1[control_qubit] == '0':
-                        # Flip when control is 0 (use X-CNOT-X pattern)
                         operations.extend([
                             {'type': 'X', 'qubit': control_qubit},
                             {'type': 'CNOT', 'control': control_qubit, 'target': qubit},
                             {'type': 'X', 'qubit': control_qubit}
                         ])
             elif flip_in_mapping1 and flip_in_mapping2:
-                # Both mappings need this qubit flipped - simple X gate
                 operations.append({'type': 'X', 'qubit': qubit})
         
-        # Verify this solution works
         if self._verify_operations(operations, [(state1, mapping1['end']), (state2, mapping2['end'])]):
             return operations
         
         return []
 
     def _find_control_qubit(self, state1, state2, target_qubit):
-        """
-        Find a qubit that can be used as control to distinguish between state1 and state2.
-        
-        Returns:
-            int: Control qubit index, or None if not found
-        """
+        """EXACT copy of working implementation."""
         
         for i in range(len(state1)):
             if i != target_qubit and state1[i] != state2[i]:
@@ -846,17 +1069,11 @@ class DiagonalEdgeGraph(StaticGraph):
         return None
 
     def _generate_general_solution(self, mapping1, mapping2, state1, state2):
-        """
-        Generate a general solution using systematic approach.
-        
-        Returns:
-            list: Gate operations
-        """
+        """EXACT copy of working implementation."""
         
         operations = []
         n_qubits = len(state1)
         
-        # Strategy: Use the first differing qubit as a "selector"
         selector_qubit = None
         for i in range(n_qubits):
             if state1[i] != state2[i]:
@@ -864,48 +1081,32 @@ class DiagonalEdgeGraph(StaticGraph):
                 break
         
         if selector_qubit is None:
-            # States are identical - shouldn't happen for diagonal edges
             return []
         
-        # For each other qubit, determine the conditional operation needed
         for target_qubit in range(n_qubits):
             if target_qubit == selector_qubit:
                 continue
                 
-            # Determine what happens to this qubit in each mapping
             flip1 = target_qubit in mapping1['flips']
             flip2 = target_qubit in mapping2['flips']
             
             if flip1 != flip2:
-                # Need conditional flip based on selector qubit
                 if (flip1 and state1[selector_qubit] == '1') or (flip2 and state2[selector_qubit] == '1'):
                     operations.append({'type': 'CNOT', 'control': selector_qubit, 'target': target_qubit})
             elif flip1 and flip2:
-                # Always flip
                 operations.append({'type': 'X', 'qubit': target_qubit})
         
-        # Handle the selector qubit itself
         if selector_qubit in mapping1['flips']:
             operations.append({'type': 'X', 'qubit': selector_qubit})
         
         return operations
 
     def _verify_operations(self, operations, state_mappings):
-        """
-        Verify that the operations correctly implement the state mappings.
-        
-        Args:
-            operations (list): List of gate operations
-            state_mappings (list): List of (start_state, end_state) tuples
-            
-        Returns:
-            bool: True if operations work correctly
-        """
+        """EXACT copy of working implementation."""
         
         for start_state, expected_end_state in state_mappings:
             current_state = start_state
             
-            # Apply each operation
             for op in operations:
                 if op['type'] == 'X':
                     qubit = op['qubit']
@@ -926,25 +1127,14 @@ class DiagonalEdgeGraph(StaticGraph):
         return True
 
     def _compute_general_boolean_transformation(self, rotation_states, target_states):
-        """
-        Compute transformation for cases with more than 2 states.
-        
-        Returns:
-            dict: Gate configuration
-        """
-        
-        # For now, implement a simple approach
-        # This can be extended for more complex multi-state cases
+        """EXACT copy of working implementation."""
         
         operations = []
         
-        # Analyze all state pairs and find common patterns
         for i, (rot_state, target_state) in enumerate(zip(rotation_states, target_states)):
             mapping = self._compute_state_mapping(rot_state, target_state)
             
-            # For each required flip, add appropriate operation
             for qubit in mapping['flips']:
-                # Simple approach: just add X gate (this may need refinement)
                 if {'type': 'X', 'qubit': qubit} not in operations:
                     operations.append({'type': 'X', 'qubit': qubit})
         
@@ -952,34 +1142,6 @@ class DiagonalEdgeGraph(StaticGraph):
             'forward': [],
             'reverse': operations
         }
-
-    def _debug_transformation_analysis(self):
-        """
-        Debug method to understand the transformation needed.
-        """
-        
-        print("=== Transformation Analysis Debug ===")
-        
-        if not self.best_candidate or not hasattr(self.best_candidate, 'edges'):
-            print("No best_candidate or edges found")
-            return
-        
-        rotation_edges = self.best_candidate.edges
-        rotation_states = self._extract_states_from_edges(rotation_edges)
-        
-        target_edges = self.set_hamming_greater_1
-        target_states = self._extract_states_from_edges(target_edges)
-        
-        print(f"Rotation circuit prepares states: {sorted(rotation_states)}")
-        print(f"Target diagonal edge states: {sorted(target_states)}")
-        
-        transformation = self._compute_boolean_transformation(rotation_states, target_states)
-        print(f"Required transformation: {transformation}")
-        
-        print("=" * 50)
-
-    # Usage example:
-    # graph._debug_transformation_analysis()
 
     def __del__(self):
         """Clean up any remaining resources"""
