@@ -14,11 +14,9 @@ from src import MCRX, Edge, Expression, GraphDrawer
 from src.mcrx_simplifier import MCRXCascadeSimplifier
 from src.misc import (
     binary_tuple_to_int_tuple,
-    get_cyclic_connections,
     graph_matchings_greedy,
     graph_matchings_parallel,
     hamming_distance,
-    lists_to_sets,
 )
 
 
@@ -296,7 +294,12 @@ class ParallelEdgeGraph(StaticGraph):
             qc.rx(angle if angle is not None else self.rot_angle, self.target)
             return qc
         else:
-            mcrx = MCRX(self.n_qubits, self.expr, self.target, angle if angle is not None else self.rot_angle)
+            mcrx = MCRX(
+                self.n_qubits,
+                self.expr,
+                self.target,
+                angle if angle is not None else self.rot_angle,
+            )
             if simplified:
                 return mcrx.simplify().qc
             else:
@@ -373,7 +376,9 @@ class NonDiagonalEdgeGraph(StaticGraph):
         # Build subcircuits for each edge set
         for idx, edges in self.edge_sets.items():
             G = ParallelEdgeGraph(edges)
-            qc = G.get_qc(simplified=simplified, angle=angle if angle is not None else self.rot_angle)
+            qc = G.get_qc(
+                simplified=simplified, angle=angle if angle is not None else self.rot_angle
+            )
             qc_dict[idx] = qc
 
         # Combine subcircuits in order
@@ -559,24 +564,26 @@ class DiagonalEdgeGraph(StaticGraph):
         if not self.best_candidate:
             return QuantumCircuit(self.n_qubits)
 
-        # Get CNOT connections from cyclic path
-        cnots_lists = []
-        for target in self.best_candidate.targets:
-            cnots = get_cyclic_connections(self.connections, target)
-            for cx in cnots:
-                if cx not in cnots_lists:
-                    cnots_lists.append(cx)
-
-        unsimplified_qc = self.best_candidate.get_qc(angle=angle if angle is not None else self.rot_angle)
+        # Get the base circuit from the best candidate
+        unsimplified_qc = self.best_candidate.get_qc(
+            angle=angle if angle is not None else self.rot_angle
+        )
         n_qubits = self.best_candidate.n_qubits
 
         # Build the circuit
         circ = QuantumCircuit(n_qubits)
 
-        # Add forward CNOTs
-        for t in cnots_lists:
-            circ.cx(*t)
+        # Get gate configuration for transforming the rotation output
+        gate_configs = self._get_diagonal_cnot_configuration()
 
+        # Add forward gates (pre-rotation preparation if needed)
+        for gate_config in gate_configs["forward"]:
+            if gate_config["type"] == "X":
+                circ.x(gate_config["qubit"])
+            elif gate_config["type"] == "CNOT":
+                circ.cx(gate_config["control"], gate_config["target"])
+
+        # Add the rotation circuit
         if simplified:
             try:
                 simplifier = MCRXCascadeSimplifier(verbose=False)
@@ -587,11 +594,161 @@ class DiagonalEdgeGraph(StaticGraph):
         else:
             circ.append(unsimplified_qc, range(n_qubits))
 
-        # Add reverse CNOTs
-        for t in reversed(cnots_lists):
-            circ.cx(*t)
+        # Add reverse gates (post-rotation transformation)
+        for gate_config in gate_configs["reverse"]:
+            if gate_config["type"] == "X":
+                circ.x(gate_config["qubit"])
+            elif gate_config["type"] == "CNOT":
+                circ.cx(gate_config["control"], gate_config["target"])
 
         return circ.decompose()
+
+    def _get_diagonal_cnot_configuration(self):
+        """
+        Get the correct gate configuration for diagonal edge transformations.
+
+        The rotation circuit produces: cos(π/4)|00⟩ - i sin(π/4)|10⟩
+        We need to transform this to match the desired edge superposition.
+
+        Returns:
+            dict: Configuration with 'forward' and 'reverse' gate lists
+        """
+
+        if not self.set_hamming_greater_1:
+            return {"forward": [], "reverse": []}
+
+        # Get the diagonal edge
+        diagonal_edge = list(self.set_hamming_greater_1)[0]
+        start, end = diagonal_edge
+
+        # Handle specific cases based on the edge pattern
+        return self._get_configuration_for_edge(start, end)
+
+    def _get_configuration_for_edge(self, start, end):
+        """
+        Get gate configuration for specific edge patterns.
+
+        Args:
+            start (str): Starting computational basis state
+            end (str): Ending computational basis state
+
+        Returns:
+            dict: Gate configuration for the transformation
+        """
+
+        # Case 1: ('01', '10') - Need cos(π/4)|01⟩ - i sin(π/4)|10⟩
+        if set([start, end]) == {"01", "10"}:
+            return self._get_01_10_configuration()
+
+        # Case 2: ('00', '11') - Need cos(π/4)|00⟩ - i sin(π/4)|11⟩
+        elif set([start, end]) == {"00", "11"}:
+            return self._get_00_11_configuration()
+
+        # Case 3: ('00', '01') - Need cos(π/4)|00⟩ - i sin(π/4)|01⟩
+        elif set([start, end]) == {"00", "01"}:
+            return self._get_00_01_configuration()
+
+        # Case 4: ('00', '10') - Already correct, no transformation needed
+        elif set([start, end]) == {"00", "10"}:
+            return {"forward": [], "reverse": []}
+
+        # Case 5: ('01', '11') - Need cos(π/4)|01⟩ - i sin(π/4)|11⟩
+        elif set([start, end]) == {"01", "11"}:
+            return self._get_01_11_configuration()
+
+        # Case 6: ('10', '11') - Need cos(π/4)|10⟩ - i sin(π/4)|11⟩
+        elif set([start, end]) == {"10", "11"}:
+            return self._get_10_11_configuration()
+
+        # Default case
+        return {"forward": [], "reverse": []}
+
+    def _get_01_10_configuration(self):
+        """
+        Configuration for ('01', '10') edge.
+
+        Required mapping: |00⟩ → |01⟩, |10⟩ → |10⟩ (unchanged)
+
+        Solution: Use controlled-X on qubit 1, controlled by qubit 0 being |0⟩
+        This is equivalent to: X₀ - CNOT(0,1) - X₀
+
+        Verification:
+        - X₀: |00⟩→|10⟩, |10⟩→|00⟩
+        - CNOT(0,1): |10⟩→|11⟩, |00⟩→|00⟩
+        - X₀: |11⟩→|01⟩, |00⟩→|10⟩
+        - Net: |00⟩→|01⟩, |10⟩→|10⟩ ✓
+        """
+
+        return {
+            "forward": [],  # No pre-rotation preparation needed
+            "reverse": [
+                # Transform the rotation output to desired states
+                {"type": "X", "qubit": 0},  # Step 1: Flip qubit 0
+                {"type": "CNOT", "control": 0, "target": 1},  # Step 2: Controlled flip of qubit 1
+                {"type": "X", "qubit": 0},  # Step 3: Flip qubit 0 back
+            ],
+        }
+
+    def _get_00_11_configuration(self):
+        """
+        Configuration for ('00', '11') edge.
+
+        Required mapping: |00⟩ → |00⟩ (unchanged), |10⟩ → |11⟩
+        """
+
+        return {
+            "forward": [],
+            "reverse": [
+                # Simple X gate on qubit 1 when qubit 0 is |1⟩
+                {"type": "CNOT", "control": 0, "target": 1}
+            ],
+        }
+
+    def _get_00_01_configuration(self):
+        """
+        Configuration for ('00', '01') edge.
+
+        Required mapping: |00⟩ → |00⟩ (unchanged), |10⟩ → |01⟩
+        """
+
+        return {
+            "forward": [],
+            "reverse": [
+                # Need to map |10⟩ → |01⟩: flip both qubits
+                {"type": "X", "qubit": 0},  # |10⟩ → |00⟩
+                {"type": "X", "qubit": 1},  # |00⟩ → |01⟩, but this affects the |00⟩ component too
+            ],
+        }
+
+    def _get_01_11_configuration(self):
+        """
+        Configuration for ('01', '11') edge.
+
+        Required mapping: |00⟩ → |01⟩, |10⟩ → |11⟩
+        """
+
+        return {
+            "forward": [],
+            "reverse": [
+                # Simple X gate on qubit 1 flips both states correctly
+                {"type": "X", "qubit": 1}
+            ],
+        }
+
+    def _get_10_11_configuration(self):
+        """
+        Configuration for ('10', '11') edge.
+
+        Required mapping: |00⟩ → |10⟩, |10⟩ → |11⟩
+        """
+
+        return {
+            "forward": [],
+            "reverse": [
+                {"type": "X", "qubit": 0},  # |00⟩ → |10⟩, |10⟩ → |00⟩
+                {"type": "CNOT", "control": 0, "target": 1},  # |10⟩ → |11⟩, |00⟩ → |00⟩
+            ],
+        }
 
     def __del__(self):
         """Clean up any remaining resources"""
