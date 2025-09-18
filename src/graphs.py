@@ -565,25 +565,23 @@ class DiagonalEdgeGraph(StaticGraph):
             return QuantumCircuit(self.n_qubits)
 
         # Get the base circuit from the best candidate
-        unsimplified_qc = self.best_candidate.get_qc(
-            angle=angle if angle is not None else self.rot_angle
-        )
+        unsimplified_qc = self.best_candidate.get_qc(angle=angle if angle is not None else self.rot_angle)
         n_qubits = self.best_candidate.n_qubits
 
         # Build the circuit
         circ = QuantumCircuit(n_qubits)
-
-        # Get gate configuration for transforming the rotation output
-        gate_configs = self._get_diagonal_cnot_configuration()
-
+        
+        # Analyze what the rotation prepares vs what we want
+        gate_configs = self._get_general_transformation_configuration()
+        
         # Add forward gates (pre-rotation preparation if needed)
-        for gate_config in gate_configs["forward"]:
-            if gate_config["type"] == "X":
-                circ.x(gate_config["qubit"])
-            elif gate_config["type"] == "CNOT":
-                circ.cx(gate_config["control"], gate_config["target"])
+        for gate_config in gate_configs['forward']:
+            if gate_config['type'] == 'X':
+                circ.x(gate_config['qubit'])
+            elif gate_config['type'] == 'CNOT':
+                circ.cx(gate_config['control'], gate_config['target'])
 
-        # Add the rotation circuit
+        # Add the rotation circuit 
         if simplified:
             try:
                 simplifier = MCRXCascadeSimplifier(verbose=False)
@@ -595,160 +593,393 @@ class DiagonalEdgeGraph(StaticGraph):
             circ.append(unsimplified_qc, range(n_qubits))
 
         # Add reverse gates (post-rotation transformation)
-        for gate_config in gate_configs["reverse"]:
-            if gate_config["type"] == "X":
-                circ.x(gate_config["qubit"])
-            elif gate_config["type"] == "CNOT":
-                circ.cx(gate_config["control"], gate_config["target"])
+        for gate_config in gate_configs['reverse']:
+            if gate_config['type'] == 'X':
+                circ.x(gate_config['qubit'])
+            elif gate_config['type'] == 'CNOT':
+                circ.cx(gate_config['control'], gate_config['target'])
 
         return circ.decompose()
 
-    def _get_diagonal_cnot_configuration(self):
+    def _get_general_transformation_configuration(self):
         """
-        Get the correct gate configuration for diagonal edge transformations.
-
-        The rotation circuit produces: cos(π/4)|00⟩ - i sin(π/4)|10⟩
-        We need to transform this to match the desired edge superposition.
-
+        General method to determine transformation based on boolean edge analysis.
+        
+        Uses self.best_candidate.edges to understand what rotation prepares,
+        and self.set_hamming_greater_1 to understand what we want.
+        
         Returns:
             dict: Configuration with 'forward' and 'reverse' gate lists
         """
-
+        
+        if not self.best_candidate or not hasattr(self.best_candidate, 'edges'):
+            return {'forward': [], 'reverse': []}
+        
         if not self.set_hamming_greater_1:
-            return {"forward": [], "reverse": []}
+            return {'forward': [], 'reverse': []}
+        
+        # Get what the rotation circuit prepares
+        rotation_edges = self.best_candidate.edges
+        rotation_states = self._extract_states_from_edges(rotation_edges)
+        
+        # Get what we want (the diagonal edge)
+        target_edges = self.set_hamming_greater_1
+        target_states = self._extract_states_from_edges(target_edges)
+        
+        # Compute the boolean transformation needed
+        transformation = self._compute_boolean_transformation(rotation_states, target_states)
+        
+        return transformation
 
-        # Get the diagonal edge
-        diagonal_edge = list(self.set_hamming_greater_1)[0]
-        start, end = diagonal_edge
-
-        # Handle specific cases based on the edge pattern
-        return self._get_configuration_for_edge(start, end)
-
-    def _get_configuration_for_edge(self, start, end):
+    def _extract_states_from_edges(self, edges):
         """
-        Get gate configuration for specific edge patterns.
-
+        Extract the computational basis states from a set of edges.
+        
         Args:
-            start (str): Starting computational basis state
-            end (str): Ending computational basis state
+            edges (set): Set of edges like {('000', '010'), ('001', '011')}
+            
+        Returns:
+            set: Set of unique computational basis states
+        """
+        
+        states = set()
+        for edge in edges:
+            states.add(edge[0])  # Start state
+            states.add(edge[1])  # End state
+        
+        return states
 
+    def _compute_boolean_transformation(self, rotation_states, target_states):
+        """
+        Compute the boolean transformation needed to map rotation states to target states.
+        
+        Args:
+            rotation_states (set): States that rotation circuit prepares
+            target_states (set): States we want to achieve
+            
         Returns:
             dict: Gate configuration for the transformation
         """
+        
+        # Convert to sorted lists for consistent ordering
+        rotation_list = sorted(list(rotation_states))
+        target_list = sorted(list(target_states))
+        
+        # Must have same number of states
+        if len(rotation_list) != len(target_list):
+            print(f"Warning: Different number of states - rotation: {len(rotation_list)}, target: {len(target_list)}")
+            return {'forward': [], 'reverse': []}
+        
+        # For 2-state case, compute direct mapping
+        if len(rotation_list) == 2:
+            return self._compute_two_state_transformation(rotation_list, target_list)
+        
+        # For more complex cases, use general boolean logic
+        return self._compute_general_boolean_transformation(rotation_list, target_list)
 
-        # Case 1: ('01', '10') - Need cos(π/4)|01⟩ - i sin(π/4)|10⟩
-        if set([start, end]) == {"01", "10"}:
-            return self._get_01_10_configuration()
-
-        # Case 2: ('00', '11') - Need cos(π/4)|00⟩ - i sin(π/4)|11⟩
-        elif set([start, end]) == {"00", "11"}:
-            return self._get_00_11_configuration()
-
-        # Case 3: ('00', '01') - Need cos(π/4)|00⟩ - i sin(π/4)|01⟩
-        elif set([start, end]) == {"00", "01"}:
-            return self._get_00_01_configuration()
-
-        # Case 4: ('00', '10') - Already correct, no transformation needed
-        elif set([start, end]) == {"00", "10"}:
-            return {"forward": [], "reverse": []}
-
-        # Case 5: ('01', '11') - Need cos(π/4)|01⟩ - i sin(π/4)|11⟩
-        elif set([start, end]) == {"01", "11"}:
-            return self._get_01_11_configuration()
-
-        # Case 6: ('10', '11') - Need cos(π/4)|10⟩ - i sin(π/4)|11⟩
-        elif set([start, end]) == {"10", "11"}:
-            return self._get_10_11_configuration()
-
-        # Default case
-        return {"forward": [], "reverse": []}
-
-    def _get_01_10_configuration(self):
+    def _compute_two_state_transformation(self, rotation_states, target_states):
         """
-        Configuration for ('01', '10') edge.
-
-        Required mapping: |00⟩ → |01⟩, |10⟩ → |10⟩ (unchanged)
-
-        Solution: Use controlled-X on qubit 1, controlled by qubit 0 being |0⟩
-        This is equivalent to: X₀ - CNOT(0,1) - X₀
-
-        Verification:
-        - X₀: |00⟩→|10⟩, |10⟩→|00⟩
-        - CNOT(0,1): |10⟩→|11⟩, |00⟩→|00⟩
-        - X₀: |11⟩→|01⟩, |00⟩→|10⟩
-        - Net: |00⟩→|01⟩, |10⟩→|10⟩ ✓
+        Compute transformation for two-state case using boolean logic.
+        
+        Args:
+            rotation_states (list): [state1, state2] from rotation
+            target_states (list): [state1, state2] that we want
+            
+        Returns:
+            dict: Gate configuration
         """
-
+        
+        state1_rot, state2_rot = rotation_states[0], rotation_states[1]
+        state1_target, state2_target = target_states[0], target_states[1]
+        
+        # print(f"Mapping: {state1_rot}→{state1_target}, {state2_rot}→{state2_target}")
+        
+        # Compute the boolean operations needed for each mapping
+        operations = []
+        
+        # Analyze the mapping using XOR logic
+        mapping1 = self._compute_state_mapping(state1_rot, state1_target)
+        mapping2 = self._compute_state_mapping(state2_rot, state2_target)
+        
+        # Find operations that work for both mappings
+        operations = self._find_common_operations(mapping1, mapping2, state1_rot, state2_rot)
+        
         return {
-            "forward": [],  # No pre-rotation preparation needed
-            "reverse": [
-                # Transform the rotation output to desired states
-                {"type": "X", "qubit": 0},  # Step 1: Flip qubit 0
-                {"type": "CNOT", "control": 0, "target": 1},  # Step 2: Controlled flip of qubit 1
-                {"type": "X", "qubit": 0},  # Step 3: Flip qubit 0 back
-            ],
+            'forward': [],
+            'reverse': operations
         }
 
-    def _get_00_11_configuration(self):
+    def _compute_state_mapping(self, start_state, end_state):
         """
-        Configuration for ('00', '11') edge.
-
-        Required mapping: |00⟩ → |00⟩ (unchanged), |10⟩ → |11⟩
+        Compute what boolean operations are needed to map start_state to end_state.
+        
+        Args:
+            start_state (str): Starting binary string like '010'
+            end_state (str): Target binary string like '111'
+            
+        Returns:
+            dict: Information about the required transformation
         """
-
+        
+        if len(start_state) != len(end_state):
+            return {'valid': False}
+        
+        # Find which qubits need to be flipped
+        flips_needed = []
+        for i, (bit1, bit2) in enumerate(zip(start_state, end_state)):
+            if bit1 != bit2:
+                flips_needed.append(i)
+        
         return {
-            "forward": [],
-            "reverse": [
-                # Simple X gate on qubit 1 when qubit 0 is |1⟩
-                {"type": "CNOT", "control": 0, "target": 1}
-            ],
+            'valid': True,
+            'start': start_state,
+            'end': end_state,
+            'flips': flips_needed,
+            'xor_pattern': ''.join('1' if b1 != b2 else '0' for b1, b2 in zip(start_state, end_state))
         }
 
-    def _get_00_01_configuration(self):
+    def _find_common_operations(self, mapping1, mapping2, state1, state2):
         """
-        Configuration for ('00', '01') edge.
-
-        Required mapping: |00⟩ → |00⟩ (unchanged), |10⟩ → |01⟩
+        Find gate operations that correctly transform both mappings.
+        
+        Args:
+            mapping1 (dict): Mapping info for first state pair
+            mapping2 (dict): Mapping info for second state pair
+            state1 (str): First rotation state
+            state2 (str): Second rotation state
+            
+        Returns:
+            list: List of gate operations
         """
+        
+        if not mapping1['valid'] or not mapping2['valid']:
+            return []
+        
+        operations = []
+        n_qubits = len(state1)
+        
+        # Method 1: Try simple X gates on qubits that need flipping
+        simple_solution = self._try_simple_x_gates(mapping1, mapping2, state1, state2)
+        if simple_solution:
+            return simple_solution
+        
+        # Method 2: Try controlled operations
+        controlled_solution = self._try_controlled_operations(mapping1, mapping2, state1, state2)
+        if controlled_solution:
+            return controlled_solution
+        
+        # Method 3: General approach using multiple CNOTs and X gates
+        return self._generate_general_solution(mapping1, mapping2, state1, state2)
 
+    def _try_simple_x_gates(self, mapping1, mapping2, state1, state2):
+        """
+        Try to solve with simple X gates on individual qubits.
+        
+        Returns:
+            list: Gate operations if successful, empty list otherwise
+        """
+        
+        # Check if same qubits need flipping in both mappings
+        flips1 = set(mapping1['flips'])
+        flips2 = set(mapping2['flips'])
+        
+        if flips1 == flips2:
+            # Simple case: same qubits need flipping in both mappings
+            return [{'type': 'X', 'qubit': qubit} for qubit in sorted(flips1)]
+        
+        return []
+
+    def _try_controlled_operations(self, mapping1, mapping2, state1, state2):
+        """
+        Try to solve with controlled operations (CNOTs + X gates).
+        
+        Returns:
+            list: Gate operations if successful, empty list otherwise
+        """
+        
+        operations = []
+        n_qubits = len(state1)
+        
+        # For each qubit position, determine if it needs conditional flipping
+        for qubit in range(n_qubits):
+            # Check if this qubit behaves differently in the two mappings
+            flip_in_mapping1 = qubit in mapping1['flips']
+            flip_in_mapping2 = qubit in mapping2['flips']
+            
+            if flip_in_mapping1 != flip_in_mapping2:
+                # This qubit needs conditional flipping
+                # Find a control qubit that distinguishes the two states
+                control_qubit = self._find_control_qubit(state1, state2, qubit)
+                if control_qubit is not None:
+                    if flip_in_mapping1 and state1[control_qubit] == '1':
+                        # Flip when control is 1
+                        operations.append({'type': 'CNOT', 'control': control_qubit, 'target': qubit})
+                    elif flip_in_mapping1 and state1[control_qubit] == '0':
+                        # Flip when control is 0 (use X-CNOT-X pattern)
+                        operations.extend([
+                            {'type': 'X', 'qubit': control_qubit},
+                            {'type': 'CNOT', 'control': control_qubit, 'target': qubit},
+                            {'type': 'X', 'qubit': control_qubit}
+                        ])
+            elif flip_in_mapping1 and flip_in_mapping2:
+                # Both mappings need this qubit flipped - simple X gate
+                operations.append({'type': 'X', 'qubit': qubit})
+        
+        # Verify this solution works
+        if self._verify_operations(operations, [(state1, mapping1['end']), (state2, mapping2['end'])]):
+            return operations
+        
+        return []
+
+    def _find_control_qubit(self, state1, state2, target_qubit):
+        """
+        Find a qubit that can be used as control to distinguish between state1 and state2.
+        
+        Returns:
+            int: Control qubit index, or None if not found
+        """
+        
+        for i in range(len(state1)):
+            if i != target_qubit and state1[i] != state2[i]:
+                return i
+        
+        return None
+
+    def _generate_general_solution(self, mapping1, mapping2, state1, state2):
+        """
+        Generate a general solution using systematic approach.
+        
+        Returns:
+            list: Gate operations
+        """
+        
+        operations = []
+        n_qubits = len(state1)
+        
+        # Strategy: Use the first differing qubit as a "selector"
+        selector_qubit = None
+        for i in range(n_qubits):
+            if state1[i] != state2[i]:
+                selector_qubit = i
+                break
+        
+        if selector_qubit is None:
+            # States are identical - shouldn't happen for diagonal edges
+            return []
+        
+        # For each other qubit, determine the conditional operation needed
+        for target_qubit in range(n_qubits):
+            if target_qubit == selector_qubit:
+                continue
+                
+            # Determine what happens to this qubit in each mapping
+            flip1 = target_qubit in mapping1['flips']
+            flip2 = target_qubit in mapping2['flips']
+            
+            if flip1 != flip2:
+                # Need conditional flip based on selector qubit
+                if (flip1 and state1[selector_qubit] == '1') or (flip2 and state2[selector_qubit] == '1'):
+                    operations.append({'type': 'CNOT', 'control': selector_qubit, 'target': target_qubit})
+            elif flip1 and flip2:
+                # Always flip
+                operations.append({'type': 'X', 'qubit': target_qubit})
+        
+        # Handle the selector qubit itself
+        if selector_qubit in mapping1['flips']:
+            operations.append({'type': 'X', 'qubit': selector_qubit})
+        
+        return operations
+
+    def _verify_operations(self, operations, state_mappings):
+        """
+        Verify that the operations correctly implement the state mappings.
+        
+        Args:
+            operations (list): List of gate operations
+            state_mappings (list): List of (start_state, end_state) tuples
+            
+        Returns:
+            bool: True if operations work correctly
+        """
+        
+        for start_state, expected_end_state in state_mappings:
+            current_state = start_state
+            
+            # Apply each operation
+            for op in operations:
+                if op['type'] == 'X':
+                    qubit = op['qubit']
+                    state_list = list(current_state)
+                    state_list[qubit] = '1' if state_list[qubit] == '0' else '0'
+                    current_state = ''.join(state_list)
+                    
+                elif op['type'] == 'CNOT':
+                    control, target = op['control'], op['target']
+                    state_list = list(current_state)
+                    if state_list[control] == '1':
+                        state_list[target] = '1' if state_list[target] == '0' else '0'
+                    current_state = ''.join(state_list)
+            
+            if current_state != expected_end_state:
+                return False
+        
+        return True
+
+    def _compute_general_boolean_transformation(self, rotation_states, target_states):
+        """
+        Compute transformation for cases with more than 2 states.
+        
+        Returns:
+            dict: Gate configuration
+        """
+        
+        # For now, implement a simple approach
+        # This can be extended for more complex multi-state cases
+        
+        operations = []
+        
+        # Analyze all state pairs and find common patterns
+        for i, (rot_state, target_state) in enumerate(zip(rotation_states, target_states)):
+            mapping = self._compute_state_mapping(rot_state, target_state)
+            
+            # For each required flip, add appropriate operation
+            for qubit in mapping['flips']:
+                # Simple approach: just add X gate (this may need refinement)
+                if {'type': 'X', 'qubit': qubit} not in operations:
+                    operations.append({'type': 'X', 'qubit': qubit})
+        
         return {
-            "forward": [],
-            "reverse": [
-                # Need to map |10⟩ → |01⟩: flip both qubits
-                {"type": "X", "qubit": 0},  # |10⟩ → |00⟩
-                {"type": "X", "qubit": 1},  # |00⟩ → |01⟩, but this affects the |00⟩ component too
-            ],
+            'forward': [],
+            'reverse': operations
         }
 
-    def _get_01_11_configuration(self):
+    def _debug_transformation_analysis(self):
         """
-        Configuration for ('01', '11') edge.
-
-        Required mapping: |00⟩ → |01⟩, |10⟩ → |11⟩
+        Debug method to understand the transformation needed.
         """
+        
+        print("=== Transformation Analysis Debug ===")
+        
+        if not self.best_candidate or not hasattr(self.best_candidate, 'edges'):
+            print("No best_candidate or edges found")
+            return
+        
+        rotation_edges = self.best_candidate.edges
+        rotation_states = self._extract_states_from_edges(rotation_edges)
+        
+        target_edges = self.set_hamming_greater_1
+        target_states = self._extract_states_from_edges(target_edges)
+        
+        print(f"Rotation circuit prepares states: {sorted(rotation_states)}")
+        print(f"Target diagonal edge states: {sorted(target_states)}")
+        
+        transformation = self._compute_boolean_transformation(rotation_states, target_states)
+        print(f"Required transformation: {transformation}")
+        
+        print("=" * 50)
 
-        return {
-            "forward": [],
-            "reverse": [
-                # Simple X gate on qubit 1 flips both states correctly
-                {"type": "X", "qubit": 1}
-            ],
-        }
-
-    def _get_10_11_configuration(self):
-        """
-        Configuration for ('10', '11') edge.
-
-        Required mapping: |00⟩ → |10⟩, |10⟩ → |11⟩
-        """
-
-        return {
-            "forward": [],
-            "reverse": [
-                {"type": "X", "qubit": 0},  # |00⟩ → |10⟩, |10⟩ → |00⟩
-                {"type": "CNOT", "control": 0, "target": 1},  # |10⟩ → |11⟩, |00⟩ → |00⟩
-            ],
-        }
+    # Usage example:
+    # graph._debug_transformation_analysis()
 
     def __del__(self):
         """Clean up any remaining resources"""
