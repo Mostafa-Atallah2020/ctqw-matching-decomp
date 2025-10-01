@@ -137,7 +137,7 @@ def getOpsCirc(z1: str, z2: str, little_endian: bool, param: float = 0.25) -> Qu
     Returns:
     Corresponding QuantumCircuit."""
     gateops = getGateOps(z1, z2, little_endian)
-    print(gateops)
+    # print(gateops)
     circ = QuantumCircuit(len(z1))
     # implement ops
     for op in gateops:
@@ -166,10 +166,3 @@ def getOpsCirc(z1: str, z2: str, little_endian: bool, param: float = 0.25) -> Qu
             mc_gate = gate.control(len(cntrls))
             circ.append(mc_gate, cntrls + [target])
     return circ
-
-
-if __name__ == "__main__":
-    circ = getOpsCirc("0001000000000", "0001000000000", True)
-    print(circ)
-    circ = getOpsCirc("1000", "1011", True)
-    print(circ)
