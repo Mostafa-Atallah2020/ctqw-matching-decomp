@@ -117,7 +117,7 @@ def graph_matchings_parallel(edges):
     Tries multiple approaches and returns the one with minimum total hamming distance.
 
     Args:
-        edges: Set/list of tuples representing edges (u, v)
+        edges: Set/list of tuples representing edges (u, v) where u, v are binary strings
 
     Returns:
         List of sets, where each set is a matching using optimized binary labels
@@ -128,7 +128,14 @@ def graph_matchings_parallel(edges):
 
     # Get all vertices
     vertices = list(set(v for edge in edges for v in edge))
-    n_bits = max(2, (len(vertices) - 1).bit_length())
+    
+    # Determine bit length from the input edges (preserve original bit length)
+    n_bits = len(vertices[0]) if vertices else 2
+    
+    # Ensure we have enough bits for all vertices
+    min_bits_needed = max(2, (len(vertices) - 1).bit_length())
+    if min_bits_needed > n_bits:
+        n_bits = min_bits_needed
 
     def hamming_distance(u, v):
         """Calculate hamming distance between binary strings"""
@@ -192,8 +199,27 @@ def graph_matchings_parallel(edges):
 
     def try_simple_swaps():
         """Try simple vertex swaps to find better labelings"""
-        # Start with identity mapping
-        current_mapping = {vertices[i]: format(i, f"0{n_bits}b") for i in range(len(vertices))}
+        # Start with identity mapping - preserve original labels if possible
+        current_mapping = {}
+        used_labels = set()
+        
+        # First, try to keep original labels
+        for vertex in vertices:
+            if vertex not in used_labels and len(vertex) == n_bits:
+                current_mapping[vertex] = vertex
+                used_labels.add(vertex)
+        
+        # Assign labels to remaining vertices
+        label_int = 0
+        for vertex in vertices:
+            if vertex not in current_mapping:
+                while True:
+                    label = format(label_int, f"0{n_bits}b")
+                    if label not in used_labels:
+                        current_mapping[vertex] = label
+                        used_labels.add(label)
+                        break
+                    label_int += 1
 
         best_mapping = current_mapping.copy()
         best_cost = calculate_total_cost(
