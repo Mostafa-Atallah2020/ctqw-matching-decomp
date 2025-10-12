@@ -128,10 +128,10 @@ def graph_matchings_parallel(edges):
 
     # Get all vertices
     vertices = list(set(v for edge in edges for v in edge))
-    
+
     # Determine bit length from the input edges (preserve original bit length)
     n_bits = len(vertices[0]) if vertices else 2
-    
+
     # Ensure we have enough bits for all vertices
     min_bits_needed = max(2, (len(vertices) - 1).bit_length())
     if min_bits_needed > n_bits:
@@ -202,13 +202,13 @@ def graph_matchings_parallel(edges):
         # Start with identity mapping - preserve original labels if possible
         current_mapping = {}
         used_labels = set()
-        
+
         # First, try to keep original labels
         for vertex in vertices:
             if vertex not in used_labels and len(vertex) == n_bits:
                 current_mapping[vertex] = vertex
                 used_labels.add(vertex)
-        
+
         # Assign labels to remaining vertices
         label_int = 0
         for vertex in vertices:
@@ -669,3 +669,129 @@ def analyze_circuit_comparison(qc_original, qc_simplified, tolerance=1e-10):
     results = compare_quantum_states(state_original, state_simplified, tolerance, verbose=False)
 
     return results
+
+
+def reduce_graph_space(edges, active_qubits=None):
+    """
+    Reduce the graph space by keeping only essential qubits.
+
+    Allow merging only if:
+    - Number of edges is a power of 2 (complete subcube)
+    - Variation occurs ONLY in the highest-indexed non-flipping qubits
+    """
+    if not edges:
+        return edges, active_qubits if active_qubits is not None else []
+
+    bitstring_length = len(next(iter(edges))[0])
+
+    if active_qubits is None:
+        active_qubits = list(range(bitstring_length))
+
+    edge_list = list(edges)
+    num_edges = len(edges)
+
+    # Check if number of edges is a power of 2
+    is_power_of_2 = (num_edges & (num_edges - 1)) == 0 and num_edges > 0
+
+    # Find qubits that flip in at least one edge
+    flipping_qubits = set()
+    for source, target in edge_list:
+        for qubit_idx in active_qubits:
+            pos = bitstring_length - 1 - qubit_idx
+            if source[pos] != target[pos]:
+                flipping_qubits.add(qubit_idx)
+
+    if not flipping_qubits:
+        return edges, active_qubits
+
+    non_flipping_qubits = sorted(set(active_qubits) - flipping_qubits, reverse=True)
+
+    from itertools import combinations
+    import math
+
+    # Check if edges can merge
+    can_merge = False
+
+    if is_power_of_2 and num_edges >= 2 and len(non_flipping_qubits) > 0:
+        expected_varying_bits = int(math.log2(num_edges))
+
+        if len(non_flipping_qubits) >= expected_varying_bits:
+            # Check which non-flipping qubits vary
+            varying_non_flipping_source = []
+            varying_non_flipping_target = []
+
+            for qubit_idx in non_flipping_qubits:
+                pos = bitstring_length - 1 - qubit_idx
+                source_values = set(source[pos] for source, target in edge_list)
+                target_values = set(target[pos] for source, target in edge_list)
+
+                if len(source_values) > 1:
+                    varying_non_flipping_source.append(qubit_idx)
+                if len(target_values) > 1:
+                    varying_non_flipping_target.append(qubit_idx)
+
+            # Check if both source and target vary in the same qubits
+            if varying_non_flipping_source == varying_non_flipping_target:
+                varying_non_flipping = varying_non_flipping_source
+                expected_varying_qubits = non_flipping_qubits[:expected_varying_bits]
+
+                # Only merge if exactly the highest N non-flipping qubits vary
+                if varying_non_flipping == expected_varying_qubits:
+                    can_merge = True
+
+    if can_merge:
+        # Allow merging: find minimal edges with maximal bits
+        min_distinct_edges = float("inf")
+        best_qubits = list(flipping_qubits)
+
+        # Try all subsets
+        for flip_size in range(len(flipping_qubits), 0, -1):
+            for flip_subset in combinations(sorted(flipping_qubits), flip_size):
+                for non_flip_size in range(len(non_flipping_qubits) + 1):
+                    for non_flip_subset in combinations(sorted(non_flipping_qubits), non_flip_size):
+                        test_qubits = sorted(list(flip_subset) + list(non_flip_subset))
+                        test_positions = sorted([bitstring_length - 1 - q for q in test_qubits])
+
+                        test_projected = set()
+                        valid_projection = True
+
+                        for source, target in edge_list:
+                            source_proj = "".join(source[pos] for pos in test_positions)
+                            target_proj = "".join(target[pos] for pos in test_positions)
+
+                            if source_proj == target_proj:
+                                valid_projection = False
+                                break
+
+                            if source_proj <= target_proj:
+                                test_projected.add((source_proj, target_proj))
+                            else:
+                                test_projected.add((target_proj, source_proj))
+
+                        if valid_projection:
+                            distinct_count = len(test_projected)
+                            if distinct_count < min_distinct_edges:
+                                min_distinct_edges = distinct_count
+                                best_qubits = test_qubits
+                            elif distinct_count == min_distinct_edges and len(test_qubits) > len(
+                                best_qubits
+                            ):
+                                best_qubits = test_qubits
+    else:
+        # No merging allowed: return original edges with all bits
+        return edges, active_qubits
+
+    qubits_to_keep = sorted(best_qubits)
+    positions_to_keep = sorted([bitstring_length - 1 - q for q in qubits_to_keep])
+
+    reduced_edges = set()
+    for source, target in edges:
+        source_proj = "".join(source[pos] for pos in positions_to_keep)
+        target_proj = "".join(target[pos] for pos in positions_to_keep)
+
+        if source_proj <= target_proj:
+            reduced_edges.add((source_proj, target_proj))
+        else:
+            reduced_edges.add((target_proj, source_proj))
+
+    return reduced_edges, qubits_to_keep
