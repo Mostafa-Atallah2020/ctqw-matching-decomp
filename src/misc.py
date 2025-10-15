@@ -677,6 +677,7 @@ def reduce_graph_space(edges, active_qubits=None):
     
     Allow merging only if:
     - Number of edges is a power of 2 (complete subcube)
+    - All edges flip the SAME set of qubits
     - Variation occurs in exactly log2(num_edges) non-flipping qubits
     """
     if not edges:
@@ -693,13 +694,26 @@ def reduce_graph_space(edges, active_qubits=None):
     # Check if number of edges is a power of 2
     is_power_of_2 = (num_edges & (num_edges - 1)) == 0 and num_edges > 0
     
-    # Find qubits that flip in at least one edge
-    flipping_qubits = set()
+    # Find qubits that flip in EACH edge and check consistency
+    flipping_qubits_per_edge = []
     for source, target in edge_list:
+        edge_flips = set()
         for qubit_idx in active_qubits:
             pos = bitstring_length - 1 - qubit_idx
             if source[pos] != target[pos]:
-                flipping_qubits.add(qubit_idx)
+                edge_flips.add(qubit_idx)
+        flipping_qubits_per_edge.append(edge_flips)
+    
+    # Check if all edges flip the same qubits
+    if not flipping_qubits_per_edge:
+        return edges, active_qubits
+    
+    flipping_qubits = flipping_qubits_per_edge[0]
+    all_same_flips = all(edge_flips == flipping_qubits for edge_flips in flipping_qubits_per_edge)
+    
+    if not all_same_flips:
+        # Edges flip different qubits - cannot merge
+        return edges, active_qubits
     
     if not flipping_qubits:
         return edges, active_qubits
