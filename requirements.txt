@@ -1,7 +1,7 @@
 matplotlib
 networkx
 scipy
-qiskit[visualization]==2.0.2
+qiskit[visualization]
 qiskit-aer
 black[jupyter]
 pyzx
