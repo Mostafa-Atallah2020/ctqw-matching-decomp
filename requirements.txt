@@ -1,9 +1,10 @@
 matplotlib
 networkx
 scipy
-qiskit==1.2.0
-pylatexenc
+qiskit[visualization]
+qiskit-aer
 black[jupyter]
 pyzx
 pytest
 isort
+pandas

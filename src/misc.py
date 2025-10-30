@@ -1,15 +1,29 @@
 import itertools
+from collections import defaultdict
 from typing import Dict, Union
 
 import networkx as nx
 import numpy as np
 from qiskit import QuantumCircuit, transpile
+from qiskit.circuit import Gate
 from qiskit.circuit.library import RXGate
 from qiskit.quantum_info import Statevector, state_fidelity
 
 
 def multi_crx(angle, ctrl_state):
+    """
+    Create a multi-controlled RX gate based on the control pattern.
+
+    Args:
+        angle: Rotation angle in radians
+        ctrl_state: Binary string specifying control states (e.g., '10')
+
+    Returns:
+        Controlled RX gate
+    """
     n_ctrls = len(ctrl_state)
+    if n_ctrls == 0:
+        return RXGate(angle)
     gate = RXGate(angle).control(n_ctrls, ctrl_state=ctrl_state[::-1])
     return gate
 
@@ -80,7 +94,7 @@ def lists_to_sets(*lists):
     return sets
 
 
-def graph_matchings(edges):
+def graph_matchings_greedy(edges):
     subgraphs = []
     for edge in edges:
         placed = False
@@ -94,6 +108,367 @@ def graph_matchings(edges):
             subgraphs.append({edge})
 
     return subgraphs
+
+def graph_matchings_parallel(edges):
+    from collections import defaultdict
+
+    def get_bit_flip_position(edge):
+        """Determine which bit position differs between edge endpoints"""
+        u, v = edge
+
+        # Handle string vertices (convert binary strings to integers)
+        if isinstance(u, str) and isinstance(v, str):
+            try:
+                u_int = int(u, 2)  # Convert binary string to integer
+                v_int = int(v, 2)
+            except ValueError:
+                # If not binary strings, treat as arbitrary vertex labels
+                return -2
+        else:
+            u_int, v_int = u, v
+
+        # XOR to find differing bits
+        diff = u_int ^ v_int
+        if diff == 0:
+            return -1  # Self-loop or identical vertices
+
+        # Check if only one bit differs (Hamming distance = 1)
+        if bin(diff).count("1") == 1:
+            # Find position of the single differing bit
+            position = (diff & -diff).bit_length() - 1
+            return position
+        else:
+            return -2  # Multi-bit difference
+
+    # Group edges by bit flip position
+    edge_groups = defaultdict(list)
+    for edge in edges:
+        bit_pos = get_bit_flip_position(edge)
+        edge_groups[bit_pos].append(edge)
+
+    matchings = []
+
+    # Process each edge group to create optimal matchings
+    for bit_position, group_edges in edge_groups.items():
+        # For single-bit flip edges, create maximum matchings
+        if bit_position >= 0:
+            while group_edges:
+                current_matching = set()
+                remaining_edges = []
+
+                for edge in group_edges:
+                    # Check if edge shares vertices with current matching
+                    if not any(
+                        set(edge) & set(existing_edge) for existing_edge in current_matching
+                    ):
+                        current_matching.add(edge)
+                    else:
+                        remaining_edges.append(edge)
+
+                if current_matching:
+                    matchings.append(current_matching)
+                group_edges = remaining_edges
+
+        # Handle multi-bit flip edges or non-binary vertices with greedy approach
+        else:
+            for edge in group_edges:
+                placed = False
+                for matching in matchings:
+                    if not any(set(edge) & set(e) for e in matching):
+                        matching.add(edge)
+                        placed = True
+                        break
+                if not placed:
+                    matchings.append({edge})
+
+    return matchings
+
+def graph_matchings_no_relabeling(edges):
+    from collections import defaultdict
+
+    def get_bit_flip_position(edge):
+        """Determine which bit position differs between edge endpoints"""
+        u, v = edge
+
+        # Handle string vertices (convert binary strings to integers)
+        if isinstance(u, str) and isinstance(v, str):
+            try:
+                u_int = int(u, 2)  # Convert binary string to integer
+                v_int = int(v, 2)
+            except ValueError:
+                # If not binary strings, treat as arbitrary vertex labels
+                return -2
+        else:
+            u_int, v_int = u, v
+
+        # XOR to find differing bits
+        diff = u_int ^ v_int
+        if diff == 0:
+            return -1  # Self-loop or identical vertices
+
+        # Check if only one bit differs (Hamming distance = 1)
+        if bin(diff).count("1") == 1:
+            # Find position of the single differing bit
+            position = (diff & -diff).bit_length() - 1
+            return position
+        else:
+            return -2  # Multi-bit difference
+
+    # Group edges by bit flip position
+    edge_groups = defaultdict(list)
+    for edge in edges:
+        bit_pos = get_bit_flip_position(edge)
+        edge_groups[bit_pos].append(edge)
+
+    matchings = []
+
+    # Process each edge group to create optimal matchings
+    for bit_position, group_edges in edge_groups.items():
+        # For single-bit flip edges, create maximum matchings
+        if bit_position >= 0:
+            while group_edges:
+                current_matching = set()
+                remaining_edges = []
+
+                for edge in group_edges:
+                    # Check if edge shares vertices with current matching
+                    if not any(
+                        set(edge) & set(existing_edge) for existing_edge in current_matching
+                    ):
+                        current_matching.add(edge)
+                    else:
+                        remaining_edges.append(edge)
+
+                if current_matching:
+                    matchings.append(current_matching)
+                group_edges = remaining_edges
+
+        # Handle multi-bit flip edges or non-binary vertices with greedy approach
+        else:
+            for edge in group_edges:
+                placed = False
+                for matching in matchings:
+                    if not any(set(edge) & set(e) for e in matching):
+                        matching.add(edge)
+                        placed = True
+                        break
+                if not placed:
+                    matchings.append({edge})
+
+    return matchings
+
+
+def graph_matchings_with_relabeling(edges):
+    """
+    Create optimal parallel matchings by finding the best relabeling strategy.
+
+    Tries multiple approaches and returns the one with minimum total hamming distance.
+
+    Args:
+        edges: Set/list of tuples representing edges (u, v) where u, v are binary strings
+
+    Returns:
+        List of sets, where each set is a matching using optimized binary labels
+    """
+    edges = list(edges)
+    if not edges:
+        return []
+
+    # Get all vertices
+    vertices = list(set(v for edge in edges for v in edge))
+
+    # Determine bit length from the input edges (preserve original bit length)
+    n_bits = len(vertices[0]) if vertices else 2
+
+    # Ensure we have enough bits for all vertices
+    min_bits_needed = max(2, (len(vertices) - 1).bit_length())
+    if min_bits_needed > n_bits:
+        n_bits = min_bits_needed
+
+    def hamming_distance(u, v):
+        """Calculate hamming distance between binary strings"""
+        try:
+            u_int = int(u, 2)
+            v_int = int(v, 2)
+            return bin(u_int ^ v_int).count("1")
+        except ValueError:
+            return len(u)  # Fallback for non-binary
+
+    def calculate_total_cost(edge_list):
+        """Calculate total hamming distance for a list of edges"""
+        return sum(hamming_distance(u, v) for u, v in edge_list)
+
+    def find_all_maximum_matchings(edge_list):
+        """Find maximum matching using Edmonds' Blossom algorithm via NetworkX"""
+        # Create graph
+        G = nx.Graph()
+        G.add_edges_from(edge_list)
+
+        # Find maximum matching using Edmonds' Blossom
+        max_matching = nx.max_weight_matching(G)
+
+        # Convert to list format consistent with original function
+        return [list(max_matching)]
+
+    def create_relabeling_from_matching(matching, all_vertices):
+        """Create vertex relabeling based on a matching"""
+        vertex_mapping = {}
+        used_labels = set()
+
+        # Label matching edges to flip bit 0
+        counter = 0
+        for u, v in matching:
+            if u not in vertex_mapping and v not in vertex_mapping:
+                if n_bits == 1:
+                    label1, label2 = "0", "1"
+                else:
+                    base = format(counter, f"0{n_bits-1}b")
+                    label1 = base + "0"
+                    label2 = base + "1"
+
+                vertex_mapping[u] = label1
+                vertex_mapping[v] = label2
+                used_labels.update([label1, label2])
+                counter += 1
+
+        # Label remaining vertices
+        remaining = [v for v in all_vertices if v not in vertex_mapping]
+        label_int = 0
+        for vertex in remaining:
+            while True:
+                label = format(label_int, f"0{n_bits}b")
+                if label not in used_labels:
+                    vertex_mapping[vertex] = label
+                    used_labels.add(label)
+                    break
+                label_int += 1
+
+        return vertex_mapping
+
+    def try_simple_swaps():
+        """Try simple vertex swaps to find better labelings"""
+        # Start with identity mapping - preserve original labels if possible
+        current_mapping = {}
+        used_labels = set()
+
+        # First, try to keep original labels
+        for vertex in vertices:
+            if vertex not in used_labels and len(vertex) == n_bits:
+                current_mapping[vertex] = vertex
+                used_labels.add(vertex)
+
+        # Assign labels to remaining vertices
+        label_int = 0
+        for vertex in vertices:
+            if vertex not in current_mapping:
+                while True:
+                    label = format(label_int, f"0{n_bits}b")
+                    if label not in used_labels:
+                        current_mapping[vertex] = label
+                        used_labels.add(label)
+                        break
+                    label_int += 1
+
+        best_mapping = current_mapping.copy()
+        best_cost = calculate_total_cost(
+            [(current_mapping[u], current_mapping[v]) for u, v in edges]
+        )
+
+        # Try all pairwise swaps
+        for i in range(len(vertices)):
+            for j in range(i + 1, len(vertices)):
+                # Swap labels of vertices[i] and vertices[j]
+                test_mapping = current_mapping.copy()
+                test_mapping[vertices[i]], test_mapping[vertices[j]] = (
+                    test_mapping[vertices[j]],
+                    test_mapping[vertices[i]],
+                )
+
+                test_cost = calculate_total_cost(
+                    [(test_mapping[u], test_mapping[v]) for u, v in edges]
+                )
+
+                if test_cost < best_cost:
+                    best_cost = test_cost
+                    best_mapping = test_mapping.copy()
+
+        return best_mapping, best_cost
+
+    def edges_to_matchings(relabeled_edges):
+        """Convert edges to parallel matchings grouped by bit flip"""
+
+        def get_bit_flip_position(u, v):
+            u_int = int(u, 2)
+            v_int = int(v, 2)
+            diff = u_int ^ v_int
+
+            if diff == 0:
+                return -1
+            elif bin(diff).count("1") == 1:
+                return (diff & -diff).bit_length() - 1
+            else:
+                return -2
+
+        # Group by bit flip position
+        groups = defaultdict(list)
+        for u, v in relabeled_edges:
+            bit_pos = get_bit_flip_position(u, v)
+            groups[bit_pos].append((u, v))
+
+        # Create matchings for each group
+        matchings = []
+        for group_edges in groups.values():
+            remaining = group_edges[:]
+            while remaining:
+                matching = set()
+                used_vertices = set()
+                next_remaining = []
+
+                for u, v in remaining:
+                    if u not in used_vertices and v not in used_vertices:
+                        matching.add((u, v))
+                        used_vertices.update([u, v])
+                    else:
+                        next_remaining.append((u, v))
+
+                if matching:
+                    matchings.append(matching)
+
+                if len(next_remaining) == len(remaining):
+                    break
+                remaining = next_remaining
+
+        return matchings
+
+    # Strategy 1: Try all maximum matchings
+    all_max_matchings = find_all_maximum_matchings(edges)
+    best_cost = float("inf")
+    best_strategy = None
+
+    for matching in all_max_matchings:
+        mapping = create_relabeling_from_matching(matching, vertices)
+        relabeled_edges = [(mapping[u], mapping[v]) for u, v in edges]
+        cost = calculate_total_cost(relabeled_edges)
+
+        if cost < best_cost:
+            best_cost = cost
+            best_strategy = ("matching", mapping, relabeled_edges)
+
+    # Strategy 2: Try simple swaps
+    swap_mapping, swap_cost = try_simple_swaps()
+    swap_edges = [(swap_mapping[u], swap_mapping[v]) for u, v in edges]
+
+    if swap_cost < best_cost:
+        best_cost = swap_cost
+        best_strategy = ("swap", swap_mapping, swap_edges)
+
+    # Use the best strategy found
+    _, best_mapping, best_edges = best_strategy
+
+    # Convert to matchings
+    matchings = edges_to_matchings(best_edges)
+
+    return matchings
 
 
 def graph_to_bitstring_edges(graph):
@@ -207,6 +582,51 @@ def count_gates(circuit, optimization_level=3):
     u3_count = op_counts.get("u3", 0)
 
     return cx_count, u3_count
+
+
+def count_gates_direct_transpilation(circuit, optimization_level=3):
+    """
+    Count gates using DIRECT Qiskit transpilation only - NO estimation fallbacks.
+
+    Args:
+        circuit: QuantumCircuit to analyze
+        optimization_level: Transpilation optimization level (0-3)
+
+    Returns:
+        Tuple of (cx_count, u3_count, success_flag, method_used, transpiled_circuit)
+    """
+
+    try:
+        transpiled_circuit = transpile(
+            circuit,
+            basis_gates=["cx", "u3", "u", "rz", "ry", "rx", "x", "h", "p"],
+            optimization_level=optimization_level,
+            seed_transpiler=42,  # For reproducible results
+        )
+
+        op_counts = transpiled_circuit.count_ops()
+
+        # Count gates
+        cx_count = op_counts.get("cx", 0) + op_counts.get("cnot", 0)
+
+        u3_count = (
+            op_counts.get("u3", 0)
+            + op_counts.get("u", 0)
+            + op_counts.get("rz", 0)
+            + op_counts.get("ry", 0)
+            + op_counts.get("rx", 0)
+            + op_counts.get("p", 0)
+            + op_counts.get("x", 0)
+            + op_counts.get("h", 0)
+        )
+
+        return cx_count, u3_count, True, "Direct-Transpile", transpiled_circuit
+
+    except Exception as e:
+        print(f"  Direct transpilation failed: {str(e)[:60]}...")
+
+        # NO FALLBACK - Return failure
+        return 0, 0, False, "FAILED", None
 
 
 def compare_quantum_states(
@@ -397,3 +817,138 @@ def analyze_circuit_comparison(qc_original, qc_simplified, tolerance=1e-10):
     results = compare_quantum_states(state_original, state_simplified, tolerance, verbose=False)
 
     return results
+
+
+def reduce_graph_space(edges, active_qubits=None):
+    """
+    Reduce the graph space by keeping only essential qubits.
+    
+    Allow merging only if:
+    - Number of edges is a power of 2 (complete subcube)
+    - All edges flip the SAME set of qubits
+    - Variation occurs in exactly log2(num_edges) non-flipping qubits
+    """
+    if not edges:
+        return edges, active_qubits if active_qubits is not None else []
+    
+    bitstring_length = len(next(iter(edges))[0])
+    
+    if active_qubits is None:
+        active_qubits = list(range(bitstring_length))
+    
+    edge_list = list(edges)
+    num_edges = len(edges)
+    
+    # Check if number of edges is a power of 2
+    is_power_of_2 = (num_edges & (num_edges - 1)) == 0 and num_edges > 0
+    
+    # Find qubits that flip in EACH edge and check consistency
+    flipping_qubits_per_edge = []
+    for source, target in edge_list:
+        edge_flips = set()
+        for qubit_idx in active_qubits:
+            pos = bitstring_length - 1 - qubit_idx
+            if source[pos] != target[pos]:
+                edge_flips.add(qubit_idx)
+        flipping_qubits_per_edge.append(edge_flips)
+    
+    # Check if all edges flip the same qubits
+    if not flipping_qubits_per_edge:
+        return edges, active_qubits
+    
+    flipping_qubits = flipping_qubits_per_edge[0]
+    all_same_flips = all(edge_flips == flipping_qubits for edge_flips in flipping_qubits_per_edge)
+    
+    if not all_same_flips:
+        # Edges flip different qubits - cannot merge
+        return edges, active_qubits
+    
+    if not flipping_qubits:
+        return edges, active_qubits
+    
+    non_flipping_qubits = sorted(set(active_qubits) - flipping_qubits, reverse=True)
+    
+    from itertools import combinations
+    import math
+    
+    # Check if edges can merge
+    can_merge = False
+    
+    if is_power_of_2 and num_edges >= 2 and len(non_flipping_qubits) > 0:
+        expected_varying_bits = int(math.log2(num_edges))
+        
+        if len(non_flipping_qubits) >= expected_varying_bits:
+            # Check which non-flipping qubits vary
+            varying_non_flipping_source = []
+            varying_non_flipping_target = []
+            
+            for qubit_idx in non_flipping_qubits:
+                pos = bitstring_length - 1 - qubit_idx
+                source_values = set(source[pos] for source, target in edge_list)
+                target_values = set(target[pos] for source, target in edge_list)
+                
+                if len(source_values) > 1:
+                    varying_non_flipping_source.append(qubit_idx)
+                if len(target_values) > 1:
+                    varying_non_flipping_target.append(qubit_idx)
+            
+            # Check if both source and target vary in the same qubits
+            # and exactly the expected number of qubits vary
+            if (varying_non_flipping_source == varying_non_flipping_target and
+                len(varying_non_flipping_source) == expected_varying_bits):
+                can_merge = True
+    
+    if can_merge:
+        # Allow merging: find minimal edges with maximal bits
+        min_distinct_edges = float('inf')
+        best_qubits = list(flipping_qubits)
+        
+        # Try all subsets
+        for flip_size in range(len(flipping_qubits), 0, -1):
+            for flip_subset in combinations(sorted(flipping_qubits), flip_size):
+                for non_flip_size in range(len(non_flipping_qubits) + 1):
+                    for non_flip_subset in combinations(sorted(non_flipping_qubits), non_flip_size):
+                        test_qubits = sorted(list(flip_subset) + list(non_flip_subset))
+                        test_positions = sorted([bitstring_length - 1 - q for q in test_qubits])
+                        
+                        test_projected = set()
+                        valid_projection = True
+                        
+                        for source, target in edge_list:
+                            source_proj = ''.join(source[pos] for pos in test_positions)
+                            target_proj = ''.join(target[pos] for pos in test_positions)
+                            
+                            if source_proj == target_proj:
+                                valid_projection = False
+                                break
+                            
+                            if source_proj <= target_proj:
+                                test_projected.add((source_proj, target_proj))
+                            else:
+                                test_projected.add((target_proj, source_proj))
+                        
+                        if valid_projection:
+                            distinct_count = len(test_projected)
+                            if distinct_count < min_distinct_edges:
+                                min_distinct_edges = distinct_count
+                                best_qubits = test_qubits
+                            elif distinct_count == min_distinct_edges and len(test_qubits) > len(best_qubits):
+                                best_qubits = test_qubits
+    else:
+        # No merging allowed: return original edges with all bits
+        return edges, active_qubits
+    
+    qubits_to_keep = sorted(best_qubits)
+    positions_to_keep = sorted([bitstring_length - 1 - q for q in qubits_to_keep])
+    
+    reduced_edges = set()
+    for source, target in edges:
+        source_proj = ''.join(source[pos] for pos in positions_to_keep)
+        target_proj = ''.join(target[pos] for pos in positions_to_keep)
+        
+        if source_proj <= target_proj:
+            reduced_edges.add((source_proj, target_proj))
+        else:
+            reduced_edges.add((target_proj, source_proj))
+    
+    return reduced_edges, qubits_to_keep

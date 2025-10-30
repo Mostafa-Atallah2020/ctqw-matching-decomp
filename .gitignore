@@ -126,6 +126,8 @@ venv/
 ENV/
 env.bak/
 venv.bak/
+linux
+win-env
 
 # Spyder project settings
 .spyderproject
@@ -162,3 +164,6 @@ cython_debug/
 pauli_strings.txt
 graphs and their circuits.ipynb
 BWT Exit Probability comparison.ipynb
+
+mcrx_optimization_errors
+analysis/outputs

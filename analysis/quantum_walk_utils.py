@@ -17,6 +17,7 @@ from qiskit import QuantumCircuit, transpile
 from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.quantum_info import Operator, Pauli, SparsePauliOp
 from scipy.linalg import expm
+from src.misc import graph_matchings_parallel
 
 from src.graphs import IntersectingEdgesGraph, MultiEdgeGraph, StaticGraph
 
@@ -128,25 +129,59 @@ class GraphProcessor:
 
 
 class BaseAnalyzer:
-    def __init__(self, n_qubits: int, delta_t: float, seed: int = 0):
+    def __init__(self, n_qubits: int, delta_t: float, matchings: str = "greedy", seed: int = 0):
         self.n_qubits = n_qubits
         self.delta_t = delta_t
+        self.matchings = matchings
         self.seed = seed
 
-    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
-        """Analyze circuit with fixed transpilation settings over multiple runs and return the lowest counts."""
-        min_metrics = CircuitMetrics(
-            cx_count=float("inf"), u3_count=float("inf"), depth=float("inf")
-        )
+    # def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
+    #     """Analyze circuit with fixed transpilation settings over multiple runs and return the lowest counts."""
+    #     min_metrics = CircuitMetrics(
+    #         cx_count=float("inf"), u3_count=float("inf"), depth=float("inf")
+    #     )
+
+    #     for _ in range(runs):
+    #         try:
+    #             transpiled_qc = transpile(
+    #                 qc,
+    #                 basis_gates=["cx", "u3"],
+    #                 optimization_level=3,
+    #                 seed_transpiler=self.seed,
+    #                 # routing_method="sabre",
+    #             )
+
+    #             counts = transpiled_qc.count_ops()
+    #             current_metrics = CircuitMetrics(
+    #                 cx_count=counts.get("cx", 0),
+    #                 u3_count=counts.get("u3", 0),
+    #                 depth=transpiled_qc.depth(),
+    #             )
+
+    #             # Update minimum metrics
+    #             min_metrics.cx_count = min(min_metrics.cx_count, current_metrics.cx_count)
+    #             min_metrics.u3_count = min(min_metrics.u3_count, current_metrics.u3_count)
+    #             min_metrics.depth = min(min_metrics.depth, current_metrics.depth)
+
+    #         except Exception as e:
+    #             print(f"Transpilation error: {str(e)}")
+
+    #     # Return the minimum metrics found
+    #     return min_metrics if min_metrics.cx_count != float("inf") else None
+
+    def analyze_circuit(self, qc: QuantumCircuit, runs: int = 1) -> CircuitMetrics:
+        """Analyze circuit with fixed transpilation settings over multiple runs and return the average counts."""
+        total_metrics = CircuitMetrics(cx_count=0, u3_count=0, depth=0)
 
         for _ in range(runs):
             try:
                 transpiled_qc = transpile(
                     qc,
                     basis_gates=["cx", "u3"],
+                    # seed_transpiler=self.seed,
+                    # routing_method="basic",
+                    # layout_method="trivial",
                     optimization_level=3,
-                    seed_transpiler=self.seed,
-                    # routing_method="sabre",
                 )
 
                 counts = transpiled_qc.count_ops()
@@ -156,55 +191,22 @@ class BaseAnalyzer:
                     depth=transpiled_qc.depth(),
                 )
 
-                # Update minimum metrics
-                min_metrics.cx_count = min(min_metrics.cx_count, current_metrics.cx_count)
-                min_metrics.u3_count = min(min_metrics.u3_count, current_metrics.u3_count)
-                min_metrics.depth = min(min_metrics.depth, current_metrics.depth)
+                # Accumulate metrics
+                total_metrics.cx_count += current_metrics.cx_count
+                total_metrics.u3_count += current_metrics.u3_count
+                total_metrics.depth += current_metrics.depth
 
             except Exception as e:
                 print(f"Transpilation error: {str(e)}")
 
-        # Return the minimum metrics found
-        return min_metrics if min_metrics.cx_count != float("inf") else None
+        # Calculate averages
+        average_metrics = CircuitMetrics(
+            cx_count=total_metrics.cx_count / runs,
+            u3_count=total_metrics.u3_count / runs,
+            depth=total_metrics.depth / runs,
+        )
 
-    # def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
-    #     """Analyze circuit with fixed transpilation settings over multiple runs and return the average counts."""
-    #     total_metrics = CircuitMetrics(cx_count=0, u3_count=0, depth=0)
-
-    #     for _ in range(runs):
-    #         try:
-    #             transpiled_qc = transpile(
-    #                 qc,
-    #                 basis_gates=['cx', 'u3'],
-    #                 seed_transpiler=self.seed,
-    #                 optimization_level=3
-    #                 #routing_method='sabre'
-
-    #             )
-
-    #             counts = transpiled_qc.count_ops()
-    #             current_metrics = CircuitMetrics(
-    #                 cx_count=counts.get('cx', 0),
-    #                 u3_count=counts.get('u3', 0),
-    #                 depth=transpiled_qc.depth()
-    #             )
-
-    #             # Accumulate metrics
-    #             total_metrics.cx_count += current_metrics.cx_count
-    #             total_metrics.u3_count += current_metrics.u3_count
-    #             total_metrics.depth += current_metrics.depth
-
-    #         except Exception as e:
-    #             print(f"Transpilation error: {str(e)}")
-
-    #     # Calculate averages
-    #     average_metrics = CircuitMetrics(
-    #         cx_count=total_metrics.cx_count / runs,
-    #         u3_count=total_metrics.u3_count / runs,
-    #         depth=total_metrics.depth / runs
-    #     )
-
-    #     return average_metrics
+        return average_metrics
 
     def analyze_matching(
         self, edges: Set[Tuple[str, str]], n_steps: int = 1
@@ -212,7 +214,7 @@ class BaseAnalyzer:
         """Analyze circuit using matching method."""
         try:
             static_G = StaticGraph(edges)
-            intersecting_G = IntersectingEdgesGraph(edges)
+            intersecting_G = IntersectingEdgesGraph(edges, self.matchings)
 
             qc = QuantumCircuit(static_G.n_qubits)
             for _ in range(n_steps):
@@ -252,38 +254,45 @@ class BaseAnalyzer:
     def analyze_pauli(self, edges: Set[Tuple[str, str]]) -> Optional[CircuitMetrics]:
         """Analyze circuit using Pauli decomposition method."""
         try:
-            static_G = StaticGraph(edges)
-            H = static_G.get_adj_mat()
-            n = static_G.n_qubits
+            matchings = graph_matchings_parallel(edges)
+
+            relabeled_edges = set()
+            for m in matchings:
+                relabeled_edges = relabeled_edges.union(m)
+
+            relabeled_G = StaticGraph(relabeled_edges)
+
+            H = relabeled_G.get_adj_mat()
+            n = relabeled_G.n_qubits
 
             # Decompose the Hamiltonian into Pauli basis
             pauli_strings = []
-            real_coeffs = []
-            imag_coeffs = []
+            coeffs = []
 
             for pauli_string in ["".join(p) for p in itertools.product("IXYZ", repeat=n)]:
                 P = Pauli(pauli_string)
                 P_op = Operator(P).data
                 coeff = np.trace(P_op.conj().T @ H) / (2**n)
-                if not np.isclose(coeff, 0, atol=1e-10):
-                    pauli_strings.append(pauli_string)
-                    real_coeffs.append(float(np.real(coeff)))
-                    imag_coeffs.append(float(np.imag(coeff)))
 
-            # Create quantum circuit
+                # For real symmetric matrices, coefficients should be real
+                # Check that imaginary part is negligible
+                if not np.isclose(np.imag(coeff), 0, atol=1e-10):
+                    print(
+                        f"Warning: Non-negligible imaginary coefficient {np.imag(coeff)} for Pauli string {pauli_string}"
+                    )
+
+                real_coeff = float(np.real(coeff))
+                if not np.isclose(real_coeff, 0, atol=1e-10):
+                    pauli_strings.append(pauli_string)
+                    coeffs.append(real_coeff)
+
+            # Create quantum circuit with real coefficients only
             qc = QuantumCircuit(n)
 
-            # Real part evolution
-            if any(c != 0 for c in real_coeffs):
-                real_pauli_op = SparsePauliOp(pauli_strings, real_coeffs)
-                real_evo_gate = PauliEvolutionGate(real_pauli_op, time=-self.delta_t)
-                qc.append(real_evo_gate, range(n))
-
-            # Imaginary part evolution
-            if any(c != 0 for c in imag_coeffs):
-                imag_pauli_op = SparsePauliOp(pauli_strings, imag_coeffs)
-                imag_evo_gate = PauliEvolutionGate(imag_pauli_op, time=-self.delta_t)
-                qc.append(imag_evo_gate, range(n))
+            if coeffs:  # Only if we have non-zero coefficients
+                pauli_op = SparsePauliOp(pauli_strings, coeffs)
+                evo_gate = PauliEvolutionGate(pauli_op, time=-self.delta_t)
+                qc.append(evo_gate, range(n))
 
             metrics = self.analyze_circuit(qc)
             if metrics is None:
@@ -294,76 +303,6 @@ class BaseAnalyzer:
             print(f"Pauli analysis error: {str(e)}")
             return None
 
-    def analyze_matching(
-        self, edges: Set[Tuple[str, str]], n_steps: int = 1
-    ) -> Optional[CircuitMetrics]:
-        try:
-            static_G = StaticGraph(edges)
-            intersecting_G = IntersectingEdgesGraph(edges)
-
-            qc = QuantumCircuit(static_G.n_qubits)
-            for _ in range(n_steps):
-                for subgraph in intersecting_G.subgraphs:
-                    G = MultiEdgeGraph(subgraph.edges)
-                    sub_qc = G.get_qc(simplified=True)
-                    qc = qc.compose(sub_qc)
-
-            return self.analyze_circuit(qc)
-        except Exception as e:
-            return None
-
-    def analyze_exact(self, edges: Set[Tuple[str, str]]) -> Optional[CircuitMetrics]:
-        try:
-            static_G = StaticGraph(edges)
-            H = -1j * self.delta_t * static_G.get_adj_mat()
-            U = Operator(expm(H))
-
-            qc = QuantumCircuit(static_G.n_qubits)
-            qc.unitary(U, range(static_G.n_qubits))
-
-            return self.analyze_circuit(qc)
-        except Exception as e:
-            return None
-
-    def analyze_pauli(self, edges: Set[Tuple[str, str]]) -> Optional[CircuitMetrics]:
-        try:
-            static_G = StaticGraph(edges)
-            H = static_G.get_adj_mat()
-            n = static_G.n_qubits
-
-            # Decompose the Hamiltonian into Pauli basis
-            pauli_strings = []
-            real_coeffs = []
-            imag_coeffs = []
-
-            for pauli_string in ["".join(p) for p in itertools.product("IXYZ", repeat=n)]:
-                P = Pauli(pauli_string)
-                P_op = Operator(P).data
-                coeff = np.trace(P_op.conj().T @ H) / (2**n)
-                if not np.isclose(coeff, 0, atol=1e-10):
-                    pauli_strings.append(pauli_string)
-                    real_coeffs.append(float(np.real(coeff)))
-                    imag_coeffs.append(float(np.imag(coeff)))
-
-            # Create quantum circuit
-            qc = QuantumCircuit(n)
-
-            # Real part evolution
-            if any(c != 0 for c in real_coeffs):
-                real_pauli_op = SparsePauliOp(pauli_strings, real_coeffs)
-                real_evo_gate = PauliEvolutionGate(real_pauli_op, time=-self.delta_t)
-                qc.append(real_evo_gate, range(n))
-
-            # Imaginary part evolution
-            if any(c != 0 for c in imag_coeffs):
-                imag_pauli_op = SparsePauliOp(pauli_strings, imag_coeffs)
-                imag_evo_gate = PauliEvolutionGate(imag_pauli_op, time=-self.delta_t)
-                qc.append(imag_evo_gate, range(n))
-
-            return self.analyze_circuit(qc)
-        except Exception as e:
-            return None
-
 
 class ResultsManager:
     def __init__(self, base_dir: str, graph_info: Dict[str, str]):
@@ -371,7 +310,7 @@ class ResultsManager:
         self.graph_info = graph_info
 
     def get_output_path(self, category: str, ext: str) -> str:
-        filename = f"{category}_{self.graph_info['size']}_{self.graph_info['vertices']}c"
+        filename = f"{category}_{self.graph_info['size']}_{self.graph_info['vertices']}c.{ext}"
         return os.path.join(self.base_dir, filename)
 
     def save_results(self, results: Dict, category: str):
