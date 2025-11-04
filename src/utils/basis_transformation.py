@@ -379,19 +379,8 @@ if __name__ == "__main__":
     )
 
     # Example 2: Compose two transformations
-    print("\n" + "=" * 60)
-    print("Example 2: Compose transformations")
-    tr1 = {"101": "011", "011": "101"}
-    tr2 = {"100": "110", "110": "100", "101": "111", "111": "101"}
-
-    # Complete them first
-    tr1_complete = complete_transformation(tr1, 3)
-    tr2_complete = complete_transformation(tr2, 3)
-
-    print(f"\nTR1 (partial): {tr1}")
-    print(f"TR1 (complete): {tr1_complete}")
-    print(f"\nTR2 (partial): {tr2}")
-    print(f"TR2 (complete): {tr2_complete}")
+    tr1 = {'101': '011', '011': '101'}
+    tr2 = {'100': '110', '110': '100', '101': '111', '111': '101'}
 
     composed = compose_transformations(tr1, tr2)
     print_transformation(composed, "Composed transformation (TR2 ∘ TR1)")
@@ -400,39 +389,35 @@ if __name__ == "__main__":
     print("\nCircuit:")
     print(circuit)
 
-    # Example 3: Show difference between partial and complete
-    print("\n" + "=" * 60)
-    print("Example 3: Partial vs Complete transformation display")
+    # Example 3: Simple single-qubit controlled swap
+    print("\n" + "="*50)
+    tr_simple = create_transformation_from_swaps([('10', '11')], 2)
+    print_transformation(tr_simple, "Simple transformation |10⟩ ↔ |11⟩")
+    circuit_simple = transformation_to_circuit(tr_simple)
+    print("\nCircuit:")
+    print(circuit_simple)
 
-    tr_simple = {"000": "010", "010": "000"}
-    print(f"\nPartial transformation dict: {tr_simple}")
+    # Example 4: Multiple transformations
+    print("\n" + "="*50)
+    tr_a = create_transformation_from_swaps([('000', '010')], 3)
+    tr_b = create_transformation_from_swaps([('010', '110')], 3)
+    tr_c = create_transformation_from_swaps([('011', '111')], 3)
 
-    print_transformation(tr_simple, "Partial (only changed states)")
+    composed_multiple = compose_multiple_transformations([tr_a, tr_b, tr_c])
+    print_transformation(composed_multiple, "Multiple composition")
+    circuit_multiple = transformation_to_circuit(composed_multiple)
+    print("\nCircuit:")
+    print(circuit_multiple)
 
-    tr_simple_complete = complete_transformation(tr_simple, 3)
-    print_transformation(tr_simple_complete, "Complete (all states)", show_unchanged=True)
-
-    # Example 4: Compose multiple and show complete result
-    print("\n" + "=" * 60)
-    print("Example 4: Multiple composition with complete output")
-
-    tr_a = {"000": "010", "010": "000"}
-    tr_b = {"010": "110", "110": "010"}
-
-    composed_ab = compose_transformations(tr_a, tr_b)
-    composed_ab_complete = complete_transformation(composed_ab, 3)
-
-    print("\nComposed transformation (complete):")
-    print(composed_ab_complete)
-    print_transformation(composed_ab_complete, "All states", show_unchanged=True)
-
-    # Example 5: Error handling
-    print("\n" + "=" * 60)
-    print("Example 5: Using complete_transformation with inference")
-
-    tr_infer = {"0000": "1000", "1000": "0000", "0001": "1001", "1001": "0001"}
-    tr_infer_complete = complete_transformation(tr_infer)  # n_qubits inferred as 4
-
-    print(f"\nInferred {get_number_of_qubits(tr_infer_complete)} qubits")
-    print(f"Total states in complete transformation: {len(tr_infer_complete)}")
-    print_transformation(tr_infer_complete, "4-qubit transformation")
+    # Example 5: Complex transformation
+    print("\n" + "="*50)
+    tr_complex = {
+        '000': '010',
+        '010': '000',
+        '001': '011',
+        '011': '001'
+    }
+    print_transformation(tr_complex, "Complex transformation")
+    circuit_complex = transformation_to_circuit(tr_complex)
+    print("\nCircuit:")
+    print(circuit_complex)
