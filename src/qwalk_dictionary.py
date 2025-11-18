@@ -53,7 +53,7 @@ def _updatez2(z2: str, zeros1: List):
     return "".join(z2)
 
 
-def getGateOps(z1: str, z2: str, little_endian: bool):
+def getGateOps(z1: str, z2: str, little_endian: bool, target_qubit=None):
     """
     Returns the gate operations that implement the quantum walk. When the two strings are equal
     the adjacency matrix is A=|z><z|. When the two bit strings z1 and z2 are not equal, the adjacency
@@ -65,6 +65,7 @@ def getGateOps(z1: str, z2: str, little_endian: bool):
     little_endian: keep True if you want the gates to match the qubit order on qiskit.
     In qiskit the top most qubit on the circuit is least significant qubit. It is stored on the
     zero index of the QuantumRegister.
+    target_qubit: target qubit for the walk, i.e., it is the qubit that is target qubit of CRX or CP.
 
     Returns: list(str): A list of gate operations in strings. In the controled gates,
     the target and controls are separated by ','. Ex: crx_0|2|3,1 means controls
@@ -94,9 +95,13 @@ def getGateOps(z1: str, z2: str, little_endian: bool):
         zeros1 = [str(idx) for idx, elem in enumerate(z1) if elem == "0"]
         zeros2 = [str(idx) for idx, elem in enumerate(z2) if elem == "0"]
 
-        ctrlBit2 = list(set(zeros1) - set(zeros2))[
-            0
-        ]  # Gets the first nonzero index for z2 that's a zero for z1.
+        if target_qubit:
+            ctrlBit2=str(target_qubit)
+        else:
+            ctrlBit2 = list(set(zeros1) - set(zeros2))[
+                0
+            ]  # Gets the first nonzero index for z2 that's a zero for z1.
+
         zeros1.remove(
             ctrlBit2
         )  # we will use this as a control to turn the z2 to all ones without affecting z1.
@@ -121,7 +126,7 @@ def getGateOps(z1: str, z2: str, little_endian: bool):
         return ops
 
 
-def getOpsCirc(z1: str, z2: str, little_endian: bool, param: float = 0.25) -> QuantumCircuit:
+def getOpsCirc(z1: str, z2: str, little_endian: bool, param: float = 0.25, target_qubit=None) -> QuantumCircuit:
     """Wrapper function. Takes a z1 and z2 and returns the corresponding circuit. Works for
     both single-edge and single-self loops.
 
@@ -133,10 +138,11 @@ def getOpsCirc(z1: str, z2: str, little_endian: bool, param: float = 0.25) -> Qu
     param: angle value for crx or cp. Note that the code takes param and manipulates it.
     param is multiplied by 2 for rx and param for cp is multiplied by -1.
     This is so that mathematically rx=exp(-it(|z1><z2|+|z2><z1|). cp=(exp(-it(|z1><z1|))).
+    target_qubit: target qubit for the walk, i.e., it is the qubit that is target qubit of CRX or CP.
 
     Returns:
     Corresponding QuantumCircuit."""
-    gateops = getGateOps(z1, z2, little_endian)
+    gateops = getGateOps(z1, z2, little_endian, target_qubit)
     # print(gateops)
     circ = QuantumCircuit(len(z1))
     # implement ops
