@@ -246,83 +246,86 @@ def build_matching_circuit_iteratively(n_qubits, n_steps, delta_t, matchings):
     # Time per step
     dt = delta_t / n_steps
     
-    for step in range(n_steps):
-        for matching in matchings:
-            # Convert matching to set of edges with proper string format
-            edges_set = set()
+    # for step in range(n_steps):
+    for matching in matchings:
+        # Convert matching to set of edges with proper string format
+        edges_set = set()
+        
+        for edge in matching:
+            node1, node2 = edge
             
-            for edge in matching:
-                node1, node2 = edge
+            # Ensure they are strings
+            if isinstance(node1, int):
+                z1 = format(node1, f'0{n_qubits}b')
+            else:
+                z1 = str(node1).zfill(n_qubits)
                 
-                # Ensure they are strings
-                if isinstance(node1, int):
-                    z1 = format(node1, f'0{n_qubits}b')
-                else:
-                    z1 = str(node1).zfill(n_qubits)
-                    
-                if isinstance(node2, int):
-                    z2 = format(node2, f'0{n_qubits}b')
-                else:
-                    z2 = str(node2).zfill(n_qubits)
+            if isinstance(node2, int):
+                z2 = format(node2, f'0{n_qubits}b')
+            else:
+                z2 = str(node2).zfill(n_qubits)
+            
+            edges_set.add((z1, z2))
+        
+        # Reduce space for this matching
+        reduced_edges, not_reduced_edges = compress_edges_iteratively(list(edges_set))
+        
+        # For each reduced edge, get circuit and append
+        for edge_elem in reduced_edges:
+            z1_reduced, z2_reduced= edge_elem["compressed_edge"]
+            active_qubits=edge_elem["active_qubits"]
+            weight_reducing_qubits=edge_elem["weight_reducing_qubits"]
+
+            target_qubit_reduced=_get_target_qubit(z1_reduced, z2_reduced) # this is guaranteed to exist.
+            target_qubit_full=active_qubits[target_qubit_reduced]
+
+            # print(f"compressed edge: {edge_elem["compressed_edge"]}")
+            # print(f"active qubits: {edge_elem["active_qubits"]}")
+            # print(f"weight reducing qubits: {edge_elem["weight_reducing_qubits"]}")
+            # print(f"target qubit reduced: {target_qubit_reduced}")
+            # print(f"target qubit full: {target_qubit_full}")
+            # print(f"z1: {z1_reduced}")
+            # print(f"z2: {z2_reduced}")
+
+            # cx gates for the weight reducing qubits.
+            for w_qubit in weight_reducing_qubits:
+                qc.cx(target_qubit_full, w_qubit)
+
+            # Handle single qubit case: just an RX gate
+            if len(z1_reduced) == 1:
+                # Single qubit case: ('0', '1') or ('1', '0')
+                # This is a simple RX gate on the active qubit
+                # active_qubits[0] is the qubit index in the full register
+                # target_qubit = active_qubits[0]
                 
-                edges_set.add((z1, z2))
-            
-            # Reduce space for this matching
-            reduced_edges, not_reduced_edges = compress_edges_iteratively(list(edges_set))
-            
-            # For each reduced edge, get circuit and append
-            for edge_elem in reduced_edges:
-                z1_reduced, z2_reduced= edge_elem["compressed_edge"]
-                active_qubits=edge_elem["active_qubits"]
-                weight_reducing_qubits=edge_elem["weight_reducing_qubits"]
+                # Apply RX gate to the target qubit
+                qc.rx(2 * dt, target_qubit_full)  # Factor of 2 matches getOpsCirc convention
+                # qc.barrier(label=f'M{matchings.index(matching)+1}')
+                
+            elif len(z1_reduced) == 0:
+                # Edge case: no active qubits (shouldn't happen, but handle it)
+                continue
+                
+            else:
+                # Multi-qubit case: use getOpsCirc
+                reduced_circ = getOpsCirc(z1_reduced, z2_reduced, 
+                                            little_endian=True, param=dt, target_qubit=target_qubit_reduced)
+                
+                # Compose onto main circuit at active qubit positions
+                qc.compose(reduced_circ, qubits=active_qubits, inplace=True)
 
-                target_qubit_reduced=_get_target_qubit(z1_reduced, z2_reduced) # this is guaranteed to exist.
-                target_qubit_full=active_qubits[target_qubit_reduced]
+            # cx gates for the weight reducing qubits.
+            for w_qubit in weight_reducing_qubits:
+                qc.cx(target_qubit_full, w_qubit)
 
-                # print(f"compressed edge: {edge_elem["compressed_edge"]}")
-                # print(f"active qubits: {edge_elem["active_qubits"]}")
-                # print(f"weight reducing qubits: {edge_elem["weight_reducing_qubits"]}")
-                # print(f"target qubit reduced: {target_qubit_reduced}")
-                # print(f"target qubit full: {target_qubit_full}")
-                # print(f"z1: {z1_reduced}")
-                # print(f"z2: {z2_reduced}")
-
-                # cx gates for the weight reducing qubits.
-                for w_qubit in weight_reducing_qubits:
-                    qc.cx(target_qubit_full, w_qubit)
-
-                # Handle single qubit case: just an RX gate
-                if len(z1_reduced) == 1:
-                    # Single qubit case: ('0', '1') or ('1', '0')
-                    # This is a simple RX gate on the active qubit
-                    # active_qubits[0] is the qubit index in the full register
-                    # target_qubit = active_qubits[0]
-                    
-                    # Apply RX gate to the target qubit
-                    qc.rx(2 * dt, target_qubit_full)  # Factor of 2 matches getOpsCirc convention
-                    # qc.barrier(label=f'M{matchings.index(matching)+1}')
-                    
-                elif len(z1_reduced) == 0:
-                    # Edge case: no active qubits (shouldn't happen, but handle it)
-                    continue
-                    
-                else:
-                    # Multi-qubit case: use getOpsCirc
-                    reduced_circ = getOpsCirc(z1_reduced, z2_reduced, 
-                                             little_endian=True, param=dt, target_qubit=target_qubit_reduced)
-                    
-                    # Compose onto main circuit at active qubit positions
-                    qc.compose(reduced_circ, qubits=active_qubits, inplace=True)
-
-                # cx gates for the weight reducing qubits.
-                for w_qubit in weight_reducing_qubits:
-                    qc.cx(target_qubit_full, w_qubit)
-
-            # edges that weren't compressed.
-            for z1, z2 in not_reduced_edges:
-                circ=getOpsCirc(z1, z2, 
-                                             little_endian=True, param=dt)
-                qc.compose(circ, inplace=True)
-            # qc.barrier(label=f'M{matchings.index(matching)+1}')
-    
-    return qc
+        # edges that weren't compressed.
+        for z1, z2 in not_reduced_edges:
+            circ=getOpsCirc(z1, z2, 
+                                            little_endian=True, param=dt)
+            qc.compose(circ, inplace=True)
+        # qc.barrier(label=f'M{matchings.index(matching)+1}')
+    # manually repeat. more robust than using decompose
+    qc_final=QuantumCircuit(n_qubits)
+    for _ in range(n_steps):
+        qc_final.compose(qc, inplace=True)
+    return qc_final
