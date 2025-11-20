@@ -7,7 +7,7 @@ import networkx as nx
 import numpy as np
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
-from scipy.linalg import expm, eigh
+from scipy.linalg import expm
 from sympy import symbols
 
 from src import MCRX, Edge, Expression, GraphDrawer
@@ -18,37 +18,6 @@ from src.misc import (
     graph_matchings_parallel,
     hamming_distance,
 )
-
-
-def expm_quantum(hamiltonian, time):
-    """
-    Compute quantum time evolution operator exp(-iHt) with high accuracy.
-
-    Uses eigendecomposition which guarantees perfect unitarity for Hermitian matrices.
-    This is the gold standard method for quantum mechanics:
-    - H = V @ D @ V†  (eigendecomposition)
-    - exp(-iHt) = V @ exp(-iDt) @ V†
-
-    Benchmarks show this is 3-4x faster than scipy.linalg.expm for small matrices
-    while maintaining perfect unitarity (errors < machine precision).
-
-    Args:
-        hamiltonian: Hermitian Hamiltonian matrix (numpy array)
-        time: Evolution time
-
-    Returns:
-        Unitary evolution operator U = exp(-iHt)
-    """
-    # Use eigh for Hermitian matrices (faster and more accurate than eig)
-    eigenvalues, eigenvectors = eigh(hamiltonian)
-
-    # Compute exp(-i * eigenvalues * time)
-    exp_eigenvalues = np.exp(-1j * eigenvalues * time)
-
-    # Reconstruct: U = V @ diag(exp(-iλt)) @ V†
-    result = eigenvectors @ np.diag(exp_eigenvalues) @ eigenvectors.conj().T
-
-    return result
 
 
 class Graph:
@@ -252,8 +221,8 @@ class DynamicGraph:
         for _ in range(t_steps):
             for graph, time in self.graph_sequence:
                 adj_matrix = graph.get_adj_mat()
-                # Use eigendecomposition for guaranteed unitarity and speed
-                unitary = expm_quantum(adj_matrix, time)
+                # Use scipy's fast expm (faster than eigendecomposition)
+                unitary = expm(-1j * adj_matrix * time)
                 time_evo_op = np.dot(unitary, time_evo_op)
 
         time_evo_op = Operator(time_evo_op)
