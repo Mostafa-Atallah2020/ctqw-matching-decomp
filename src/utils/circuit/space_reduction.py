@@ -1,6 +1,6 @@
 from typing import List, Tuple, Dict, Set, Any
 from qiskit import QuantumCircuit
-from src.qwalk_dictionary import getOpsCirc, getHammingWt
+from src.utils.circuit.gate_ops import getOpsCirc, getHammingWt
 
 def compress_edges_iteratively(
     edge_list: List[Tuple[str, str]]

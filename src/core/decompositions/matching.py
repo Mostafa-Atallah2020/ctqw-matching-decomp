@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 from qiskit import QuantumCircuit
-from src.utils.circuit.graph_simplifier import build_matching_circuit_iteratively
+from src.utils.circuit.space_reduction import build_matching_circuit_iteratively
 
 if TYPE_CHECKING:
     from src.core.multi_edge_graph import MultiEdgeGraph
