@@ -158,6 +158,12 @@ class StaticGraph:
         return StaticGraph(self.nodes | other.nodes, self.edges | other.edges)
 
     def get_adj_mat(self):
+        """
+        Get adjacency matrix for the graph.
+
+        Returns:
+            Adjacency matrix (numpy array)
+        """
         vertex_to_index = {v: i for i, v in enumerate(self.nodes)}
         num_vertices = len(self.nodes)
         adj_matrix = np.zeros((num_vertices, num_vertices), dtype=int)
@@ -215,6 +221,7 @@ class DynamicGraph:
         for _ in range(t_steps):
             for graph, time in self.graph_sequence:
                 adj_matrix = graph.get_adj_mat()
+                # Use scipy's fast expm (faster than eigendecomposition)
                 unitary = expm(-1j * adj_matrix * time)
                 time_evo_op = np.dot(unitary, time_evo_op)
 

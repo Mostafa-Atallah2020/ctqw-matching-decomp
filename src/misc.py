@@ -214,9 +214,181 @@ def graph_matchings_no_relabeling(edges):
         else:
             return -2  # Multi-bit difference
 
-    # Group edges by bit flip position
+    # Check if this is a complete bipartite graph
+    def is_complete_bipartite(edge_list):
+        """Check if edges form a complete bipartite graph."""
+        vertices = set()
+        for u, v in edge_list:
+            vertices.add(u)
+            vertices.add(v)
+
+        # Try to partition by first bit (MSB)
+        set_0 = {v for v in vertices if v[0] == '0'}
+        set_1 = {v for v in vertices if v[0] == '1'}
+
+        if len(set_0) != len(set_1):
+            return False, None, None
+
+        n = len(set_0)
+
+        # Check all edges exist
+        expected_edges = set()
+        for u in set_0:
+            for v in set_1:
+                edge = tuple(sorted([u, v]))
+                expected_edges.add(edge)
+
+        actual_edges = {tuple(sorted([u, v])) for u, v in edge_list}
+
+        if expected_edges == actual_edges:
+            return True, sorted(set_0), sorted(set_1)
+
+        return False, None, None
+
+    edges_list = list(edges)
+    is_complete, left_set, right_set = is_complete_bipartite(edges_list)
+
+    # If complete bipartite, use the same optimal algorithm as with_relabeling
+    if is_complete:
+        import networkx as nx
+        from networkx.algorithms import bipartite
+
+        G = nx.Graph()
+        G.add_edges_from(edges_list)
+
+        left_nodes = set(left_set)
+        right_nodes = set(right_set)
+
+        def matchings_commute(matching1, matching2):
+            """Check if two matchings have commuting Hamiltonians."""
+            all_vertices = sorted(set(left_set) | set(right_set))
+            n = len(all_vertices)
+            vertex_to_idx = {v: i for i, v in enumerate(all_vertices)}
+
+            A = np.zeros((n, n), dtype=float)
+            B = np.zeros((n, n), dtype=float)
+
+            for u, v in matching1:
+                i, j = vertex_to_idx[u], vertex_to_idx[v]
+                A[i, j] = 1.0
+                A[j, i] = 1.0
+
+            for u, v in matching2:
+                i, j = vertex_to_idx[u], vertex_to_idx[v]
+                B[i, j] = 1.0
+                B[j, i] = 1.0
+
+            AB = A @ B
+            BA = B @ A
+            commutator_norm = np.linalg.norm(AB - BA)
+
+            return commutator_norm < 1e-10
+
+        def try_generate_commuting_matchings(edge_set, num_attempts=10):
+            """Try to generate perfect matchings with different strategies."""
+            if not edge_set:
+                return []
+
+            H = G.edge_subgraph(edge_set)
+
+            available_left = sorted([v for v in H.nodes() if v in left_nodes])
+            available_right = sorted([v for v in H.nodes() if v in right_nodes])
+
+            if len(available_left) != len(available_right):
+                return []
+
+            matchings = []
+
+            import random
+
+            # Strategy 1: Natural ordering
+            matching = set()
+            matched_right = set()
+            for u in available_left:
+                for v in available_right:
+                    if v not in matched_right:
+                        edge = (u, v) if (u, v) in edge_set else (v, u) if (v, u) in edge_set else None
+                        if edge:
+                            matching.add(edge)
+                            matched_right.add(v)
+                            break
+            if len(matching) == len(available_left):
+                matchings.append(matching)
+
+            # Strategy 2-N: Random orderings
+            for attempt in range(min(num_attempts - 1, 9)):
+                random.seed(attempt)
+                shuffled_right = available_right.copy()
+                random.shuffle(shuffled_right)
+
+                matching = set()
+                matched_right = set()
+                for u in available_left:
+                    for v in shuffled_right:
+                        if v not in matched_right:
+                            edge = (u, v) if (u, v) in edge_set else (v, u) if (v, u) in edge_set else None
+                            if edge:
+                                matching.add(edge)
+                                matched_right.add(v)
+                                break
+
+                if len(matching) == len(available_left):
+                    if matching not in matchings:
+                        matchings.append(matching)
+
+            return matchings
+
+        def find_commuting_matching(selected_matchings, remaining_edges):
+            """Find a perfect matching that commutes with all selected matchings."""
+            if not remaining_edges:
+                return None
+
+            candidate_matchings = try_generate_commuting_matchings(remaining_edges, num_attempts=10)
+
+            if not candidate_matchings:
+                H = G.edge_subgraph(remaining_edges)
+                matching_dict = bipartite.maximum_matching(H, top_nodes=left_nodes)
+
+                matching_edges = set()
+                for u, v in matching_dict.items():
+                    if u in left_nodes:
+                        edge = (u, v) if (u, v) in remaining_edges else (v, u)
+                        matching_edges.add(edge)
+
+                if matching_edges:
+                    commutes = all(matchings_commute(matching_edges, m) for m in selected_matchings)
+                    return matching_edges, commutes
+                return None
+
+            # Try to find a matching that commutes with all selected matchings
+            for matching in candidate_matchings:
+                if all(matchings_commute(matching, m) for m in selected_matchings):
+                    return matching, True
+
+            return candidate_matchings[0], False
+
+        matchings = []
+        remaining_edges = set(G.edges())
+
+        while remaining_edges:
+            result = find_commuting_matching(matchings, remaining_edges)
+
+            if result is None:
+                break
+
+            matching_edges, commutes = result
+            matchings.append(matching_edges)
+
+            for edge in matching_edges:
+                remaining_edges.discard(edge)
+                u, v = edge
+                remaining_edges.discard((v, u))
+
+        return matchings
+
+    # Otherwise, use the original greedy algorithm
     edge_groups = defaultdict(list)
-    for edge in edges:
+    for edge in edges_list:
         bit_pos = get_bit_flip_position(edge)
         edge_groups[bit_pos].append(edge)
 
@@ -273,6 +445,200 @@ def graph_matchings_with_relabeling(edges):
     edges = list(edges)
     if not edges:
         return []
+
+    # Check if this is a complete bipartite graph - if so, use optimal algorithm
+    def is_complete_bipartite(edge_list):
+        """Check if edges form a complete bipartite graph."""
+        vertices = set()
+        for u, v in edge_list:
+            vertices.add(u)
+            vertices.add(v)
+
+        # Try to partition by first bit (MSB)
+        set_0 = {v for v in vertices if v[0] == '0'}
+        set_1 = {v for v in vertices if v[0] == '1'}
+
+        if len(set_0) != len(set_1):
+            return False, None, None
+
+        n = len(set_0)
+
+        # Check all edges exist
+        expected_edges = set()
+        for u in set_0:
+            for v in set_1:
+                edge = tuple(sorted([u, v]))
+                expected_edges.add(edge)
+
+        actual_edges = {tuple(sorted([u, v])) for u, v in edge_list}
+
+        if expected_edges == actual_edges:
+            return True, sorted(set_0), sorted(set_1)
+
+        return False, None, None
+
+    is_complete, left_set, right_set = is_complete_bipartite(edges)
+    if is_complete:
+        # Use NetworkX bipartite maximum matching to get optimal edge coloring
+        # For complete bipartite K(n,n), this gives exactly n perfect matchings
+        G = nx.Graph()
+        G.add_edges_from(edges)
+
+        from networkx.algorithms import bipartite
+
+        # Get bipartite sets
+        left_nodes = set(left_set)
+        right_nodes = set(right_set)
+
+        def matchings_commute(matching1, matching2):
+            """
+            Check if two matchings have commuting Hamiltonians.
+            Two adjacency matrices A and B commute if AB = BA.
+            This happens when they don't create asymmetric 2-step path structures.
+            """
+            # Build vertex list from all edges
+            all_vertices = sorted(set(left_set) | set(right_set))
+            n = len(all_vertices)
+            vertex_to_idx = {v: i for i, v in enumerate(all_vertices)}
+
+            # Build adjacency matrices
+            A = np.zeros((n, n), dtype=float)
+            B = np.zeros((n, n), dtype=float)
+
+            for u, v in matching1:
+                i, j = vertex_to_idx[u], vertex_to_idx[v]
+                A[i, j] = 1.0
+                A[j, i] = 1.0
+
+            for u, v in matching2:
+                i, j = vertex_to_idx[u], vertex_to_idx[v]
+                B[i, j] = 1.0
+                B[j, i] = 1.0
+
+            # Check if AB = BA (compute commutator)
+            AB = A @ B
+            BA = B @ A
+            commutator_norm = np.linalg.norm(AB - BA)
+
+            # They commute if ||[A,B]|| < epsilon
+            return commutator_norm < 1e-10
+
+        def try_generate_commuting_matchings(edge_set, num_attempts=10):
+            """
+            Try to generate perfect matchings from edge_set using different strategies.
+            Returns a list of possible matchings to try.
+            """
+            if not edge_set:
+                return []
+
+            H = G.edge_subgraph(edge_set)
+
+            # Get available vertices
+            available_left = sorted([v for v in H.nodes() if v in left_nodes])
+            available_right = sorted([v for v in H.nodes() if v in right_nodes])
+
+            if len(available_left) != len(available_right):
+                return []
+
+            matchings = []
+
+            # Try different permutations/orderings to get different matchings
+            import random
+
+            # Strategy 1: Natural ordering
+            matching = set()
+            matched_right = set()
+            for u in available_left:
+                for v in available_right:
+                    if v not in matched_right:
+                        edge = (u, v) if (u, v) in edge_set else (v, u) if (v, u) in edge_set else None
+                        if edge:
+                            matching.add(edge)
+                            matched_right.add(v)
+                            break
+            if len(matching) == len(available_left):
+                matchings.append(matching)
+
+            # Strategy 2-N: Random orderings
+            for attempt in range(min(num_attempts - 1, 9)):
+                random.seed(attempt)  # Deterministic randomness
+                shuffled_right = available_right.copy()
+                random.shuffle(shuffled_right)
+
+                matching = set()
+                matched_right = set()
+                for u in available_left:
+                    for v in shuffled_right:
+                        if v not in matched_right:
+                            edge = (u, v) if (u, v) in edge_set else (v, u) if (v, u) in edge_set else None
+                            if edge:
+                                matching.add(edge)
+                                matched_right.add(v)
+                                break
+
+                if len(matching) == len(available_left):
+                    # Check if this is a new matching
+                    if matching not in matchings:
+                        matchings.append(matching)
+
+            return matchings
+
+        def find_commuting_matching(selected_matchings, remaining_edges):
+            """
+            Find a perfect matching from remaining_edges that commutes with all selected matchings.
+            If none exists, return any perfect matching.
+            """
+            if not remaining_edges:
+                return None
+
+            # Try to generate several candidate matchings
+            candidate_matchings = try_generate_commuting_matchings(remaining_edges, num_attempts=10)
+
+            if not candidate_matchings:
+                # Fallback: use NetworkX to find any matching
+                H = G.edge_subgraph(remaining_edges)
+                matching_dict = bipartite.maximum_matching(H, top_nodes=left_nodes)
+
+                matching_edges = set()
+                for u, v in matching_dict.items():
+                    if u in left_nodes:
+                        edge = (u, v) if (u, v) in remaining_edges else (v, u)
+                        matching_edges.add(edge)
+
+                if matching_edges:
+                    commutes = all(matchings_commute(matching_edges, m) for m in selected_matchings)
+                    return matching_edges, commutes
+                return None
+
+            # Try to find a matching that commutes with all selected matchings
+            for matching in candidate_matchings:
+                if all(matchings_commute(matching, m) for m in selected_matchings):
+                    return matching, True
+
+            # If no commuting matching found, return the first one
+            return candidate_matchings[0], False
+
+        matchings = []
+        remaining_edges = set(G.edges())
+
+        while remaining_edges:
+            result = find_commuting_matching(matchings, remaining_edges)
+
+            if result is None:
+                break
+
+            matching_edges, commutes = result
+
+            # Add the matching (commuting ones are prioritized by the search)
+            matchings.append(matching_edges)
+
+            # Remove used edges
+            for edge in matching_edges:
+                remaining_edges.discard(edge)
+                u, v = edge
+                remaining_edges.discard((v, u))
+
+        return matchings
 
     # Get all vertices
     vertices = list(set(v for edge in edges for v in edge))
@@ -468,7 +834,405 @@ def graph_matchings_with_relabeling(edges):
     # Convert to matchings
     matchings = edges_to_matchings(best_edges)
 
-    return matchings
+    # Map relabeled edges back to original vertex names
+    reverse_mapping = {v: k for k, v in best_mapping.items()}
+    original_matchings = []
+    for matching in matchings:
+        original_matching = set()
+        for u, v in matching:
+            original_u = reverse_mapping[u]
+            original_v = reverse_mapping[v]
+            original_matching.add((original_u, original_v))
+        original_matchings.append(original_matching)
+
+    return original_matchings
+
+
+def graph_matchings_with_relabeling_keep_labels(edges):
+    """
+    Create optimal parallel matchings by finding the best relabeling strategy.
+    Returns matchings with RELABELED vertices (not mapped back to original).
+
+    Args:
+        edges: Set/list of tuples representing edges (u, v) where u, v are binary strings
+
+    Returns:
+        Tuple of (matchings, mapping) where:
+        - matchings: List of sets, each set is a matching using optimized binary labels
+        - mapping: Dict mapping original vertex names to relabeled names
+    """
+    edges = list(edges)
+    if not edges:
+        return [], {}
+
+    # Use same logic as graph_matchings_with_relabeling
+    # Check if this is a complete bipartite graph - if so, use optimal algorithm
+    def is_complete_bipartite(edge_list):
+        """Check if edges form a complete bipartite graph."""
+        vertices = set()
+        for u, v in edge_list:
+            vertices.add(u)
+            vertices.add(v)
+
+        # Try to partition by first bit (MSB)
+        set_0 = {v for v in vertices if v[0] == '0'}
+        set_1 = {v for v in vertices if v[0] == '1'}
+
+        if len(set_0) != len(set_1):
+            return False, None, None
+
+        n = len(set_0)
+
+        # Check all edges exist
+        expected_edges = set()
+        for u in set_0:
+            for v in set_1:
+                edge = tuple(sorted([u, v]))
+                expected_edges.add(edge)
+
+        actual_edges = {tuple(sorted([u, v])) for u, v in edge_list}
+
+        if expected_edges == actual_edges:
+            return True, sorted(set_0), sorted(set_1)
+
+        return False, None, None
+
+    is_complete, left_set, right_set = is_complete_bipartite(edges)
+    if is_complete:
+        # For complete bipartite graphs, use the same algorithm
+        # but return relabeled matchings
+        import networkx as nx
+        from networkx.algorithms import bipartite
+
+        G = nx.Graph()
+        G.add_edges_from(edges)
+
+        left_nodes = set(left_set)
+        right_nodes = set(right_set)
+
+        def matchings_commute(matching1, matching2):
+            all_vertices = sorted(set(left_set) | set(right_set))
+            n = len(all_vertices)
+            vertex_to_idx = {v: i for i, v in enumerate(all_vertices)}
+
+            A = np.zeros((n, n), dtype=float)
+            B = np.zeros((n, n), dtype=float)
+
+            for u, v in matching1:
+                i, j = vertex_to_idx[u], vertex_to_idx[v]
+                A[i, j] = 1.0
+                A[j, i] = 1.0
+
+            for u, v in matching2:
+                i, j = vertex_to_idx[u], vertex_to_idx[v]
+                B[i, j] = 1.0
+                B[j, i] = 1.0
+
+            AB = A @ B
+            BA = B @ A
+            commutator_norm = np.linalg.norm(AB - BA)
+
+            return commutator_norm < 1e-10
+
+        def try_generate_commuting_matchings(edge_set, num_attempts=10):
+            if not edge_set:
+                return []
+
+            H = G.edge_subgraph(edge_set)
+
+            available_left = sorted([v for v in H.nodes() if v in left_nodes])
+            available_right = sorted([v for v in H.nodes() if v in right_nodes])
+
+            if len(available_left) != len(available_right):
+                return []
+
+            matchings = []
+
+            import random
+
+            # Strategy 1: Natural ordering
+            matching = set()
+            matched_right = set()
+            for u in available_left:
+                for v in available_right:
+                    if v not in matched_right:
+                        edge = (u, v) if (u, v) in edge_set else (v, u) if (v, u) in edge_set else None
+                        if edge:
+                            matching.add(edge)
+                            matched_right.add(v)
+                            break
+            if len(matching) == len(available_left):
+                matchings.append(matching)
+
+            # Strategy 2-N: Random orderings
+            for attempt in range(min(num_attempts - 1, 9)):
+                random.seed(attempt)
+                shuffled_right = available_right.copy()
+                random.shuffle(shuffled_right)
+
+                matching = set()
+                matched_right = set()
+                for u in available_left:
+                    for v in shuffled_right:
+                        if v not in matched_right:
+                            edge = (u, v) if (u, v) in edge_set else (v, u) if (v, u) in edge_set else None
+                            if edge:
+                                matching.add(edge)
+                                matched_right.add(v)
+                                break
+
+                if len(matching) == len(available_left):
+                    if matching not in matchings:
+                        matchings.append(matching)
+
+            return matchings
+
+        def find_commuting_matching(selected_matchings, remaining_edges):
+            if not remaining_edges:
+                return None
+
+            candidate_matchings = try_generate_commuting_matchings(remaining_edges, num_attempts=10)
+
+            if not candidate_matchings:
+                H = G.edge_subgraph(remaining_edges)
+                matching_dict = bipartite.maximum_matching(H, top_nodes=left_nodes)
+
+                matching_edges = set()
+                for u, v in matching_dict.items():
+                    if u in left_nodes:
+                        edge = (u, v) if (u, v) in remaining_edges else (v, u)
+                        matching_edges.add(edge)
+
+                if matching_edges:
+                    commutes = all(matchings_commute(matching_edges, m) for m in selected_matchings)
+                    return matching_edges, commutes
+                return None
+
+            # Try to find a matching that commutes with all selected matchings
+            for matching in candidate_matchings:
+                if all(matchings_commute(matching, m) for m in selected_matchings):
+                    return matching, True
+
+            return candidate_matchings[0], False
+
+        # Create identity mapping for complete bipartite (no relabeling optimization for now)
+        vertices = list(set(v for edge in edges for v in edge))
+        identity_mapping = {v: v for v in vertices}
+
+        matchings = []
+        remaining_edges = set(G.edges())
+
+        while remaining_edges:
+            result = find_commuting_matching(matchings, remaining_edges)
+
+            if result is None:
+                break
+
+            matching_edges, commutes = result
+            matchings.append(matching_edges)
+
+            for edge in matching_edges:
+                remaining_edges.discard(edge)
+                u, v = edge
+                remaining_edges.discard((v, u))
+
+        return matchings, identity_mapping
+
+    # Get all vertices
+    vertices = list(set(v for edge in edges for v in edge))
+
+    # Determine bit length from the input edges
+    n_bits = len(vertices[0]) if vertices else 2
+
+    # Ensure we have enough bits for all vertices
+    min_bits_needed = max(2, (len(vertices) - 1).bit_length())
+    if min_bits_needed > n_bits:
+        n_bits = min_bits_needed
+
+    def hamming_distance(u, v):
+        """Calculate hamming distance between binary strings"""
+        try:
+            u_int = int(u, 2)
+            v_int = int(v, 2)
+            return bin(u_int ^ v_int).count("1")
+        except ValueError:
+            return len(u)  # Fallback for non-binary
+
+    def calculate_total_cost(edge_list):
+        """Calculate total hamming distance for a list of edges"""
+        return sum(hamming_distance(u, v) for u, v in edge_list)
+
+    def find_all_maximum_matchings(edge_list):
+        """Find maximum matching using Edmonds' Blossom algorithm via NetworkX"""
+        import networkx as nx
+        G = nx.Graph()
+        G.add_edges_from(edge_list)
+
+        max_matching = nx.max_weight_matching(G)
+
+        return [list(max_matching)]
+
+    def create_relabeling_from_matching(matching, all_vertices):
+        """Create vertex relabeling based on a matching"""
+        vertex_mapping = {}
+        used_labels = set()
+
+        # Label matching edges to flip bit 0
+        counter = 0
+        for u, v in matching:
+            if u not in vertex_mapping and v not in vertex_mapping:
+                if n_bits == 1:
+                    label1, label2 = "0", "1"
+                else:
+                    base = format(counter, f"0{n_bits-1}b")
+                    label1 = base + "0"
+                    label2 = base + "1"
+
+                vertex_mapping[u] = label1
+                vertex_mapping[v] = label2
+                used_labels.update([label1, label2])
+                counter += 1
+
+        # Label remaining vertices
+        remaining = [v for v in all_vertices if v not in vertex_mapping]
+        label_int = 0
+        for vertex in remaining:
+            while True:
+                label = format(label_int, f"0{n_bits}b")
+                if label not in used_labels:
+                    vertex_mapping[vertex] = label
+                    used_labels.add(label)
+                    break
+                label_int += 1
+
+        return vertex_mapping
+
+    def try_simple_swaps():
+        """Try simple vertex swaps to find better labelings"""
+        # Start with identity mapping - preserve original labels if possible
+        current_mapping = {}
+        used_labels = set()
+
+        # First, try to keep original labels
+        for vertex in vertices:
+            if vertex not in used_labels and len(vertex) == n_bits:
+                current_mapping[vertex] = vertex
+                used_labels.add(vertex)
+
+        # Assign labels to remaining vertices
+        label_int = 0
+        for vertex in vertices:
+            if vertex not in current_mapping:
+                while True:
+                    label = format(label_int, f"0{n_bits}b")
+                    if label not in used_labels:
+                        current_mapping[vertex] = label
+                        used_labels.add(label)
+                        break
+                    label_int += 1
+
+        best_mapping = current_mapping.copy()
+        best_cost = calculate_total_cost(
+            [(current_mapping[u], current_mapping[v]) for u, v in edges]
+        )
+
+        # Try all pairwise swaps
+        for i in range(len(vertices)):
+            for j in range(i + 1, len(vertices)):
+                # Swap labels of vertices[i] and vertices[j]
+                test_mapping = current_mapping.copy()
+                test_mapping[vertices[i]], test_mapping[vertices[j]] = (
+                    test_mapping[vertices[j]],
+                    test_mapping[vertices[i]],
+                )
+
+                test_cost = calculate_total_cost(
+                    [(test_mapping[u], test_mapping[v]) for u, v in edges]
+                )
+
+                if test_cost < best_cost:
+                    best_cost = test_cost
+                    best_mapping = test_mapping.copy()
+
+        return best_mapping, best_cost
+
+    def edges_to_matchings(relabeled_edges):
+        """Convert edges to parallel matchings grouped by bit flip"""
+        from collections import defaultdict
+
+        def get_bit_flip_position(u, v):
+            u_int = int(u, 2)
+            v_int = int(v, 2)
+            diff = u_int ^ v_int
+
+            if diff == 0:
+                return -1
+            elif bin(diff).count("1") == 1:
+                return (diff & -diff).bit_length() - 1
+            else:
+                return -2
+
+        # Group by bit flip position
+        groups = defaultdict(list)
+        for u, v in relabeled_edges:
+            bit_pos = get_bit_flip_position(u, v)
+            groups[bit_pos].append((u, v))
+
+        # Create matchings for each group
+        matchings = []
+        for group_edges in groups.values():
+            remaining = group_edges[:]
+            while remaining:
+                matching = set()
+                used_vertices = set()
+                next_remaining = []
+
+                for u, v in remaining:
+                    if u not in used_vertices and v not in used_vertices:
+                        matching.add((u, v))
+                        used_vertices.update([u, v])
+                    else:
+                        next_remaining.append((u, v))
+
+                if matching:
+                    matchings.append(matching)
+
+                if len(next_remaining) == len(remaining):
+                    break
+                remaining = next_remaining
+
+        return matchings
+
+    # Strategy 1: Try all maximum matchings
+    all_max_matchings = find_all_maximum_matchings(edges)
+    best_cost = float("inf")
+    best_strategy = None
+
+    for matching in all_max_matchings:
+        mapping = create_relabeling_from_matching(matching, vertices)
+        relabeled_edges = [(mapping[u], mapping[v]) for u, v in edges]
+        cost = calculate_total_cost(relabeled_edges)
+
+        if cost < best_cost:
+            best_cost = cost
+            best_strategy = ("matching", mapping, relabeled_edges)
+
+    # Strategy 2: Try simple swaps
+    swap_mapping, swap_cost = try_simple_swaps()
+    swap_edges = [(swap_mapping[u], swap_mapping[v]) for u, v in edges]
+
+    if swap_cost < best_cost:
+        best_cost = swap_cost
+        best_strategy = ("swap", swap_mapping, swap_edges)
+
+    # Use the best strategy found
+    _, best_mapping, best_edges = best_strategy
+
+    # Convert to matchings (using relabeled edges)
+    matchings = edges_to_matchings(best_edges)
+
+    # Return matchings with relabeled vertices AND the mapping
+    return matchings, best_mapping
 
 
 def graph_to_bitstring_edges(graph):
