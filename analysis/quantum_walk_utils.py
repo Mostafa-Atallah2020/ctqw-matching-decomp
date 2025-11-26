@@ -122,6 +122,7 @@ class BaseAnalyzer:
                     qc,
                     basis_gates=["cx", "u3"],
                     optimization_level=3,
+                    seed_transpiler=self.seed,
                 )
 
                 counts = transpiled_qc.count_ops()
