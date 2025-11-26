@@ -34,9 +34,8 @@ def binary_tuple_to_int_tuple(binary_tuple):
     return int_tuple
 
 
-def hamming_distance(s1, s2):
-    """Calculate the Hamming distance between two binary strings."""
-    return sum(c1 != c2 for c1, c2 in zip(s1, s2))
+# Import hamming_distance from the properties module for backwards compatibility
+from src.utils.graph.properties import hamming_distance
 
 
 def get_cyclic_connections(connections, target):
@@ -1243,44 +1242,17 @@ def graph_to_bitstring_edges(graph):
     return edges_bitstring
 
 
-def count_edges(G):
-    return nx.number_of_edges(G)
-
-
-def calculate_edge_density(G):
-    # Can use nx.density(G) directly instead of this function
-    return nx.density(G)
-
-
-def is_bipartite(G):
-    return nx.is_bipartite(G)
-
-
-def find_diameter(G):
-    if not nx.is_connected(G):
-        return float("inf")
-    return nx.diameter(G)
-
-
-def find_max_clique(G):
-    return len(max(nx.find_cliques(G), key=len, default=[]))
-
-
-def average_clustering(G):
-    return nx.average_clustering(G)
-
-
-def estimate_group_size(G):
-    # This is a custom metric - NetworkX doesn't have direct equivalent
-    # Could use automorphism groups but would be much slower
-    degree_sequence = [d for _, d in G.degree()]
-    return max(degree_sequence.count(x) for x in set(degree_sequence))
-
-
-def estimate_orbit_count(G):
-    # Similar to above, NetworkX doesn't have direct equivalent
-    # Could use nx.vf2pp_isomorphism but would be much slower
-    return len(set(d for _, d in G.degree()))
+# Import graph property functions from the properties module for backwards compatibility
+from src.utils.graph.properties import (
+    count_edges,
+    calculate_edge_density,
+    is_bipartite,
+    find_diameter,
+    find_max_clique,
+    average_clustering,
+    estimate_group_size,
+    estimate_orbit_count,
+)
 
 
 def get_state(circuit=None, initial_state=None):
