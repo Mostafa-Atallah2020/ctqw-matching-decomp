@@ -1,11 +1,14 @@
 # quantum_walk_utils.py
+"""
+Utilities for CTQW analysis using the refactored decomposition classes.
+"""
 
 import os
 import sys
 
 sys.path.append(os.path.dirname(os.path.dirname(os.path.abspath(__file__))))
 
-import itertools
+from collections import defaultdict
 from dataclasses import dataclass
 from datetime import datetime
 from typing import Dict, List, Optional, Set, Tuple
@@ -14,12 +17,13 @@ import matplotlib.pyplot as plt
 import networkx as nx
 import numpy as np
 from qiskit import QuantumCircuit, transpile
-from qiskit.circuit.library import PauliEvolutionGate
-from qiskit.quantum_info import Operator, Pauli, SparsePauliOp
+from qiskit.quantum_info import Operator
 from scipy.linalg import expm
-from src.misc import graph_matchings_parallel
 
-from src.graphs import IntersectingEdgesGraph, MultiEdgeGraph, StaticGraph
+# Use the new refactored decomposition classes
+from src.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
+from src.utils import get_exact_evolution_operator
+from src.utils.graph import graph_to_bitstring_edges, parse_g6_filename
 
 
 @dataclass
@@ -38,10 +42,9 @@ class Logger:
         """Log message with timestamp to file only."""
         timestamp = datetime.now().strftime("%Y-%m-%d %H:%M:%S")
         log_msg = f"[{timestamp}] {message}"
-        # Write directly to file, don't print to console
         with open(self.log_file, "a") as f:
             f.write(log_msg + "\n")
-            f.flush()  # Ensure immediate writing to disk
+            f.flush()
 
     def log_metrics(self, method: str, cx_count: int, u3_count: int, depth: int):
         """Log circuit metrics."""
@@ -84,93 +87,33 @@ class Logger:
 class GraphProcessor:
     @staticmethod
     def graph_to_bitstring(graph: nx.Graph) -> Set[Tuple[str, str]]:
-        num_nodes = len(graph.nodes)
-        num_bits = len(bin(num_nodes - 1)) - 2
-        node_to_bitstring = {node: format(node, f"0{num_bits}b") for node in graph.nodes}
-        return {(node_to_bitstring[u], node_to_bitstring[v]) for u, v in graph.edges}
+        """Convert NetworkX graph to bitstring edge set."""
+        return graph_to_bitstring_edges(graph)
 
     @staticmethod
     def parse_graph_filename(filepath: str) -> Dict[str, str]:
         """
         Parse graph filename to extract metadata.
         Format: '<num>graph_<size>_<vertices>c.g6'
-        Example: '100graph_50-50_8c.g6'
         """
-        # Extract just the filename without path and extension
-        filename = os.path.basename(filepath)
-        base_name = os.path.splitext(filename)[0]
-
-        try:
-            # Extract number from 'Ngraph' format
-            import re
-
-            num_match = re.match(r"(\d+)graph_", base_name)
-            if not num_match:
-                raise ValueError("Could not find number of graphs")
-            num_graphs = int(num_match.group(1))
-
-            # Split remaining parts
-            parts = base_name.split("graph_")[1].split("_")
-            size = parts[0]  # '50-50', 'BM', or 'bipartite'
-            vertex_info = parts[1]  # e.g., '8c'
-            vertices = vertex_info[:-1]  # '8'
-            graph_type = vertex_info[-1]  # 'c'
-
-            return {
-                "num_graphs": num_graphs,
-                "size": size,
-                "vertices": vertices,
-                "type": graph_type,
-            }
-        except Exception as e:
-            raise ValueError(
-                f"Invalid filename format. Expected '<num>graph_<size>_<vertices>c.g6', got: {filename}"
-            )
+        metadata = parse_g6_filename(filepath)
+        # Convert to legacy format expected by analysis scripts
+        return {
+            "num_graphs": metadata.get('n_graphs', 0),
+            "size": metadata.get('type', 'unknown'),
+            "vertices": str(metadata.get('vertices', 0)),
+            "type": metadata.get('suffix', 'c'),
+        }
 
 
 class BaseAnalyzer:
-    def __init__(self, n_qubits: int, delta_t: float, matchings: str = "greedy", seed: int = 0):
+    def __init__(self, n_qubits: int, delta_t: float, seed: int = 0):
         self.n_qubits = n_qubits
         self.delta_t = delta_t
-        self.matchings = matchings
         self.seed = seed
 
-    # def analyze_circuit(self, qc: QuantumCircuit, runs: int = 10) -> CircuitMetrics:
-    #     """Analyze circuit with fixed transpilation settings over multiple runs and return the lowest counts."""
-    #     min_metrics = CircuitMetrics(
-    #         cx_count=float("inf"), u3_count=float("inf"), depth=float("inf")
-    #     )
-
-    #     for _ in range(runs):
-    #         try:
-    #             transpiled_qc = transpile(
-    #                 qc,
-    #                 basis_gates=["cx", "u3"],
-    #                 optimization_level=3,
-    #                 seed_transpiler=self.seed,
-    #                 # routing_method="sabre",
-    #             )
-
-    #             counts = transpiled_qc.count_ops()
-    #             current_metrics = CircuitMetrics(
-    #                 cx_count=counts.get("cx", 0),
-    #                 u3_count=counts.get("u3", 0),
-    #                 depth=transpiled_qc.depth(),
-    #             )
-
-    #             # Update minimum metrics
-    #             min_metrics.cx_count = min(min_metrics.cx_count, current_metrics.cx_count)
-    #             min_metrics.u3_count = min(min_metrics.u3_count, current_metrics.u3_count)
-    #             min_metrics.depth = min(min_metrics.depth, current_metrics.depth)
-
-    #         except Exception as e:
-    #             print(f"Transpilation error: {str(e)}")
-
-    #     # Return the minimum metrics found
-    #     return min_metrics if min_metrics.cx_count != float("inf") else None
-
     def analyze_circuit(self, qc: QuantumCircuit, runs: int = 1) -> CircuitMetrics:
-        """Analyze circuit with fixed transpilation settings over multiple runs and return the average counts."""
+        """Analyze circuit with transpilation and return average metrics."""
         total_metrics = CircuitMetrics(cx_count=0, u3_count=0, depth=0)
 
         for _ in range(runs):
@@ -178,9 +121,6 @@ class BaseAnalyzer:
                 transpiled_qc = transpile(
                     qc,
                     basis_gates=["cx", "u3"],
-                    # seed_transpiler=self.seed,
-                    # routing_method="basic",
-                    # layout_method="trivial",
                     optimization_level=3,
                 )
 
@@ -191,7 +131,6 @@ class BaseAnalyzer:
                     depth=transpiled_qc.depth(),
                 )
 
-                # Accumulate metrics
                 total_metrics.cx_count += current_metrics.cx_count
                 total_metrics.u3_count += current_metrics.u3_count
                 total_metrics.depth += current_metrics.depth
@@ -199,7 +138,6 @@ class BaseAnalyzer:
             except Exception as e:
                 print(f"Transpilation error: {str(e)}")
 
-        # Calculate averages
         average_metrics = CircuitMetrics(
             cx_count=total_metrics.cx_count / runs,
             u3_count=total_metrics.u3_count / runs,
@@ -211,17 +149,14 @@ class BaseAnalyzer:
     def analyze_matching(
         self, edges: Set[Tuple[str, str]], n_steps: int = 1
     ) -> Optional[CircuitMetrics]:
-        """Analyze circuit using matching method."""
+        """Analyze circuit using MatchingDecomposition class."""
         try:
-            static_G = StaticGraph(edges)
-            intersecting_G = IntersectingEdgesGraph(edges, self.matchings)
+            # Create graph and decomposition using new classes
+            G = MultiEdgeGraph(edges)
+            decomp = MatchingDecomposition(G)
 
-            qc = QuantumCircuit(static_G.n_qubits)
-            for _ in range(n_steps):
-                for subgraph in intersecting_G.subgraphs:
-                    G = MultiEdgeGraph(subgraph.edges)
-                    sub_qc = G.get_qc(simplified=True)
-                    qc = qc.compose(sub_qc)
+            # Build circuit with specified steps
+            qc = decomp.build_circuit(n_steps=n_steps, delta_t=self.delta_t)
 
             metrics = self.analyze_circuit(qc)
             if metrics is None:
@@ -233,14 +168,13 @@ class BaseAnalyzer:
             return None
 
     def analyze_exact(self, edges: Set[Tuple[str, str]]) -> Optional[CircuitMetrics]:
-        """Analyze circuit using exact method."""
+        """Analyze circuit using exact evolution."""
         try:
-            static_G = StaticGraph(edges)
-            H = -1j * self.delta_t * static_G.get_adj_mat()
-            U = Operator(expm(H))
+            G = MultiEdgeGraph(edges)
+            exact_op = get_exact_evolution_operator(self.delta_t, G.hamiltonian)
 
-            qc = QuantumCircuit(static_G.n_qubits)
-            qc.unitary(U, range(static_G.n_qubits))
+            qc = QuantumCircuit(G.n_qubits)
+            qc.unitary(exact_op, range(G.n_qubits))
 
             metrics = self.analyze_circuit(qc)
             if metrics is None:
@@ -251,48 +185,17 @@ class BaseAnalyzer:
             print(f"Exact analysis error: {str(e)}")
             return None
 
-    def analyze_pauli(self, edges: Set[Tuple[str, str]]) -> Optional[CircuitMetrics]:
-        """Analyze circuit using Pauli decomposition method."""
+    def analyze_pauli(
+        self, edges: Set[Tuple[str, str]], n_steps: int = 1
+    ) -> Optional[CircuitMetrics]:
+        """Analyze circuit using PauliDecomposition class."""
         try:
-            matchings = graph_matchings_parallel(edges)
+            # Create graph and decomposition using new classes
+            G = MultiEdgeGraph(edges)
+            decomp = PauliDecomposition(G)
 
-            relabeled_edges = set()
-            for m in matchings:
-                relabeled_edges = relabeled_edges.union(m)
-
-            relabeled_G = StaticGraph(relabeled_edges)
-
-            H = relabeled_G.get_adj_mat()
-            n = relabeled_G.n_qubits
-
-            # Decompose the Hamiltonian into Pauli basis
-            pauli_strings = []
-            coeffs = []
-
-            for pauli_string in ["".join(p) for p in itertools.product("IXYZ", repeat=n)]:
-                P = Pauli(pauli_string)
-                P_op = Operator(P).data
-                coeff = np.trace(P_op.conj().T @ H) / (2**n)
-
-                # For real symmetric matrices, coefficients should be real
-                # Check that imaginary part is negligible
-                if not np.isclose(np.imag(coeff), 0, atol=1e-10):
-                    print(
-                        f"Warning: Non-negligible imaginary coefficient {np.imag(coeff)} for Pauli string {pauli_string}"
-                    )
-
-                real_coeff = float(np.real(coeff))
-                if not np.isclose(real_coeff, 0, atol=1e-10):
-                    pauli_strings.append(pauli_string)
-                    coeffs.append(real_coeff)
-
-            # Create quantum circuit with real coefficients only
-            qc = QuantumCircuit(n)
-
-            if coeffs:  # Only if we have non-zero coefficients
-                pauli_op = SparsePauliOp(pauli_strings, coeffs)
-                evo_gate = PauliEvolutionGate(pauli_op, time=-self.delta_t)
-                qc.append(evo_gate, range(n))
+            # Build circuit with specified steps (matching the notebook implementation)
+            qc = decomp.build_circuit(n_steps=n_steps, delta_t=self.delta_t)
 
             metrics = self.analyze_circuit(qc)
             if metrics is None:
@@ -321,17 +224,12 @@ class ResultsManager:
 
     def save_categorized_graphs(self, results: List[Dict], original_graphs: List[nx.Graph]):
         """Save graphs to separate g6 files based on their categories."""
-        # Create dictionary to store graphs by category
-        from collections import defaultdict  # Add import here
-
         graphs_by_category = defaultdict(list)
 
-        # Group graphs by their categories
         for result, graph in zip(results, original_graphs):
             category = result["category"]
             graphs_by_category[category].append(graph)
 
-        # Save each category to a separate file
         for category, graphs in graphs_by_category.items():
             output_path = self.get_output_path(category, "g6")
             with open(output_path, "w") as f:
@@ -363,7 +261,6 @@ class PlotManager:
 def setup_directories(base_dir: str) -> Dict[str, str]:
     directories = {
         "logs": os.path.join(base_dir, "logs"),
-        #'data': os.path.join(base_dir, 'data'),
         "plots": os.path.join(base_dir, "plots"),
         "results": os.path.join(base_dir, "results"),
     }

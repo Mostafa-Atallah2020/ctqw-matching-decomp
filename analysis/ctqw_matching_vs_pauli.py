@@ -7,7 +7,6 @@ Standalone script for processing large quantum graph datasets.
 import argparse
 import gc
 import json
-import math
 import os
 import sys
 import time
@@ -22,87 +21,14 @@ import networkx as nx
 import numpy as np
 from quantum_walk_utils import *
 
-
-def calculate_graph_properties(graph: nx.Graph) -> dict:
-    """Calculate various graph properties for analysis"""
-    properties = {}
-
-    # Basic properties
-    properties["edge_count"] = len(graph.edges())
-    properties["edge_density"] = nx.density(graph)
-    properties["is_bipartite"] = nx.is_bipartite(graph)
-
-    # Connected graph properties
-    if nx.is_connected(graph):
-        properties["diameter"] = nx.diameter(graph)
-    else:
-        properties["diameter"] = None
-
-    # Clique number (maximum clique size)
-    try:
-        properties["clique_number"] = len(max(nx.find_cliques(graph), key=len))
-    except:
-        properties["clique_number"] = 1
-
-    # Degree properties
-    degrees = [graph.degree(node) for node in graph.nodes()]
-    properties["max_degree"] = max(degrees) if degrees else 0
-    properties["avg_degree"] = sum(degrees) / len(degrees) if degrees else 0
-
-    # Clustering coefficient
-    properties["avg_clustering"] = nx.average_clustering(graph)
-
-    # Automorphism group size estimation (simplified)
-    try:
-        # This is a rough estimate - exact calculation is computationally expensive
-        properties["estimated_group_size"] = estimate_group_size(graph)
-    except:
-        properties["estimated_group_size"] = 1
-
-    # Orbit count estimation (simplified)
-    try:
-        properties["estimated_orbit_count"] = estimate_orbit_count(graph)
-    except:
-        properties["estimated_orbit_count"] = len(graph.nodes())
-
-    return properties
-
-
-def estimate_group_size(graph: nx.Graph) -> int:
-    """Rough estimation of automorphism group size"""
-    # Simple heuristic based on symmetry indicators
-    n = len(graph.nodes())
-    if n <= 1:
-        return 1
-
-    # Check for some common symmetric structures
-    if nx.is_regular(graph):
-        degree = list(graph.degree())[0][1]
-        if degree == n - 1:  # Complete graph
-            return math.factorial(n)
-        elif degree == 0:  # Empty graph
-            return math.factorial(n)
-        elif degree == 1:  # Matching or path-like
-            # Rough estimate for matching-like structures
-            return 2 ** (n // 2)
-
-    # Default conservative estimate
-    return max(1, n // 4)
-
-
-def estimate_orbit_count(graph: nx.Graph) -> int:
-    """Rough estimation of number of orbits under automorphism group"""
-    # Group nodes by degree sequence and other simple invariants
-    degree_sequence = sorted([graph.degree(node) for node in graph.nodes()])
-    unique_degrees = len(set(degree_sequence))
-
-    # Very rough heuristic
-    return min(len(graph.nodes()), max(1, unique_degrees))
+# Add parent directory to path for imports
+sys.path.insert(0, str(script_dir.parent))
+from src.utils.graph import calculate_graph_properties
 
 
 class MatchingVsPauliAnalyzer:
-    def __init__(self, n_qubits: int, delta_t: float, matchings: str, logger: Logger):
-        self.analyzer = BaseAnalyzer(n_qubits, delta_t, matchings)
+    def __init__(self, n_qubits: int, delta_t: float, logger: Logger):
+        self.analyzer = BaseAnalyzer(n_qubits, delta_t)
         self.logger = logger
 
     def analyze_graph(self, edges: set, graph: nx.Graph, n_steps: int = 1) -> dict:
@@ -121,7 +47,7 @@ class MatchingVsPauliAnalyzer:
         )
 
         self.logger.log("Computing Pauli decomposition")
-        pauli_metrics = self.analyzer.analyze_pauli(edges)
+        pauli_metrics = self.analyzer.analyze_pauli(edges, n_steps)
         if not pauli_metrics:
             self.logger.log("Failed to get Pauli metrics")
             return None
@@ -189,13 +115,19 @@ def load_checkpoint(checkpoint_file):
     return None
 
 
-def setup_paths(script_dir):
-    """Setup and validate all necessary paths"""
+def setup_paths(script_dir, graph_type: str, n_vertices: int):
+    """Setup and validate all necessary paths with graph type and timestamp."""
+    from datetime import datetime
+
     # Data directory - default to parent/data/graphs
     data_dir = script_dir.parent / "data" / "graphs"
 
-    # Output directory - default to script_dir/outputs
-    output_dir = script_dir / "outputs" / "matching_vs_pauli"
+    # Create timestamp for this run
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Output directory with graph type and timestamp
+    # Format: outputs/matching_vs_pauli/{graph_type}_{n_vertices}v/{timestamp}/
+    output_dir = script_dir / "outputs" / "matching_vs_pauli" / f"{graph_type}_{n_vertices}v" / timestamp
 
     # Create output directory if it doesn't exist
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -238,15 +170,6 @@ def parse_arguments():
         default="random",
         choices=["BM", "random", "bipartite"],
         help="Type of graphs to process",
-    )
-
-    parser.add_argument(
-        "--matchings",
-        "-m",
-        type=str,
-        default="parallel",
-        choices=["greedy", "parallel"],
-        help="Matching algorithm to use",
     )
 
     # Processing options
@@ -295,9 +218,9 @@ def main():
     # Calculate derived values
     n_vertices = args.n_vertices
 
-    # Setup paths
+    # Setup paths with graph type and timestamp
     script_dir = Path(__file__).parent.absolute()
-    data_dir, output_dir = setup_paths(script_dir)
+    data_dir, output_dir = setup_paths(script_dir, args.graph_type, n_vertices)
 
     # Determine input file automatically from arguments
     graph_file = data_dir / f"{args.n_graphs}graph_{args.graph_type}_{n_vertices}c.g6"
@@ -308,7 +231,7 @@ def main():
     print(
         f"📈 Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)"
     )
-    print(f"🔧 Using {args.matchings} matching algorithm")
+    print(f"🔧 Using automatic matching algorithm (bipartite/greedy based on graph structure)")
     print(f"⏱️  Delta t: {args.delta_t}")
 
     # Verify input file exists
@@ -321,10 +244,10 @@ def main():
     # Setup directories and logging
     try:
         dirs = setup_directories(str(output_dir))
-        log_filename = f"analysis_{args.matchings}_{args.graph_type}_{n_vertices}c.log"
+        log_filename = f"analysis_{args.graph_type}_{n_vertices}c.log"
         logger = Logger(os.path.join(dirs["logs"], log_filename))
         checkpoint_file = (
-            output_dir / f"checkpoint_{args.matchings}_{args.graph_type}_{n_vertices}c.json"
+            output_dir / f"checkpoint_{args.graph_type}_{n_vertices}c.json"
         )
     except Exception as e:
         print(f"❌ Error setting up directories: {e}")
@@ -336,7 +259,7 @@ def main():
     logger.log(f"Number of qubits: {n_qubits}")
     logger.log(f"Number of vertices: {n_vertices}")
     logger.log(f"Delta t: {args.delta_t}")
-    logger.log(f"Matching algorithm: {args.matchings}")
+    logger.log(f"Matching algorithm: automatic (bipartite/greedy)")
     logger.log(f"Graph type: {args.graph_type}")
     logger.log(f"Input file: {graph_file}")
     logger.log(f"Output directory: {output_dir}")
@@ -347,7 +270,7 @@ def main():
         graph_info = GraphProcessor.parse_graph_filename(str(graph_file))
         logger.log(f"Parsed graph info: {graph_info}")
 
-        analyzer = MatchingVsPauliAnalyzer(n_qubits, args.delta_t, args.matchings, logger)
+        analyzer = MatchingVsPauliAnalyzer(n_qubits, args.delta_t, logger)
         results_manager = ResultsManager(dirs["results"], graph_info)
         plot_manager = PlotManager(dirs["plots"])
 
@@ -476,7 +399,7 @@ def main():
         logger.log("\nFinal Results Summary:")
         logger.log(f"Total graphs in file: {total_lines}")
         logger.log(f"Successfully processed: {total_processed}")
-        logger.log(f"Matching algorithm used: {args.matchings}")
+        logger.log(f"Matching algorithm used: automatic (bipartite/greedy)")
         logger.log_final_stats(categories, total_processed)
 
         # Calculate overall timing statistics
@@ -591,7 +514,7 @@ def main():
 
         print(f"📊 Total graphs: {total_lines}")
         print(f"✅ Successfully processed: {total_processed} ({success_rate:.1f}%)")
-        print(f"🔧 Matching algorithm: {args.matchings}")
+        print(f"🔧 Matching algorithm: automatic (bipartite/greedy)")
         print(f"🏆 Results breakdown:")
         print(f"   🟢 Win (Matching better):  {categories['win']}")
         print(f"   🔴 Lose (Pauli better):    {categories['lose']}")
@@ -682,7 +605,7 @@ def main():
                     "config_n_qubits": n_qubits,
                     "config_n_vertices": n_vertices,
                     "config_delta_t": args.delta_t,
-                    "config_matchings": args.matchings,
+                    "config_matchings": "automatic",
                     "config_graph_type": args.graph_type,
                     "config_n_steps": args.n_steps,
                 }
@@ -705,20 +628,20 @@ def main():
             if timing_stats:
                 summary_with_timing.update(timing_stats)
 
-            results_manager.save_results(summary_with_timing, f"summary_{args.matchings}")
+            results_manager.save_results(summary_with_timing, "summary")
             results_manager.save_results(
-                {"detailed_results": results}, f"detailed_{args.matchings}"
+                {"detailed_results": results}, "detailed"
             )
-            results_manager.save_results(avg_stats, f"averages_{args.matchings}")
+            results_manager.save_results(avg_stats, "averages")
 
             # Save categorized graphs
             results_manager.save_categorized_graphs(results, original_graphs)
 
             # Create visualization
-            title = f"Matching ({args.matchings}) vs Pauli Results ({n_qubits} qubits)"
+            title = f"Matching vs Pauli Results ({n_qubits} qubits)"
             pie_chart = plot_manager.create_pie_chart(categories, title)
             chart_filename = (
-                f'pie_chart_{args.matchings}_{graph_info["size"]}_{graph_info["vertices"]}c.png'
+                f'pie_chart_{graph_info["size"]}_{graph_info["vertices"]}c.png'
             )
             plot_manager.save_plot(pie_chart, chart_filename)
 
