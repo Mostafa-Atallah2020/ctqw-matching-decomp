@@ -1524,7 +1524,7 @@ def analyze_circuit_comparison(qc_original, qc_simplified, tolerance=1e-10):
         qc_simplified: Simplified quantum circuit
         tolerance: Numerical tolerance for comparison
     """
-    from src.misc import count_gates, get_state  # Import your functions
+    from src.utils.misc import count_gates, get_state  # Import your functions
 
     # Get states
     state_original = get_state(qc_original)
