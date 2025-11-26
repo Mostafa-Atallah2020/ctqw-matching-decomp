@@ -16,7 +16,7 @@ from scipy.linalg import expm
 
 from src.core import MultiEdgeGraph, MatchingDecomposition
 from src.utils import get_exact_evolution_operator
-from src.misc import multi_crx
+from src.utils.misc import multi_crx
 
 
 class TestSingleEdgeCircuits:
