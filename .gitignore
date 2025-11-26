@@ -167,5 +167,6 @@ BWT Exit Probability comparison.ipynb
 
 mcrx_optimization_errors
 analysis/outputs
+analysis/graphs
 examples/trotterization_plots
 venv310/
