@@ -129,32 +129,6 @@ def is_power_of_two(n: int) -> bool:
     return n > 0 and (n & (n - 1)) == 0
 
 
-def get_graph_summary(graph: nx.Graph) -> str:
-    """
-    Get a brief text summary of graph properties.
-
-    Args:
-        graph: NetworkX graph object
-
-    Returns:
-        String summary of the graph
-    """
-    n_nodes = len(graph.nodes())
-    n_edges = len(graph.edges())
-    density = nx.density(graph)
-    is_bipartite = nx.is_bipartite(graph)
-    is_connected = nx.is_connected(graph)
-
-    summary = f"Nodes: {n_nodes}, Edges: {n_edges}, Density: {density:.3f}"
-    summary += f", Bipartite: {is_bipartite}, Connected: {is_connected}"
-
-    if is_connected and n_nodes > 1:
-        diameter = nx.diameter(graph)
-        summary += f", Diameter: {diameter}"
-
-    return summary
-
-
 def compute_hamming_statistics(edges: set) -> Dict:
     """
     Compute Hamming distance statistics for a set of bitstring edges.
@@ -205,6 +179,11 @@ def calculate_edge_density(graph: nx.Graph) -> float:
 def is_bipartite(graph: nx.Graph) -> bool:
     """Check if the graph is bipartite."""
     return nx.is_bipartite(graph)
+
+
+def is_connected(graph: nx.Graph) -> bool:
+    """Check if the graph is connected."""
+    return nx.is_connected(graph)
 
 
 def find_diameter(graph: nx.Graph) -> float:
