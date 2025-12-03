@@ -124,7 +124,7 @@ def load_checkpoint(checkpoint_file):
     return None
 
 
-def setup_paths(script_dir, graph_type: str, n_vertices: int):
+def setup_paths(script_dir, graph_type: str, n_vertices: int, output_subfolder: str = None):
     """Setup and validate all necessary paths with graph type and timestamp."""
     from datetime import datetime
 
@@ -134,11 +134,15 @@ def setup_paths(script_dir, graph_type: str, n_vertices: int):
     # Create timestamp for this run
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    # Base output directory
+    base_output_dir = script_dir / "outputs" / "matching_vs_pauli"
+
     # Output directory with graph type and timestamp
-    # Format: outputs/matching_vs_pauli/{graph_type}_{n_vertices}v/{timestamp}/
-    output_dir = (
-        script_dir / "outputs" / "matching_vs_pauli" / f"{graph_type}_{n_vertices}v" / timestamp
-    )
+    # Format: outputs/matching_vs_pauli/[subfolder/]{graph_type}_{n_vertices}v/{timestamp}/
+    if output_subfolder:
+        output_dir = base_output_dir / output_subfolder / f"{graph_type}_{n_vertices}v" / timestamp
+    else:
+        output_dir = base_output_dir / f"{graph_type}_{n_vertices}v" / timestamp
 
     # Create output directory if it doesn't exist
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -196,6 +200,13 @@ def parse_arguments():
     )
     parser.add_argument(
         "--progress-interval", type=int, default=10, help="Show progress every N graphs"
+    )
+    parser.add_argument(
+        "--output-subfolder",
+        "-o",
+        type=str,
+        default=None,
+        help="Optional subfolder for output (e.g., 'random_32v' to save in outputs/matching_vs_pauli/random_32v/)",
     )
 
     return parser.parse_args()
@@ -258,7 +269,7 @@ def main():
 
     # Setup paths with graph type and timestamp
     script_dir = Path(__file__).parent.absolute()
-    data_dir, output_dir = setup_paths(script_dir, args.graph_type, n_vertices)
+    data_dir, output_dir = setup_paths(script_dir, args.graph_type, n_vertices, args.output_subfolder)
 
     # Determine input file - use provided file or construct from arguments
     if not args.input_file:
