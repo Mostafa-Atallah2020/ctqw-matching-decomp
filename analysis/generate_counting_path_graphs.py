@@ -35,7 +35,7 @@ from src.utils.graph.properties import is_connected
 
 def get_hamming_distance(u, v):
     """Calculate Hamming distance between two integers."""
-    return bin(u ^ v).count('1')
+    return bin(u ^ v).count("1")
 
 
 def create_counting_path(n_vertices, offset=0, reverse=False):
@@ -54,8 +54,8 @@ def create_counting_path(n_vertices, offset=0, reverse=False):
 
     edges = set()
     for i in range(len(order) - 1):
-        u = format(order[i], f'0{n_bits}b')
-        v = format(order[i + 1], f'0{n_bits}b')
+        u = format(order[i], f"0{n_bits}b")
+        v = format(order[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))  # Canonical order
 
     return edges
@@ -77,8 +77,8 @@ def create_xor_permuted_path(n_vertices, xor_mask, seed=None):
     # Create path in this permuted order
     edges = set()
     for i in range(n_vertices - 1):
-        u = format(permuted[i], f'0{n_bits}b')
-        v = format(permuted[i + 1], f'0{n_bits}b')
+        u = format(permuted[i], f"0{n_bits}b")
+        v = format(permuted[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -102,8 +102,8 @@ def create_perturbed_path(n_vertices, n_swaps=1, seed=None):
 
     edges = set()
     for i in range(len(order) - 1):
-        u = format(order[i], f'0{n_bits}b')
-        v = format(order[i + 1], f'0{n_bits}b')
+        u = format(order[i], f"0{n_bits}b")
+        v = format(order[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -127,8 +127,8 @@ def create_segment_reversed_path(n_vertices, segment_size=4, seed=None):
 
     edges = set()
     for i in range(len(order) - 1):
-        u = format(order[i], f'0{n_bits}b')
-        v = format(order[i + 1], f'0{n_bits}b')
+        u = format(order[i], f"0{n_bits}b")
+        v = format(order[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -167,11 +167,11 @@ def compute_metrics(edges, n_vertices):
     h1_ratio = h_dist.get(1, 0) / n_edges if n_edges > 0 else 0
 
     metrics = {
-        'n_edges': n_edges,
-        'h1_ratio': h1_ratio,
-        'h_dist': h_dist,
-        'bipartite': nx.is_bipartite(G),
-        'diameter': nx.diameter(G) if is_connected(G) else -1
+        "n_edges": n_edges,
+        "h1_ratio": h1_ratio,
+        "h_dist": h_dist,
+        "bipartite": nx.is_bipartite(G),
+        "diameter": nx.diameter(G) if is_connected(G) else -1,
     }
 
     # Valid if connected and Hamiltonian path size
@@ -195,8 +195,8 @@ def create_gray_code_path(n_vertices, seed=None):
 
     edges = set()
     for i in range(len(gray_order) - 1):
-        u = format(gray_order[i], f'0{n_bits}b')
-        v = format(gray_order[i + 1], f'0{n_bits}b')
+        u = format(gray_order[i], f"0{n_bits}b")
+        v = format(gray_order[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -234,8 +234,8 @@ def create_random_hamiltonian_path(n_vertices, seed=None):
 
     edges = set()
     for i in range(len(path) - 1):
-        u = format(path[i], f'0{n_bits}b')
-        v = format(path[i + 1], f'0{n_bits}b')
+        u = format(path[i], f"0{n_bits}b")
+        v = format(path[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -256,8 +256,8 @@ def create_path_with_extra_edges(n_vertices, base_path_edges, n_extra=1, seed=No
     all_edges = []
     for i in range(n_vertices):
         for j in range(i + 1, n_vertices):
-            u = format(i, f'0{n_bits}b')
-            v = format(j, f'0{n_bits}b')
+            u = format(i, f"0{n_bits}b")
+            v = format(j, f"0{n_bits}b")
             edge = (min(u, v), max(u, v))
             if edge not in edges:
                 all_edges.append(edge)
@@ -289,8 +289,8 @@ def create_bit_reversed_path(n_vertices, seed=None):
 
     edges = set()
     for i in range(len(order) - 1):
-        u = format(order[i], f'0{n_bits}b')
-        v = format(order[i + 1], f'0{n_bits}b')
+        u = format(order[i], f"0{n_bits}b")
+        v = format(order[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -333,8 +333,8 @@ def create_h1_spanning_tree(n_vertices, seed=None):
             # Add random unvisited H1 neighbor
             next_v = random.choice(unvisited)
             visited.add(next_v)
-            u_str = format(current, f'0{n_bits}b')
-            v_str = format(next_v, f'0{n_bits}b')
+            u_str = format(current, f"0{n_bits}b")
+            v_str = format(next_v, f"0{n_bits}b")
             edges.add((min(u_str, v_str), max(u_str, v_str)))
             frontier.append(next_v)
         else:
@@ -381,8 +381,8 @@ def create_h1_path_dfs(n_vertices, seed=None):
         if len(path) == n_vertices:
             edges = set()
             for i in range(len(path) - 1):
-                u = format(path[i], f'0{n_bits}b')
-                v = format(path[i + 1], f'0{n_bits}b')
+                u = format(path[i], f"0{n_bits}b")
+                v = format(path[i + 1], f"0{n_bits}b")
                 edges.add((min(u, v), max(u, v)))
             return edges
 
@@ -411,8 +411,8 @@ def create_h1_tree_with_extras(n_vertices, n_extra=1, seed=None):
     for v in range(n_vertices):
         for neighbor in get_h1_neighbors(v, n_bits):
             if neighbor > v:  # Avoid duplicates
-                u_str = format(v, f'0{n_bits}b')
-                v_str = format(neighbor, f'0{n_bits}b')
+                u_str = format(v, f"0{n_bits}b")
+                v_str = format(neighbor, f"0{n_bits}b")
                 edge = (min(u_str, v_str), max(u_str, v_str))
                 if edge not in edges:
                     available_h1.append(edge)
@@ -443,8 +443,8 @@ def create_shifted_gray_code(n_vertices, shift=0, seed=None):
 
     edges = set()
     for i in range(len(gray_order) - 1):
-        u = format(gray_order[i], f'0{n_bits}b')
-        v = format(gray_order[i + 1], f'0{n_bits}b')
+        u = format(gray_order[i], f"0{n_bits}b")
+        v = format(gray_order[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -465,8 +465,8 @@ def create_xor_gray_code(n_vertices, xor_mask, seed=None):
 
     edges = set()
     for i in range(len(gray_order) - 1):
-        u = format(gray_order[i], f'0{n_bits}b')
-        v = format(gray_order[i + 1], f'0{n_bits}b')
+        u = format(gray_order[i], f"0{n_bits}b")
+        v = format(gray_order[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -492,8 +492,8 @@ def create_partial_counting_path(n_vertices, path_length, start=0, seed=None):
 
     edges = set()
     for i in range(len(vertices) - 1):
-        u = format(vertices[i], f'0{n_bits}b')
-        v = format(vertices[i + 1], f'0{n_bits}b')
+        u = format(vertices[i], f"0{n_bits}b")
+        v = format(vertices[i + 1], f"0{n_bits}b")
         edges.add((min(u, v), max(u, v)))
 
     return edges
@@ -518,8 +518,8 @@ def create_multi_component_counting_path(n_vertices, n_components, seed=None):
     for i in range(n_components):
         comp_size = vertices_per_comp + (1 if i < extra else 0)
         for j in range(comp_size - 1):
-            u = format(start + j, f'0{n_bits}b')
-            v = format(start + j + 1, f'0{n_bits}b')
+            u = format(start + j, f"0{n_bits}b")
+            v = format(start + j + 1, f"0{n_bits}b")
             edges.add((min(u, v), max(u, v)))
         start += comp_size
 
@@ -546,7 +546,9 @@ def generate_graphs(n_vertices, n_graphs, seed=None, verbose=True):
     n_bits = int(np.log2(n_vertices))
 
     if verbose:
-        print(f"Generating {n_graphs} COUNTING PATH graphs for {n_vertices} vertices ({n_bits} qubits)")
+        print(
+            f"Generating {n_graphs} COUNTING PATH graphs for {n_vertices} vertices ({n_bits} qubits)"
+        )
         print(f"Strategies: counting paths, XOR-permuted counting, perturbed counting")
 
     def add_graph(edges):
@@ -611,7 +613,9 @@ def generate_graphs(n_vertices, n_graphs, seed=None, verbose=True):
         if len(graphs) >= n_graphs:
             break
         for _ in range(100):
-            edges = create_segment_reversed_path(n_vertices, seg_size, seed=random.randint(0, 10000000))
+            edges = create_segment_reversed_path(
+                n_vertices, seg_size, seed=random.randint(0, 10000000)
+            )
             add_graph(edges)
 
     # ===========================================
@@ -624,7 +628,9 @@ def generate_graphs(n_vertices, n_graphs, seed=None, verbose=True):
             if len(graphs) >= n_graphs:
                 break
             for _ in range(200):
-                edges = create_path_with_extra_edges(n_vertices, base_edges, n_extra, seed=random.randint(0, 10000000))
+                edges = create_path_with_extra_edges(
+                    n_vertices, base_edges, n_extra, seed=random.randint(0, 10000000)
+                )
                 add_graph(edges)
 
     # 8. XOR-permuted paths with extra edges
@@ -637,7 +643,9 @@ def generate_graphs(n_vertices, n_graphs, seed=None, verbose=True):
                 if len(graphs) >= n_graphs:
                     break
                 for _ in range(20):
-                    edges = create_path_with_extra_edges(n_vertices, xor_base, n_extra, seed=random.randint(0, 10000000))
+                    edges = create_path_with_extra_edges(
+                        n_vertices, xor_base, n_extra, seed=random.randint(0, 10000000)
+                    )
                     add_graph(edges)
 
     # 9. Random Hamiltonian paths (might have counting-like structure)
@@ -679,7 +687,9 @@ def print_statistics(graphs, n_vertices, verbose=True):
     print(f"  Bipartite: {bipartite}/{len(graphs)}")
     print(f"  Edges per graph: {total_edges / len(graphs):.1f}")
     if total_edges > 0:
-        h_dist = ", ".join([f"H{h}: {count/total_edges*100:.0f}%" for h, count in sorted(h_totals.items())])
+        h_dist = ", ".join(
+            [f"H{h}: {count/total_edges*100:.0f}%" for h, count in sorted(h_totals.items())]
+        )
         print(f"  H distribution: {h_dist}")
 
 
@@ -688,9 +698,9 @@ def save_graphs(graphs, output_path, verbose=True):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         for G in graphs:
-            f.write(nx.to_graph6_bytes(G, header=False).decode('ascii'))
+            f.write(nx.to_graph6_bytes(G, header=False).decode("ascii"))
 
     if verbose:
         print(f"Saved {len(graphs)} graphs to {output_path}")
@@ -698,24 +708,23 @@ def save_graphs(graphs, output_path, verbose=True):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Generate COUNTING PATH connected graphs for Matching win'
+        description="Generate COUNTING PATH connected graphs for Matching win"
     )
-    parser.add_argument('-n', '--n-graphs', type=int, default=200,
-                        help='Number of graphs to generate')
-    parser.add_argument('--vertices', type=int, nargs='+', default=[8, 16, 32],
-                        help='Vertex count(s) to generate')
-    parser.add_argument('-o', '--output-dir', type=str, default=None,
-                        help='Output directory')
-    parser.add_argument('--seed', type=int, default=None,
-                        help='Random seed')
-    parser.add_argument('-v', '--verbose', action='store_true', default=True,
-                        help='Verbose output')
+    parser.add_argument(
+        "-n", "--n-graphs", type=int, default=200, help="Number of graphs to generate"
+    )
+    parser.add_argument(
+        "--vertices", type=int, nargs="+", default=[8, 16, 32], help="Vertex count(s) to generate"
+    )
+    parser.add_argument("-o", "--output-dir", type=str, default=None, help="Output directory")
+    parser.add_argument("--seed", type=int, default=None, help="Random seed")
+    parser.add_argument("-v", "--verbose", action="store_true", default=True, help="Verbose output")
 
     args = parser.parse_args()
 
     if args.output_dir is None:
         script_dir = Path(__file__).parent
-        output_dir = script_dir / 'graphs'
+        output_dir = script_dir / "graphs"
     else:
         output_dir = Path(args.output_dir)
 
@@ -742,10 +751,7 @@ def main():
 
         print(f"\n" + "-" * 60)
 
-        graphs = generate_graphs(
-            n_vertices, args.n_graphs,
-            seed=args.seed, verbose=args.verbose
-        )
+        graphs = generate_graphs(n_vertices, args.n_graphs, seed=args.seed, verbose=args.verbose)
 
         if not graphs:
             print(f"No graphs generated for {n_vertices} vertices")

@@ -29,7 +29,7 @@ import pandas as pd
 sys.path.append(str(Path(__file__).parent.parent))
 
 np.random.seed(123456789)
-np.set_printoptions(floatmode='maxprec')
+np.set_printoptions(floatmode="maxprec")
 
 # Use new refactored classes
 from src.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
@@ -66,7 +66,7 @@ def analyze_graph_properties(edges):
         "density": n_edges / max_edges if max_edges > 0 else 0,
         "min_degree": min(degrees.values()) if degrees else 0,
         "max_degree": max(degrees.values()) if degrees else 0,
-        "avg_degree": np.mean(list(degrees.values())) if degrees else 0
+        "avg_degree": np.mean(list(degrees.values())) if degrees else 0,
     }
 
 
@@ -82,7 +82,7 @@ def create_matching_circuit_operator(edges, n_steps, total_time):
     G = MultiEdgeGraph(edges)
     decomp = MatchingDecomposition(G)
     qc = decomp.build_circuit(n_steps=n_steps, delta_t=total_time)
-    qc_transpiled = transpile(qc, basis_gates=['cx', 'u3'], optimization_level=3)
+    qc_transpiled = transpile(qc, basis_gates=["cx", "u3"], optimization_level=3)
     return Operator(qc_transpiled)
 
 
@@ -97,11 +97,11 @@ def create_pauli_circuit_operator(edges, n_steps, total_time):
 def compute_operator_differences(edges, trotter_steps_list, time_values):
     """Compute 2-norm differences between matching/Pauli and exact CTQW."""
     results = {
-        'trotter_steps': trotter_steps_list,
-        'time_values': time_values,
-        'matching_differences': {},
-        'pauli_differences': {},
-        'properties': analyze_graph_properties(edges)
+        "trotter_steps": trotter_steps_list,
+        "time_values": time_values,
+        "matching_differences": {},
+        "pauli_differences": {},
+        "properties": analyze_graph_properties(edges),
     }
 
     for time_val in time_values:
@@ -111,8 +111,8 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
             exact_op = create_exact_ctqw_operator(edges, time_val)
         except Exception as e:
             print(f"      Error creating exact CTQW for time {time_val}: {e}")
-            results['matching_differences'][time_val] = [np.nan] * len(trotter_steps_list)
-            results['pauli_differences'][time_val] = [np.nan] * len(trotter_steps_list)
+            results["matching_differences"][time_val] = [np.nan] * len(trotter_steps_list)
+            results["pauli_differences"][time_val] = [np.nan] * len(trotter_steps_list)
             continue
 
         matching_diffs = []
@@ -141,8 +141,8 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
                 print(f"P=Error")
                 pauli_diffs.append(np.nan)
 
-        results['matching_differences'][time_val] = matching_diffs
-        results['pauli_differences'][time_val] = pauli_diffs
+        results["matching_differences"][time_val] = matching_diffs
+        results["pauli_differences"][time_val] = pauli_diffs
 
     return results
 
@@ -159,7 +159,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
         print(f"Processing graph {i+1}/{len(graphs)}")
 
         props = analyze_graph_properties(edges)
-        n_vertices = props['n_vertices']
+        n_vertices = props["n_vertices"]
 
         if n_vertices == 0 or (n_vertices & (n_vertices - 1)) != 0:
             print(f"  Skipping: {n_vertices} vertices (not a power of 2)")
@@ -171,7 +171,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
             skipped_wrong_size += 1
             continue
 
-        if props['n_edges'] == 0:
+        if props["n_edges"] == 0:
             print(f"  Skipping: no edges")
             skipped_no_edges += 1
             continue
@@ -184,8 +184,8 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
 
         try:
             results = compute_operator_differences(edges, trotter_steps_list, time_values)
-            results['graph_index'] = i
-            results['n_qubits'] = n_qubits
+            results["graph_index"] = i
+            results["n_qubits"] = n_qubits
             all_results.append(results)
             valid_graphs += 1
         except Exception as e:
@@ -210,29 +210,35 @@ def save_raw_results(all_results, output_dir):
         return None
 
     rows = []
-    time_values = all_results[0]['time_values']
-    trotter_steps = all_results[0]['trotter_steps']
+    time_values = all_results[0]["time_values"]
+    trotter_steps = all_results[0]["trotter_steps"]
 
     for result in all_results:
         for time_val in time_values:
             for step_idx, n_steps in enumerate(trotter_steps):
-                matching_diff = result['matching_differences'].get(time_val, [np.nan] * len(trotter_steps))[step_idx]
-                pauli_diff = result['pauli_differences'].get(time_val, [np.nan] * len(trotter_steps))[step_idx]
+                matching_diff = result["matching_differences"].get(
+                    time_val, [np.nan] * len(trotter_steps)
+                )[step_idx]
+                pauli_diff = result["pauli_differences"].get(
+                    time_val, [np.nan] * len(trotter_steps)
+                )[step_idx]
 
-                rows.append({
-                    'graph_index': result['graph_index'],
-                    'n_qubits': result['n_qubits'],
-                    'n_vertices': result['properties']['n_vertices'],
-                    'n_edges': result['properties']['n_edges'],
-                    'density': result['properties']['density'],
-                    'time': time_val,
-                    'trotter_steps': n_steps,
-                    'matching_diff': matching_diff,
-                    'pauli_diff': pauli_diff
-                })
+                rows.append(
+                    {
+                        "graph_index": result["graph_index"],
+                        "n_qubits": result["n_qubits"],
+                        "n_vertices": result["properties"]["n_vertices"],
+                        "n_edges": result["properties"]["n_edges"],
+                        "density": result["properties"]["density"],
+                        "time": time_val,
+                        "trotter_steps": n_steps,
+                        "matching_diff": matching_diff,
+                        "pauli_diff": pauli_diff,
+                    }
+                )
 
     df = pd.DataFrame(rows)
-    csv_file = output_dir / 'raw_results.csv'
+    csv_file = output_dir / "raw_results.csv"
     df.to_csv(csv_file, index=False)
     print(f"Raw results saved to {csv_file}")
     return df
@@ -243,8 +249,8 @@ def compute_and_save_statistics(all_results, output_dir):
     if not all_results:
         return None
 
-    time_values = all_results[0]['time_values']
-    trotter_steps = all_results[0]['trotter_steps']
+    time_values = all_results[0]["time_values"]
+    trotter_steps = all_results[0]["trotter_steps"]
 
     stats_rows = []
 
@@ -254,40 +260,42 @@ def compute_and_save_statistics(all_results, output_dir):
             pauli_diffs = []
 
             for result in all_results:
-                if step_idx < len(result['matching_differences'].get(time_val, [])):
-                    diff = result['matching_differences'][time_val][step_idx]
+                if step_idx < len(result["matching_differences"].get(time_val, [])):
+                    diff = result["matching_differences"][time_val][step_idx]
                     if not np.isnan(diff):
                         matching_diffs.append(diff)
 
-                if step_idx < len(result['pauli_differences'].get(time_val, [])):
-                    diff = result['pauli_differences'][time_val][step_idx]
+                if step_idx < len(result["pauli_differences"].get(time_val, [])):
+                    diff = result["pauli_differences"][time_val][step_idx]
                     if not np.isnan(diff):
                         pauli_diffs.append(diff)
 
-            stats_rows.append({
-                'time': time_val,
-                'trotter_steps': n_steps,
-                'n_graphs': len(matching_diffs),
-                # Matching statistics
-                'matching_mean': np.mean(matching_diffs) if matching_diffs else np.nan,
-                'matching_std': np.std(matching_diffs) if matching_diffs else np.nan,
-                'matching_min': np.min(matching_diffs) if matching_diffs else np.nan,
-                'matching_max': np.max(matching_diffs) if matching_diffs else np.nan,
-                'matching_median': np.median(matching_diffs) if matching_diffs else np.nan,
-                'matching_q25': np.percentile(matching_diffs, 25) if matching_diffs else np.nan,
-                'matching_q75': np.percentile(matching_diffs, 75) if matching_diffs else np.nan,
-                # Pauli statistics
-                'pauli_mean': np.mean(pauli_diffs) if pauli_diffs else np.nan,
-                'pauli_std': np.std(pauli_diffs) if pauli_diffs else np.nan,
-                'pauli_min': np.min(pauli_diffs) if pauli_diffs else np.nan,
-                'pauli_max': np.max(pauli_diffs) if pauli_diffs else np.nan,
-                'pauli_median': np.median(pauli_diffs) if pauli_diffs else np.nan,
-                'pauli_q25': np.percentile(pauli_diffs, 25) if pauli_diffs else np.nan,
-                'pauli_q75': np.percentile(pauli_diffs, 75) if pauli_diffs else np.nan,
-            })
+            stats_rows.append(
+                {
+                    "time": time_val,
+                    "trotter_steps": n_steps,
+                    "n_graphs": len(matching_diffs),
+                    # Matching statistics
+                    "matching_mean": np.mean(matching_diffs) if matching_diffs else np.nan,
+                    "matching_std": np.std(matching_diffs) if matching_diffs else np.nan,
+                    "matching_min": np.min(matching_diffs) if matching_diffs else np.nan,
+                    "matching_max": np.max(matching_diffs) if matching_diffs else np.nan,
+                    "matching_median": np.median(matching_diffs) if matching_diffs else np.nan,
+                    "matching_q25": np.percentile(matching_diffs, 25) if matching_diffs else np.nan,
+                    "matching_q75": np.percentile(matching_diffs, 75) if matching_diffs else np.nan,
+                    # Pauli statistics
+                    "pauli_mean": np.mean(pauli_diffs) if pauli_diffs else np.nan,
+                    "pauli_std": np.std(pauli_diffs) if pauli_diffs else np.nan,
+                    "pauli_min": np.min(pauli_diffs) if pauli_diffs else np.nan,
+                    "pauli_max": np.max(pauli_diffs) if pauli_diffs else np.nan,
+                    "pauli_median": np.median(pauli_diffs) if pauli_diffs else np.nan,
+                    "pauli_q25": np.percentile(pauli_diffs, 25) if pauli_diffs else np.nan,
+                    "pauli_q75": np.percentile(pauli_diffs, 75) if pauli_diffs else np.nan,
+                }
+            )
 
     df = pd.DataFrame(stats_rows)
-    csv_file = output_dir / 'statistics.csv'
+    csv_file = output_dir / "statistics.csv"
     df.to_csv(csv_file, index=False)
     print(f"Statistics saved to {csv_file}")
     return df
@@ -296,30 +304,32 @@ def compute_and_save_statistics(all_results, output_dir):
 def save_metadata(metadata, args, output_dir, n_graphs_processed):
     """Save metadata and configuration."""
     meta = {
-        'graph_type': metadata.get('type', 'unknown'),
-        'n_vertices': metadata.get('vertices', 'unknown'),
-        'n_graphs_in_file': metadata.get('n_graphs', 'unknown'),
-        'n_graphs_processed': n_graphs_processed,
-        'trotter_steps': list(range(args.min_steps, args.max_steps + 1, args.step_inc)),
-        'time_values': args.time_values,
-        'timestamp': datetime.now().isoformat(),
-        'g6_file': str(args.g6_file),
+        "graph_type": metadata.get("type", "unknown"),
+        "n_vertices": metadata.get("vertices", "unknown"),
+        "n_graphs_in_file": metadata.get("n_graphs", "unknown"),
+        "n_graphs_processed": n_graphs_processed,
+        "trotter_steps": list(range(args.min_steps, args.max_steps + 1, args.step_inc)),
+        "time_values": args.time_values,
+        "timestamp": datetime.now().isoformat(),
+        "g6_file": str(args.g6_file),
     }
 
-    json_file = output_dir / 'metadata.json'
-    with open(json_file, 'w') as f:
+    json_file = output_dir / "metadata.json"
+    with open(json_file, "w") as f:
         json.dump(meta, f, indent=2)
     print(f"Metadata saved to {json_file}")
 
 
 def main():
-    parser = argparse.ArgumentParser(description='Compute trotterization errors for CTQW')
-    parser.add_argument('g6_file', help='Path to G6 file')
-    parser.add_argument('-m', '--min_steps', type=int, default=1, help='Minimum Trotter steps')
-    parser.add_argument('-M', '--max_steps', type=int, default=20, help='Maximum Trotter steps')
-    parser.add_argument('-s', '--step_inc', type=int, default=2, help='Step increment')
-    parser.add_argument('-t', '--time_values', nargs='+', type=float, default=[0.1], help='Time values')
-    parser.add_argument('-o', '--output', type=str, default=None, help='Output directory')
+    parser = argparse.ArgumentParser(description="Compute trotterization errors for CTQW")
+    parser.add_argument("g6_file", help="Path to G6 file")
+    parser.add_argument("-m", "--min_steps", type=int, default=1, help="Minimum Trotter steps")
+    parser.add_argument("-M", "--max_steps", type=int, default=20, help="Maximum Trotter steps")
+    parser.add_argument("-s", "--step_inc", type=int, default=2, help="Step increment")
+    parser.add_argument(
+        "-t", "--time_values", nargs="+", type=float, default=[0.1], help="Time values"
+    )
+    parser.add_argument("-o", "--output", type=str, default=None, help="Output directory")
 
     args = parser.parse_args()
 
@@ -331,14 +341,20 @@ def main():
 
     # Setup output directory with timestamp
     script_dir = Path(__file__).parent
-    graph_type = metadata.get('type', 'graph')
-    n_vertices = metadata.get('vertices', 'N')
+    graph_type = metadata.get("type", "graph")
+    n_vertices = metadata.get("vertices", "N")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if args.output:
         output_dir = Path(args.output)
     else:
-        output_dir = script_dir / "outputs" / "trotterization_error" / f"{graph_type}_{n_vertices}v" / timestamp
+        output_dir = (
+            script_dir
+            / "outputs"
+            / "trotterization_error"
+            / f"{graph_type}_{n_vertices}v"
+            / timestamp
+        )
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Generate Trotter steps list
@@ -350,7 +366,7 @@ def main():
     print(f"  Output: {output_dir}")
 
     # Process graphs
-    expected_vertices = metadata.get('vertices')
+    expected_vertices = metadata.get("vertices")
     all_results = process_all_graphs(graphs, trotter_steps, args.time_values, expected_vertices)
 
     # Save all data

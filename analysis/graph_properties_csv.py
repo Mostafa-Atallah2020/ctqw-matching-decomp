@@ -33,7 +33,7 @@ from src.utils.graph import (
 def load_graphs_from_g6_file(filepath):
     """Load graphs from a G6 file, returning list of NetworkX graphs."""
     graphs = []
-    with open(filepath, 'r') as f:
+    with open(filepath, "r") as f:
         for line in f:
             line = line.strip()
             if line:
@@ -52,40 +52,40 @@ def compute_all_properties(graph, graph_index, category):
 
     # Add graph index and category
     row = {
-        'graph_index': graph_index,
-        'category': category,
-        'n_vertices': len(graph.nodes()),
-        'n_edges': props['edge_count'],
-        'edge_density': props['edge_density'],
-        'is_bipartite': props['is_bipartite'],
-        'is_connected': nx.is_connected(graph),
-        'diameter': props['diameter'],
-        'clique_number': props['clique_number'],
-        'max_degree': props['max_degree'],
-        'avg_degree': props['avg_degree'],
-        'avg_clustering': props['avg_clustering'],
-        'estimated_group_size': props['estimated_group_size'],
-        'estimated_orbit_count': props['estimated_orbit_count'],
+        "graph_index": graph_index,
+        "category": category,
+        "n_vertices": len(graph.nodes()),
+        "n_edges": props["edge_count"],
+        "edge_density": props["edge_density"],
+        "is_bipartite": props["is_bipartite"],
+        "is_connected": nx.is_connected(graph),
+        "diameter": props["diameter"],
+        "clique_number": props["clique_number"],
+        "max_degree": props["max_degree"],
+        "avg_degree": props["avg_degree"],
+        "avg_clustering": props["avg_clustering"],
+        "estimated_group_size": props["estimated_group_size"],
+        "estimated_orbit_count": props["estimated_orbit_count"],
     }
 
     # Hamming statistics (for bitstring representation)
     try:
         edges = graph_to_bitstring_edges(graph)
         hamming_stats = compute_hamming_statistics(edges)
-        row['total_hamming'] = hamming_stats['total_hamming']
-        row['avg_hamming'] = hamming_stats['avg_hamming']
-        row['min_hamming'] = hamming_stats['min_hamming']
-        row['max_hamming'] = hamming_stats['max_hamming']
-        row['hamming_1_count'] = hamming_stats['hamming_1_count']
-        row['hamming_gt1_count'] = hamming_stats['hamming_gt1_count']
+        row["total_hamming"] = hamming_stats["total_hamming"]
+        row["avg_hamming"] = hamming_stats["avg_hamming"]
+        row["min_hamming"] = hamming_stats["min_hamming"]
+        row["max_hamming"] = hamming_stats["max_hamming"]
+        row["hamming_1_count"] = hamming_stats["hamming_1_count"]
+        row["hamming_gt1_count"] = hamming_stats["hamming_gt1_count"]
     except Exception as e:
         print(f"Warning: Failed to compute Hamming stats for graph {graph_index}: {e}")
-        row['total_hamming'] = None
-        row['avg_hamming'] = None
-        row['min_hamming'] = None
-        row['max_hamming'] = None
-        row['hamming_1_count'] = None
-        row['hamming_gt1_count'] = None
+        row["total_hamming"] = None
+        row["avg_hamming"] = None
+        row["min_hamming"] = None
+        row["max_hamming"] = None
+        row["hamming_1_count"] = None
+        row["hamming_gt1_count"] = None
 
     return row
 
@@ -109,22 +109,24 @@ def process_g6_file(filepath, category):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Generate CSV with graph properties from win/lose/draw G6 files'
+        description="Generate CSV with graph properties from win/lose/draw G6 files"
     )
-    parser.add_argument('run_folder', help='Path to matching vs pauli analysis output folder')
-    parser.add_argument('-o', '--output', help='Output CSV filename (default: graph_properties.csv)')
+    parser.add_argument("run_folder", help="Path to matching vs pauli analysis output folder")
+    parser.add_argument(
+        "-o", "--output", help="Output CSV filename (default: graph_properties.csv)"
+    )
 
     args = parser.parse_args()
 
     run_folder = Path(args.run_folder)
-    results_folder = run_folder / 'results'
+    results_folder = run_folder / "results"
 
     if not results_folder.exists():
         print(f"Error: Results folder not found: {results_folder}")
         return 1
 
     # Find G6 files
-    g6_files = list(results_folder.glob('*.g6'))
+    g6_files = list(results_folder.glob("*.g6"))
     if not g6_files:
         print(f"Error: No G6 files found in {results_folder}")
         return 1
@@ -133,7 +135,7 @@ def main():
     print(f"Found {len(g6_files)} G6 files")
 
     # Categorize files
-    categories = {'win': None, 'lose': None, 'draw': None}
+    categories = {"win": None, "lose": None, "draw": None}
     for g6_file in g6_files:
         name = g6_file.stem.lower()
         for cat in categories:
@@ -157,28 +159,42 @@ def main():
 
     # Reorder columns
     column_order = [
-        'graph_index', 'category', 'n_vertices', 'n_edges', 'edge_density',
-        'is_bipartite', 'is_connected', 'diameter', 'clique_number',
-        'max_degree', 'avg_degree', 'avg_clustering',
-        'total_hamming', 'avg_hamming', 'min_hamming', 'max_hamming',
-        'hamming_1_count', 'hamming_gt1_count',
-        'estimated_group_size', 'estimated_orbit_count'
+        "graph_index",
+        "category",
+        "n_vertices",
+        "n_edges",
+        "edge_density",
+        "is_bipartite",
+        "is_connected",
+        "diameter",
+        "clique_number",
+        "max_degree",
+        "avg_degree",
+        "avg_clustering",
+        "total_hamming",
+        "avg_hamming",
+        "min_hamming",
+        "max_hamming",
+        "hamming_1_count",
+        "hamming_gt1_count",
+        "estimated_group_size",
+        "estimated_orbit_count",
     ]
     df = df[[col for col in column_order if col in df.columns]]
 
     # Save to CSV
-    output_file = args.output if args.output else run_folder / 'graph_properties.csv'
+    output_file = args.output if args.output else run_folder / "graph_properties.csv"
     output_file = Path(output_file)
     df.to_csv(output_file, index=False)
 
     print(f"\nSaved to: {output_file}")
     print(f"Total graphs: {len(df)}")
     print(f"\nCategory summary:")
-    print(df['category'].value_counts().to_string())
+    print(df["category"].value_counts().to_string())
 
     # Print summary statistics
     print(f"\nProperty summary by category:")
-    summary = df.groupby('category')[['n_edges', 'edge_density', 'avg_hamming', 'diameter']].mean()
+    summary = df.groupby("category")[["n_edges", "edge_density", "avg_hamming", "diameter"]].mean()
     print(summary.to_string())
 
     return 0

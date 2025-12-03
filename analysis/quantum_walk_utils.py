@@ -99,10 +99,10 @@ class GraphProcessor:
         metadata = parse_g6_filename(filepath)
         # Convert to legacy format expected by analysis scripts
         return {
-            "num_graphs": metadata.get('n_graphs', 0),
-            "size": metadata.get('type', 'unknown'),
-            "vertices": str(metadata.get('vertices', 0)),
-            "type": metadata.get('suffix', 'c'),
+            "num_graphs": metadata.get("n_graphs", 0),
+            "size": metadata.get("type", "unknown"),
+            "vertices": str(metadata.get("vertices", 0)),
+            "type": metadata.get("suffix", "c"),
         }
 
 

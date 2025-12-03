@@ -19,6 +19,7 @@ RANDOM_SEED = 42
 random.seed(RANDOM_SEED)
 
 import numpy as np
+
 np.random.seed(RANDOM_SEED)
 
 # Add the current directory to Python path for imports
@@ -135,7 +136,9 @@ def setup_paths(script_dir, graph_type: str, n_vertices: int):
 
     # Output directory with graph type and timestamp
     # Format: outputs/matching_vs_pauli/{graph_type}_{n_vertices}v/{timestamp}/
-    output_dir = script_dir / "outputs" / "matching_vs_pauli" / f"{graph_type}_{n_vertices}v" / timestamp
+    output_dir = (
+        script_dir / "outputs" / "matching_vs_pauli" / f"{graph_type}_{n_vertices}v" / timestamp
+    )
 
     # Create output directory if it doesn't exist
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -161,35 +164,38 @@ def parse_arguments():
 
     # Parameters only needed when NOT using input file
     parser.add_argument(
-        "--n-vertices", "-v", type=int, default=8,
+        "--n-vertices",
+        "-v",
+        type=int,
+        default=8,
         help="Number of vertices (only used if no input_file provided)",
     )
     parser.add_argument(
-        "--n-graphs", "-n", type=int, default=100,
+        "--n-graphs",
+        "-n",
+        type=int,
+        default=100,
         help="Number of graphs (only used if no input_file provided)",
     )
     parser.add_argument(
-        "--graph-type", "-t", type=str, default="random",
+        "--graph-type",
+        "-t",
+        type=str,
+        default="random",
         choices=["BM", "random", "bipartite"],
         help="Type of graphs (only used if no input_file provided)",
     )
 
     # Parameters that apply to all modes
     parser.add_argument(
-        "--delta-t", "-dt", type=float, default=0.1,
-        help="Time step for quantum walk evolution"
+        "--delta-t", "-dt", type=float, default=0.1, help="Time step for quantum walk evolution"
+    )
+    parser.add_argument("--n-steps", type=int, default=1, help="Number of Trotter steps")
+    parser.add_argument(
+        "--checkpoint-interval", type=int, default=50, help="Save checkpoint every N graphs"
     )
     parser.add_argument(
-        "--n-steps", type=int, default=1,
-        help="Number of Trotter steps"
-    )
-    parser.add_argument(
-        "--checkpoint-interval", type=int, default=50,
-        help="Save checkpoint every N graphs"
-    )
-    parser.add_argument(
-        "--progress-interval", type=int, default=10,
-        help="Show progress every N graphs"
+        "--progress-interval", type=int, default=10, help="Show progress every N graphs"
     )
 
     return parser.parse_args()
@@ -209,11 +215,13 @@ def main():
 
         # Try to parse info from filename using g6_utils
         file_info = parse_g6_filename(graph_file)
-        if file_info and 'n_graphs' in file_info and 'vertices' in file_info:
-            args.n_graphs = file_info['n_graphs']
-            args.graph_type = file_info.get('type', 'custom')
-            args.n_vertices = file_info['vertices']
-            print(f"[INFO] Parsed from filename: {args.n_graphs} graphs, type={args.graph_type}, {args.n_vertices} vertices")
+        if file_info and "n_graphs" in file_info and "vertices" in file_info:
+            args.n_graphs = file_info["n_graphs"]
+            args.graph_type = file_info.get("type", "custom")
+            args.n_vertices = file_info["vertices"]
+            print(
+                f"[INFO] Parsed from filename: {args.n_graphs} graphs, type={args.graph_type}, {args.n_vertices} vertices"
+            )
         else:
             # Fallback: detect n_vertices from first graph in file
             with open(graph_file, "r") as f:
@@ -262,7 +270,9 @@ def main():
     print(
         f"[CONFIG] Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)"
     )
-    print(f"[CONFIG] Using automatic matching algorithm (bipartite/greedy based on graph structure)")
+    print(
+        f"[CONFIG] Using automatic matching algorithm (bipartite/greedy based on graph structure)"
+    )
     print(f"[CONFIG] Delta t: {args.delta_t}")
 
     # Verify input file exists
@@ -277,9 +287,7 @@ def main():
         dirs = setup_directories(str(output_dir))
         log_filename = f"analysis_{args.graph_type}_{n_vertices}c.log"
         logger = Logger(os.path.join(dirs["logs"], log_filename))
-        checkpoint_file = (
-            output_dir / f"checkpoint_{args.graph_type}_{n_vertices}c.json"
-        )
+        checkpoint_file = output_dir / f"checkpoint_{args.graph_type}_{n_vertices}c.json"
     except Exception as e:
         print(f"[ERROR] Error setting up directories: {e}")
         return 1
@@ -547,9 +555,9 @@ def main():
         print(f"[OK] Successfully processed: {total_processed} ({success_rate:.1f}%)")
         print(f"[CONFIG] Matching algorithm: automatic (bipartite/greedy)")
         print(f"[RESULTS] Breakdown:")
-        win_pct = categories['win'] / total_processed * 100 if total_processed > 0 else 0
-        lose_pct = categories['lose'] / total_processed * 100 if total_processed > 0 else 0
-        draw_pct = categories['draw'] / total_processed * 100 if total_processed > 0 else 0
+        win_pct = categories["win"] / total_processed * 100 if total_processed > 0 else 0
+        lose_pct = categories["lose"] / total_processed * 100 if total_processed > 0 else 0
+        draw_pct = categories["draw"] / total_processed * 100 if total_processed > 0 else 0
         print(f"   [WIN]  Matching better:  {categories['win']:>4} ({win_pct:>5.1f}%)")
         print(f"   [LOSE] Pauli better:     {categories['lose']:>4} ({lose_pct:>5.1f}%)")
         print(f"   [DRAW] Equal:            {categories['draw']:>4} ({draw_pct:>5.1f}%)")
@@ -663,9 +671,7 @@ def main():
                 summary_with_timing.update(timing_stats)
 
             results_manager.save_results(summary_with_timing, "summary")
-            results_manager.save_results(
-                {"detailed_results": results}, "detailed"
-            )
+            results_manager.save_results({"detailed_results": results}, "detailed")
             results_manager.save_results(avg_stats, "averages")
 
             # Save categorized graphs
@@ -674,9 +680,7 @@ def main():
             # Create visualization
             title = f"Matching vs Pauli Results ({n_qubits} qubits)"
             pie_chart = plot_manager.create_pie_chart(categories, title)
-            chart_filename = (
-                f'pie_chart_{graph_info["size"]}_{graph_info["vertices"]}c.png'
-            )
+            chart_filename = f'pie_chart_{graph_info["size"]}_{graph_info["vertices"]}c.png'
             plot_manager.save_plot(pie_chart, chart_filename)
 
             # Clean up checkpoint

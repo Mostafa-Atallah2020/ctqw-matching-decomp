@@ -170,3 +170,4 @@ analysis/outputs
 analysis/graphs
 examples/trotterization_plots
 venv310/
+graphs/

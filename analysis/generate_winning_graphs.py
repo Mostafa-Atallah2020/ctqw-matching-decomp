@@ -33,7 +33,7 @@ import numpy as np
 
 def get_hamming_distance(u, v):
     """Calculate Hamming distance between two integers."""
-    return bin(u ^ v).count('1')
+    return bin(u ^ v).count("1")
 
 
 def get_all_edges_by_hamming(n_vertices):
@@ -227,26 +227,26 @@ def compute_metrics(G, n_vertices):
     max_deg = max(d for n, d in G.degree())
 
     metrics = {
-        'n_edges': n_edges,
-        'h1_ratio': h1_ratio,
-        'n_components': n_components,
-        'component_ratio': component_ratio,
-        'max_degree': max_deg
+        "n_edges": n_edges,
+        "h1_ratio": h1_ratio,
+        "n_components": n_components,
+        "component_ratio": component_ratio,
+        "max_degree": max_deg,
     }
 
     # Validation based on odd/even - relaxed constraints for more variety
     if n_bits % 2 == 0:  # Even qubits
         valid = (
-            3 <= n_edges <= 2 * n_bits and  # Allow more edges
-            h1_ratio <= 0.6 and              # Relaxed H1 ratio
-            component_ratio >= 0.4 and       # Relaxed component ratio
-            max_deg <= 3                     # Allow degree 3
+            3 <= n_edges <= 2 * n_bits  # Allow more edges
+            and h1_ratio <= 0.6  # Relaxed H1 ratio
+            and component_ratio >= 0.4  # Relaxed component ratio
+            and max_deg <= 3  # Allow degree 3
         )
     else:  # Odd qubits
         valid = (
-            3 <= n_edges <= 2 * n_bits and  # Allow more edges
-            component_ratio >= 0.2 and       # Relaxed component ratio
-            max_deg <= 3                     # Allow degree 3
+            3 <= n_edges <= 2 * n_bits  # Allow more edges
+            and component_ratio >= 0.2  # Relaxed component ratio
+            and max_deg <= 3  # Allow degree 3
         )
 
     return metrics, valid
@@ -329,7 +329,9 @@ def print_statistics(graphs, n_vertices, verbose=True):
     print(f"  Components: {np.mean([m['n_components'] for m in all_metrics]):.1f}")
     print(f"  Max degree: {np.mean([m['max_degree'] for m in all_metrics]):.1f}")
     if total_edges > 0:
-        h_dist = ", ".join([f"H{h}: {count/total_edges*100:.0f}%" for h, count in sorted(h_totals.items())])
+        h_dist = ", ".join(
+            [f"H{h}: {count/total_edges*100:.0f}%" for h, count in sorted(h_totals.items())]
+        )
         print(f"  H distribution: {h_dist}")
 
 
@@ -338,9 +340,9 @@ def save_graphs(graphs, output_path, verbose=True):
     output_path = Path(output_path)
     output_path.parent.mkdir(parents=True, exist_ok=True)
 
-    with open(output_path, 'w') as f:
+    with open(output_path, "w") as f:
         for G in graphs:
-            f.write(nx.to_graph6_bytes(G, header=False).decode('ascii'))
+            f.write(nx.to_graph6_bytes(G, header=False).decode("ascii"))
 
     if verbose:
         print(f"Saved {len(graphs)} graphs to {output_path}")
@@ -348,24 +350,23 @@ def save_graphs(graphs, output_path, verbose=True):
 
 def main():
     parser = argparse.ArgumentParser(
-        description='Generate winning graphs using odd/even qubit formulae'
+        description="Generate winning graphs using odd/even qubit formulae"
     )
-    parser.add_argument('-n', '--n-graphs', type=int, default=200,
-                        help='Number of graphs to generate')
-    parser.add_argument('--vertices', type=int, nargs='+', default=[8, 16, 32],
-                        help='Vertex count(s) to generate')
-    parser.add_argument('-o', '--output-dir', type=str, default=None,
-                        help='Output directory')
-    parser.add_argument('--seed', type=int, default=None,
-                        help='Random seed')
-    parser.add_argument('-v', '--verbose', action='store_true', default=True,
-                        help='Verbose output')
+    parser.add_argument(
+        "-n", "--n-graphs", type=int, default=200, help="Number of graphs to generate"
+    )
+    parser.add_argument(
+        "--vertices", type=int, nargs="+", default=[8, 16, 32], help="Vertex count(s) to generate"
+    )
+    parser.add_argument("-o", "--output-dir", type=str, default=None, help="Output directory")
+    parser.add_argument("--seed", type=int, default=None, help="Random seed")
+    parser.add_argument("-v", "--verbose", action="store_true", default=True, help="Verbose output")
 
     args = parser.parse_args()
 
     if args.output_dir is None:
         script_dir = Path(__file__).parent
-        output_dir = script_dir / 'graphs'
+        output_dir = script_dir / "graphs"
     else:
         output_dir = Path(args.output_dir)
 
@@ -388,10 +389,7 @@ def main():
 
         print(f"\n" + "-" * 60)
 
-        graphs = generate_graphs(
-            n_vertices, args.n_graphs,
-            seed=args.seed, verbose=args.verbose
-        )
+        graphs = generate_graphs(n_vertices, args.n_graphs, seed=args.seed, verbose=args.verbose)
 
         if not graphs:
             print(f"No graphs generated for {n_vertices} vertices")

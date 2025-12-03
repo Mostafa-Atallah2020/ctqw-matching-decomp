@@ -49,7 +49,9 @@ def parse_log_file(log_path: Path) -> Dict[str, Any]:
         content = f.read()
 
     # Find the "Average Gate Counts by Category:" section
-    gate_counts_match = re.search(r"Average Gate Counts by Category:(.*?)={50,}", content, re.DOTALL)
+    gate_counts_match = re.search(
+        r"Average Gate Counts by Category:(.*?)={50,}", content, re.DOTALL
+    )
     if gate_counts_match:
         section = gate_counts_match.group(1)
 
@@ -284,7 +286,9 @@ def save_stats_csv(stats: Dict[str, Dict[str, float]], output_path: Path, n_runs
 
         # Results section
         writer.writerow(["## Results (Matching vs Pauli)"])
-        writer.writerow(["category", "count_mean", "count_std", "count_min", "count_max", "pct_mean", "pct_std"])
+        writer.writerow(
+            ["category", "count_mean", "count_std", "count_min", "count_max", "pct_mean", "pct_std"]
+        )
 
         for prop in ["win", "lose", "draw"]:
             if prop in stats:
@@ -292,33 +296,44 @@ def save_stats_csv(stats: Dict[str, Dict[str, float]], output_path: Path, n_runs
                 pct_key = f"{prop}_pct"
                 pct_s = stats.get(pct_key, {})
 
-                writer.writerow([
-                    prop.upper(),
-                    f"{s['mean']:.2f}" if s["mean"] is not None else "",
-                    f"{s['std']:.2f}" if s["std"] is not None else "",
-                    f"{s['min']:.0f}" if s["min"] is not None else "",
-                    f"{s['max']:.0f}" if s["max"] is not None else "",
-                    f"{pct_s.get('mean', 0):.2f}%" if pct_s.get("mean") is not None else "",
-                    f"{pct_s.get('std', 0):.2f}%" if pct_s.get("std") is not None else "",
-                ])
+                writer.writerow(
+                    [
+                        prop.upper(),
+                        f"{s['mean']:.2f}" if s["mean"] is not None else "",
+                        f"{s['std']:.2f}" if s["std"] is not None else "",
+                        f"{s['min']:.0f}" if s["min"] is not None else "",
+                        f"{s['max']:.0f}" if s["max"] is not None else "",
+                        f"{pct_s.get('mean', 0):.2f}%" if pct_s.get("mean") is not None else "",
+                        f"{pct_s.get('std', 0):.2f}%" if pct_s.get("std") is not None else "",
+                    ]
+                )
 
         writer.writerow([])
 
         # Gate counts section
-        gate_props = sorted([k for k in stats if any(x in k.lower() for x in ["_cx", "_u3", "_depth"]) and not k.startswith("config")])
+        gate_props = sorted(
+            [
+                k
+                for k in stats
+                if any(x in k.lower() for x in ["_cx", "_u3", "_depth"])
+                and not k.startswith("config")
+            ]
+        )
         if gate_props:
             writer.writerow(["## Gate Counts by Category"])
             writer.writerow(["metric", "mean", "std", "min", "max"])
 
             for prop in gate_props:
                 s = stats[prop]
-                writer.writerow([
-                    prop,
-                    f"{s['mean']:.2f}" if s["mean"] is not None else "",
-                    f"{s['std']:.2f}" if s["std"] is not None else "",
-                    f"{s['min']:.2f}" if s["min"] is not None else "",
-                    f"{s['max']:.2f}" if s["max"] is not None else "",
-                ])
+                writer.writerow(
+                    [
+                        prop,
+                        f"{s['mean']:.2f}" if s["mean"] is not None else "",
+                        f"{s['std']:.2f}" if s["std"] is not None else "",
+                        f"{s['min']:.2f}" if s["min"] is not None else "",
+                        f"{s['max']:.2f}" if s["max"] is not None else "",
+                    ]
+                )
 
             writer.writerow([])
 
@@ -330,13 +345,15 @@ def save_stats_csv(stats: Dict[str, Dict[str, float]], output_path: Path, n_runs
 
             for prop in graph_props:
                 s = stats[prop]
-                writer.writerow([
-                    prop,
-                    f"{s['mean']:.4f}" if s["mean"] is not None else "",
-                    f"{s['std']:.4f}" if s["std"] is not None else "",
-                    f"{s['min']:.4f}" if s["min"] is not None else "",
-                    f"{s['max']:.4f}" if s["max"] is not None else "",
-                ])
+                writer.writerow(
+                    [
+                        prop,
+                        f"{s['mean']:.4f}" if s["mean"] is not None else "",
+                        f"{s['std']:.4f}" if s["std"] is not None else "",
+                        f"{s['min']:.4f}" if s["min"] is not None else "",
+                        f"{s['max']:.4f}" if s["max"] is not None else "",
+                    ]
+                )
 
             writer.writerow([])
 
@@ -349,13 +366,15 @@ def save_stats_csv(stats: Dict[str, Dict[str, float]], output_path: Path, n_runs
             for prop in timing_props:
                 s = stats[prop]
                 readable_name = prop.replace("timing_", "").replace("_", " ").title()
-                writer.writerow([
-                    readable_name,
-                    f"{s['mean']:.6f}" if s["mean"] is not None else "",
-                    f"{s['std']:.6f}" if s["std"] is not None else "",
-                    f"{s['min']:.6f}" if s["min"] is not None else "",
-                    f"{s['max']:.6f}" if s["max"] is not None else "",
-                ])
+                writer.writerow(
+                    [
+                        readable_name,
+                        f"{s['mean']:.6f}" if s["mean"] is not None else "",
+                        f"{s['std']:.6f}" if s["std"] is not None else "",
+                        f"{s['min']:.6f}" if s["min"] is not None else "",
+                        f"{s['max']:.6f}" if s["max"] is not None else "",
+                    ]
+                )
 
             writer.writerow([])
 
@@ -365,22 +384,43 @@ def save_stats_csv(stats: Dict[str, Dict[str, float]], output_path: Path, n_runs
         lose_pct = stats.get("lose_pct", {})
 
         if win_pct.get("mean") is not None:
-            writer.writerow(["win_rate", f"{win_pct.get('mean', 0):.1f}% +/- {win_pct.get('std', 0):.1f}%"])
-            writer.writerow(["lose_rate", f"{lose_pct.get('mean', 0):.1f}% +/- {lose_pct.get('std', 0):.1f}%"])
+            writer.writerow(
+                ["win_rate", f"{win_pct.get('mean', 0):.1f}% +/- {win_pct.get('std', 0):.1f}%"]
+            )
+            writer.writerow(
+                ["lose_rate", f"{lose_pct.get('mean', 0):.1f}% +/- {lose_pct.get('std', 0):.1f}%"]
+            )
 
 
-def save_raw_data_csv(results: Dict[str, List], run_timestamps: List[str], output_path: Path, total: int):
+def save_raw_data_csv(
+    results: Dict[str, List], run_timestamps: List[str], output_path: Path, total: int
+):
     """Save raw data from all runs to CSV with percentages."""
     with open(output_path, "w", newline="") as f:
         writer = csv.writer(f)
 
         # Organize columns by category
         result_cols = ["win", "lose", "draw"]
-        gate_cols = sorted([k for k in results if any(x in k.lower() for x in ["_cx", "_u3", "_depth"]) and not k.startswith("config")])
+        gate_cols = sorted(
+            [
+                k
+                for k in results
+                if any(x in k.lower() for x in ["_cx", "_u3", "_depth"])
+                and not k.startswith("config")
+            ]
+        )
         graph_cols = sorted([k for k in results if "graph_" in k.lower()])
         timing_cols = sorted([k for k in results if "timing" in k.lower()])
         config_cols = sorted([k for k in results if k.startswith("config_")])
-        other_cols = [k for k in results if k not in result_cols and k not in gate_cols and k not in graph_cols and k not in timing_cols and k not in config_cols]
+        other_cols = [
+            k
+            for k in results
+            if k not in result_cols
+            and k not in gate_cols
+            and k not in graph_cols
+            and k not in timing_cols
+            and k not in config_cols
+        ]
 
         # Build header with percentages for results
         header = ["run_id", "timestamp"]
@@ -537,7 +577,8 @@ def main():
         help="Path to folder containing run subfolders (e.g., outputs/matching_vs_pauli/odd_8v)",
     )
     parser.add_argument(
-        "-o", "--output",
+        "-o",
+        "--output",
         type=str,
         default=None,
         help="Output base name (without extension). Default: <folder>/aggregated_stats",
