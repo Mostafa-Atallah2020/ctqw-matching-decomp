@@ -41,18 +41,25 @@ from qiskit import transpile
 from qiskit.quantum_info import Operator
 
 
-def analyze_graph_properties(edges):
-    """Analyze basic properties of the graph."""
+def analyze_graph_properties(edges, n_vertices=None):
+    """Analyze basic properties of the graph.
+
+    Args:
+        edges: Set of edge tuples (bitstring pairs)
+        n_vertices: Expected number of vertices (from metadata). If None, inferred from edges.
+    """
     if not edges:
         return {"n_vertices": 0, "n_edges": 0, "is_empty": True}
 
-    vertices = set()
-    for u, v in edges:
-        vertices.add(u)
-        vertices.add(v)
-
-    n_vertices = len(vertices)
     n_edges = len(edges)
+
+    # Use expected n_vertices from metadata if provided, otherwise infer from bitstring length
+    if n_vertices is None:
+        # Infer from bitstring length (edges are tuples of bitstrings)
+        first_edge = next(iter(edges))
+        n_qubits = len(first_edge[0])
+        n_vertices = 2 ** n_qubits
+
     max_edges = n_vertices * (n_vertices - 1) // 2
 
     degrees = defaultdict(int)
@@ -148,35 +155,39 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
 
 
 def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertices=None):
-    """Process all graphs and compute operator differences."""
+    """Process all graphs and compute operator differences.
+
+    Args:
+        graphs: List of edge sets (each edge is a tuple of bitstrings)
+        trotter_steps_list: List of Trotter step counts to test
+        time_values: List of time values to test
+        expected_vertices: Expected number of vertices from metadata (used for reporting)
+    """
     all_results = []
     valid_graphs = 0
-    skipped_wrong_size = 0
     skipped_no_edges = 0
-    skipped_not_power_of_2 = 0
+
+    # Determine n_vertices and n_qubits from metadata or first graph's bitstring length
+    if expected_vertices is not None:
+        n_vertices = expected_vertices
+        n_qubits = int(np.log2(n_vertices))
+    else:
+        # Infer from first graph's bitstring length
+        first_edge = next(iter(graphs[0]))
+        n_qubits = len(first_edge[0])
+        n_vertices = 2 ** n_qubits
+
+    print(f"  Using {n_vertices} vertices ({n_qubits} qubits) from metadata")
 
     for i, edges in enumerate(graphs):
         print(f"Processing graph {i+1}/{len(graphs)}")
 
-        props = analyze_graph_properties(edges)
-        n_vertices = props["n_vertices"]
-
-        if n_vertices == 0 or (n_vertices & (n_vertices - 1)) != 0:
-            print(f"  Skipping: {n_vertices} vertices (not a power of 2)")
-            skipped_not_power_of_2 += 1
-            continue
-
-        if expected_vertices is not None and n_vertices != expected_vertices:
-            print(f"  Skipping: {n_vertices} vertices (expected {expected_vertices})")
-            skipped_wrong_size += 1
-            continue
-
-        if props["n_edges"] == 0:
+        if not edges:
             print(f"  Skipping: no edges")
             skipped_no_edges += 1
             continue
 
-        n_qubits = int(np.log2(n_vertices))
+        props = analyze_graph_properties(edges, n_vertices)
         print(f"  Graph: {n_vertices} vertices ({n_qubits} qubits), {props['n_edges']} edges")
 
         if n_qubits > 8:
@@ -186,6 +197,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
             results = compute_operator_differences(edges, trotter_steps_list, time_values)
             results["graph_index"] = i
             results["n_qubits"] = n_qubits
+            results["properties"] = props  # Update with correct n_vertices
             all_results.append(results)
             valid_graphs += 1
         except Exception as e:
@@ -194,10 +206,6 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
 
     print(f"\nProcessing summary:")
     print(f"  Successfully processed: {valid_graphs}/{len(graphs)} graphs")
-    if skipped_wrong_size > 0:
-        print(f"  Skipped (wrong vertex count): {skipped_wrong_size}")
-    if skipped_not_power_of_2 > 0:
-        print(f"  Skipped (not power of 2): {skipped_not_power_of_2}")
     if skipped_no_edges > 0:
         print(f"  Skipped (no edges): {skipped_no_edges}")
 
@@ -241,63 +249,6 @@ def save_raw_results(all_results, output_dir):
     csv_file = output_dir / "raw_results.csv"
     df.to_csv(csv_file, index=False)
     print(f"Raw results saved to {csv_file}")
-    return df
-
-
-def compute_and_save_statistics(all_results, output_dir):
-    """Compute and save statistics (means, stds, min, max, median) for plotting."""
-    if not all_results:
-        return None
-
-    time_values = all_results[0]["time_values"]
-    trotter_steps = all_results[0]["trotter_steps"]
-
-    stats_rows = []
-
-    for time_val in time_values:
-        for step_idx, n_steps in enumerate(trotter_steps):
-            matching_diffs = []
-            pauli_diffs = []
-
-            for result in all_results:
-                if step_idx < len(result["matching_differences"].get(time_val, [])):
-                    diff = result["matching_differences"][time_val][step_idx]
-                    if not np.isnan(diff):
-                        matching_diffs.append(diff)
-
-                if step_idx < len(result["pauli_differences"].get(time_val, [])):
-                    diff = result["pauli_differences"][time_val][step_idx]
-                    if not np.isnan(diff):
-                        pauli_diffs.append(diff)
-
-            stats_rows.append(
-                {
-                    "time": time_val,
-                    "trotter_steps": n_steps,
-                    "n_graphs": len(matching_diffs),
-                    # Matching statistics
-                    "matching_mean": np.mean(matching_diffs) if matching_diffs else np.nan,
-                    "matching_std": np.std(matching_diffs) if matching_diffs else np.nan,
-                    "matching_min": np.min(matching_diffs) if matching_diffs else np.nan,
-                    "matching_max": np.max(matching_diffs) if matching_diffs else np.nan,
-                    "matching_median": np.median(matching_diffs) if matching_diffs else np.nan,
-                    "matching_q25": np.percentile(matching_diffs, 25) if matching_diffs else np.nan,
-                    "matching_q75": np.percentile(matching_diffs, 75) if matching_diffs else np.nan,
-                    # Pauli statistics
-                    "pauli_mean": np.mean(pauli_diffs) if pauli_diffs else np.nan,
-                    "pauli_std": np.std(pauli_diffs) if pauli_diffs else np.nan,
-                    "pauli_min": np.min(pauli_diffs) if pauli_diffs else np.nan,
-                    "pauli_max": np.max(pauli_diffs) if pauli_diffs else np.nan,
-                    "pauli_median": np.median(pauli_diffs) if pauli_diffs else np.nan,
-                    "pauli_q25": np.percentile(pauli_diffs, 25) if pauli_diffs else np.nan,
-                    "pauli_q75": np.percentile(pauli_diffs, 75) if pauli_diffs else np.nan,
-                }
-            )
-
-    df = pd.DataFrame(stats_rows)
-    csv_file = output_dir / "statistics.csv"
-    df.to_csv(csv_file, index=False)
-    print(f"Statistics saved to {csv_file}")
     return df
 
 
@@ -346,7 +297,7 @@ def main():
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     if args.output:
-        output_dir = Path(args.output)
+        output_dir = Path(args.output) / timestamp
     else:
         output_dir = (
             script_dir
@@ -372,7 +323,6 @@ def main():
     # Save all data
     if all_results:
         save_raw_results(all_results, output_dir)
-        compute_and_save_statistics(all_results, output_dir)
         save_metadata(metadata, args, output_dir, len(all_results))
 
     print(f"\nComputation complete! Data saved to: {output_dir}")

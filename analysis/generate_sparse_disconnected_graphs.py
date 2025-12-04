@@ -397,9 +397,7 @@ def main():
 
         print_statistics(graphs, n_vertices, args.verbose)
 
-        n_bits = int(np.log2(n_vertices))
-        formula_type = "even" if n_bits % 2 == 0 else "odd"
-        output_file = output_dir / f"{len(graphs)}graph_{formula_type}_{n_vertices:d}v.g6"
+        output_file = output_dir / f"{len(graphs)}graph_sparse_disconnected_{n_vertices:d}v.g6"
         save_graphs(graphs, output_file, args.verbose)
 
     print("\n" + "=" * 60)
