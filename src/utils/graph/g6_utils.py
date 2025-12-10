@@ -23,6 +23,18 @@ def parse_g6_filename(filename: str) -> Dict:
     path = Path(filename)
     stem = path.stem
 
+    # Special pattern for Erdős-Rényi: 100graph_erdos_renyi_p0_10_128v
+    er_match = re.match(r'(\d+)graph_(erdos_renyi_p\d+_\d+)_(\d+)([a-z]*)', stem)
+    if er_match:
+        groups = er_match.groups()
+        return {
+            'n_graphs': int(groups[0]),
+            'type': groups[1],
+            'vertices': int(groups[2]),
+            'suffix': groups[3] if groups[3] else None,
+            'filename': path.name
+        }
+
     # Try multiple patterns for different filename formats
     patterns = [
         r'(\d+)graph_([A-Za-z_]+)_(\d+)([a-z]*)',  # 100graph_bipartite_16c

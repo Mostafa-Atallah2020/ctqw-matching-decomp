@@ -97,7 +97,30 @@ def get_filename_prefix(raw_df, metadata):
     return f"cx_scaling_{graph_type}_{vertex_str}_{n_graphs}graphs"
 
 
-def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix):
+def compute_summary_for_subset(df):
+    """Compute summary statistics for a subset of the raw data."""
+    summary_rows = []
+    for n_vertices in sorted(df["n_vertices"].unique()):
+        subset = df[df["n_vertices"] == n_vertices]
+        summary_rows.append({
+            "n_vertices": n_vertices,
+            "n_qubits": int(np.log2(n_vertices)),
+            "n_graphs": len(subset),
+            "avg_edges": subset["n_edges"].mean(),
+            "matching_cx_mean": subset["matching_cx"].mean(),
+            "matching_cx_std": subset["matching_cx"].std(),
+            "pauli_cx_mean": subset["pauli_cx"].mean(),
+            "pauli_cx_std": subset["pauli_cx"].std(),
+            "cx_ratio_mean": subset["cx_ratio"].mean(),
+            "cx_ratio_std": subset["cx_ratio"].std(),
+            "matching_wins": (subset["cx_diff"] < 0).sum(),
+            "pauli_wins": (subset["cx_diff"] > 0).sum(),
+            "draws": (subset["cx_diff"] == 0).sum(),
+        })
+    return pd.DataFrame(summary_rows)
+
+
+def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix, title_suffix=""):
     """Plot CX count vs number of vertices with shaded error regions."""
     fig, ax = plt.subplots(figsize=(5, 4))
 
@@ -124,6 +147,17 @@ def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix):
     ax.plot(vertices, pauli_mean, 's-', color=PAULI_COLOR,
             label="Pauli", markersize=5, linewidth=1.5)
 
+    # Mark Matching wins with stars
+    if raw_df is not None and "cx_diff" in raw_df.columns:
+        matching_wins = raw_df[raw_df["cx_diff"] < 0]
+        if len(matching_wins) > 0:
+            # Add small jitter to x for visibility
+            jitter = np.random.uniform(-0.05, 0.05, len(matching_wins))
+            x_pos = matching_wins["n_vertices"].values * (1 + jitter)
+            ax.scatter(x_pos, matching_wins["matching_cx"].values,
+                      marker='*', color='green', s=50, zorder=5,
+                      label=f"Matching wins ({len(matching_wins)})", alpha=0.8)
+
     ax.set_xlabel("Number of Vertices $n$")
     ax.set_ylabel("CX Gate Count")
     ax.legend(loc='upper left', frameon=True, fancybox=False,
@@ -134,13 +168,14 @@ def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix):
 
     plt.tight_layout()
 
-    plot_file = output_dir / "cx_vs_vertices.pdf"
+    filename = f"cx_vs_vertices{title_suffix}.pdf"
+    plot_file = output_dir / filename
     fig.savefig(plot_file, format="pdf", bbox_inches='tight', pad_inches=0.05)
     print(f"Saved: {plot_file}")
     plt.close()
 
 
-def plot_cx_ratio(summary_df, output_dir, prefix):
+def plot_cx_ratio(summary_df, output_dir, prefix, title_suffix=""):
     """Plot the ratio of Matching/Pauli CX counts with shaded error region."""
     fig, ax = plt.subplots(figsize=(5, 4))
 
@@ -169,7 +204,8 @@ def plot_cx_ratio(summary_df, output_dir, prefix):
 
     plt.tight_layout()
 
-    plot_file = output_dir / "cx_ratio.pdf"
+    filename = f"cx_ratio{title_suffix}.pdf"
+    plot_file = output_dir / filename
     fig.savefig(plot_file, format="pdf", bbox_inches='tight', pad_inches=0.05)
     print(f"Saved: {plot_file}")
     plt.close()
@@ -351,40 +387,61 @@ def main():
         print(f"Error: Directory not found: {output_dir}")
         return 1
 
-    print(f"Loading data from: {output_dir}")
-    raw_df, summary_df, metadata = load_data(output_dir)
+    # Find subfolders with data (each probability gets its own folder)
+    subfolders = [d for d in output_dir.iterdir() if d.is_dir() and (d / "summary.csv").exists()]
 
-    if summary_df is None or summary_df.empty:
-        print("Error: No summary data found")
-        return 1
+    if not subfolders:
+        # Fallback: check if data is in main folder
+        if (output_dir / "summary.csv").exists():
+            subfolders = [output_dir]
+        else:
+            print(f"Error: No data found in {output_dir} or its subfolders")
+            return 1
 
-    # Detect graph types
-    if "graph_type" in raw_df.columns:
-        graph_types = raw_df["graph_type"].unique()
-        graph_type_str = ", ".join(sorted(set(graph_types)))
-    else:
-        graph_type_str = "unknown"
+    print(f"Found {len(subfolders)} data folders to process")
 
-    print(f"Graph type(s): {graph_type_str}")
-    print(f"Loaded {len(raw_df)} graph results across {len(summary_df)} vertex counts")
+    # Process each subfolder
+    for subfolder in sorted(subfolders):
+        print(f"\n{'='*60}")
+        print(f"Processing: {subfolder.name}")
+        print(f"{'='*60}")
 
-    # Get filename prefix
-    prefix = get_filename_prefix(raw_df, metadata)
-    print(f"Using filename prefix: {prefix}")
+        try:
+            raw_df, summary_df, metadata = load_data(subfolder)
 
-    # Print summary
-    print_summary(summary_df)
+            if summary_df is None or summary_df.empty:
+                print(f"  Warning: No summary data found in {subfolder.name}")
+                continue
 
-    # Generate plots
-    print("\nGenerating plots...")
-    plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix)
-    plot_cx_ratio(summary_df, output_dir, prefix)
+            # Detect graph type
+            if "graph_type" in raw_df.columns:
+                graph_types = raw_df["graph_type"].unique()
+                graph_type_str = ", ".join(sorted(set(graph_types)))
+            else:
+                graph_type_str = subfolder.name
 
-    if args.all:
-        plot_win_rate(summary_df, output_dir, prefix)
-        plot_scatter_by_edges(raw_df, output_dir, prefix)
-        plot_cx_diff_histogram(raw_df, output_dir, prefix)
-        plot_boxplot(raw_df, output_dir, prefix)
+            print(f"Graph type: {graph_type_str}")
+            print(f"Loaded {len(raw_df)} graph results across {len(summary_df)} vertex counts")
+
+            # Get filename prefix
+            prefix = get_filename_prefix(raw_df, metadata)
+
+            # Print summary
+            print_summary(summary_df)
+
+            # Generate plots
+            print("\nGenerating plots...")
+            plot_cx_vs_vertices(raw_df, summary_df, subfolder, prefix, title_suffix="")
+            plot_cx_ratio(summary_df, subfolder, prefix, title_suffix="")
+
+            if args.all:
+                plot_win_rate(summary_df, subfolder, prefix)
+                plot_scatter_by_edges(raw_df, subfolder, prefix)
+                plot_cx_diff_histogram(raw_df, subfolder, prefix)
+                plot_boxplot(raw_df, subfolder, prefix)
+
+        except Exception as e:
+            print(f"  Error processing {subfolder.name}: {e}")
 
     print(f"\nAll plots saved to: {output_dir}")
     print("Plotting complete!")
