@@ -147,18 +147,35 @@ def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix, title_suffix="")
     ax.plot(vertices, pauli_mean, 's-', color=PAULI_COLOR,
             label="Pauli", markersize=5, linewidth=1.5)
 
-    # Mark Matching wins with stars
+    # Mark Matching wins and draws with stars
     if raw_df is not None and "cx_diff" in raw_df.columns:
+        np.random.seed(42)  # Reproducible jitter
+
+        # Matching wins (green stars)
         matching_wins = raw_df[raw_df["cx_diff"] < 0]
         if len(matching_wins) > 0:
-            # Add small jitter to x for visibility
-            jitter = np.random.uniform(-0.05, 0.05, len(matching_wins))
-            x_pos = matching_wins["n_vertices"].values * (1 + jitter)
-            ax.scatter(x_pos, matching_wins["matching_cx"].values,
-                      marker='*', color='green', s=50, zorder=5,
-                      label=f"Matching wins ({len(matching_wins)})", alpha=0.8)
+            x_jitter = np.random.uniform(-0.15, 0.15, len(matching_wins))
+            y_jitter = np.random.uniform(-0.1, 0.1, len(matching_wins))
+            x_pos = matching_wins["n_vertices"].values * (1 + x_jitter)
+            y_pos = matching_wins["matching_cx"].values * (1 + y_jitter)
+            ax.scatter(x_pos, y_pos,
+                      marker='*', color='green', s=100, zorder=5,
+                      label=f"Matching wins ({len(matching_wins)})", alpha=0.9,
+                      edgecolors='darkgreen', linewidth=0.5)
 
-    ax.set_xlabel("Number of Vertices $n$")
+        # Draws (gray stars)
+        draws = raw_df[raw_df["cx_diff"] == 0]
+        if len(draws) > 0:
+            x_jitter = np.random.uniform(-0.15, 0.15, len(draws))
+            y_jitter = np.random.uniform(-0.1, 0.1, len(draws))
+            x_pos = draws["n_vertices"].values * (1 + x_jitter)
+            y_pos = draws["matching_cx"].values * (1 + y_jitter)
+            ax.scatter(x_pos, y_pos,
+                      marker='*', color='gray', s=100, zorder=5,
+                      label=f"Draws ({len(draws)})", alpha=0.9,
+                      edgecolors='black', linewidth=0.5)
+
+    ax.set_xlabel("Number of Vertices $N$")
     ax.set_ylabel("CX Gate Count")
     ax.legend(loc='upper left', frameon=True, fancybox=False,
               edgecolor='black', framealpha=1)
@@ -168,7 +185,10 @@ def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix, title_suffix="")
 
     plt.tight_layout()
 
-    filename = f"cx_vs_vertices{title_suffix}.pdf"
+    # Informative filename: cx_count_erdos_renyi_p0_10_4-128v.pdf
+    v_min, v_max = int(vertices.min()), int(vertices.max())
+    graph_type = title_suffix.replace("_", "") if title_suffix else "combined"
+    filename = f"cx_count_erdos_renyi_{graph_type}_{v_min}-{v_max}v.pdf"
     plot_file = output_dir / filename
     fig.savefig(plot_file, format="pdf", bbox_inches='tight', pad_inches=0.05)
     print(f"Saved: {plot_file}")
@@ -195,7 +215,7 @@ def plot_cx_ratio(summary_df, output_dir, prefix, title_suffix=""):
     ax.axhline(y=1.0, color='black', linestyle='--', alpha=0.5, linewidth=1,
                label='Equal CX count')
 
-    ax.set_xlabel("Number of Vertices $n$")
+    ax.set_xlabel("Number of Vertices $N$")
     ax.set_ylabel("CX Ratio (Matching / Pauli)")
     ax.legend(loc='upper left', frameon=True, fancybox=False,
               edgecolor='black', framealpha=1)
@@ -204,7 +224,10 @@ def plot_cx_ratio(summary_df, output_dir, prefix, title_suffix=""):
 
     plt.tight_layout()
 
-    filename = f"cx_ratio{title_suffix}.pdf"
+    # Informative filename: cx_ratio_erdos_renyi_p0_10_4-128v.pdf
+    v_min, v_max = int(vertices.min()), int(vertices.max())
+    graph_type = title_suffix.replace("_", "") if title_suffix else "combined"
+    filename = f"cx_ratio_erdos_renyi_{graph_type}_{v_min}-{v_max}v.pdf"
     plot_file = output_dir / filename
     fig.savefig(plot_file, format="pdf", bbox_inches='tight', pad_inches=0.05)
     print(f"Saved: {plot_file}")
@@ -232,7 +255,7 @@ def plot_win_rate(summary_df, output_dir, prefix):
     ax.bar(x, draw_pct, width, label='Draw', color='#7f7f7f')
     ax.bar(x + width, pauli_pct, width, label='Pauli wins', color=PAULI_COLOR)
 
-    ax.set_xlabel("Number of Vertices $n$")
+    ax.set_xlabel("Number of Vertices $N$")
     ax.set_ylabel("Win Rate (%)")
     ax.set_xticks(x)
     ax.set_xticklabels([str(v) for v in vertices])
@@ -296,7 +319,7 @@ def plot_cx_diff_histogram(raw_df, output_dir, prefix):
 
         ax.set_xlabel("CX Diff (M$-$P)")
         ax.set_ylabel("Count")
-        ax.set_title(f"$n$={n_v}")
+        ax.set_title(f"$N$={n_v}")
 
         ax.text(0.95, 0.95, f"$\\mu$={mean_diff:.1f}", transform=ax.transAxes,
                 ha='right', va='top', fontsize=8)
@@ -334,7 +357,7 @@ def plot_boxplot(raw_df, output_dir, prefix):
 
     ax.set_xticks(positions)
     ax.set_xticklabels([str(v) for v in vertex_list])
-    ax.set_xlabel("Number of Vertices $n$")
+    ax.set_xlabel("Number of Vertices $N$")
     ax.set_ylabel("CX Gate Count")
     ax.legend([bp1["boxes"][0], bp2["boxes"][0]], ["Matching", "Pauli"],
               loc='upper left', frameon=True, fancybox=False,
