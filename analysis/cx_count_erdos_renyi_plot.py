@@ -120,7 +120,7 @@ def compute_summary_for_subset(df):
     return pd.DataFrame(summary_rows)
 
 
-def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix, title_suffix=""):
+def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix, title_suffix="", show_stars=False):
     """Plot CX count vs number of vertices with shaded error regions."""
     fig, ax = plt.subplots(figsize=(5, 4))
 
@@ -147,8 +147,8 @@ def plot_cx_vs_vertices(raw_df, summary_df, output_dir, prefix, title_suffix="")
     ax.plot(vertices, pauli_mean, 's-', color=PAULI_COLOR,
             label="Pauli", markersize=5, linewidth=1.5)
 
-    # Mark Matching wins and draws with stars
-    if raw_df is not None and "cx_diff" in raw_df.columns:
+    # Mark Matching wins and draws with stars (optional)
+    if show_stars and raw_df is not None and "cx_diff" in raw_df.columns:
         np.random.seed(42)  # Reproducible jitter
 
         # Matching wins (green stars)
@@ -402,6 +402,9 @@ def main():
     parser.add_argument(
         "--all", action="store_true", help="Generate all plot types"
     )
+    parser.add_argument(
+        "--stars", action="store_true", help="Show stars for Matching wins and draws"
+    )
 
     args = parser.parse_args()
     output_dir = Path(args.output_dir)
@@ -454,7 +457,7 @@ def main():
 
             # Generate plots
             print("\nGenerating plots...")
-            plot_cx_vs_vertices(raw_df, summary_df, subfolder, prefix, title_suffix="")
+            plot_cx_vs_vertices(raw_df, summary_df, subfolder, prefix, title_suffix="", show_stars=args.stars)
             plot_cx_ratio(summary_df, subfolder, prefix, title_suffix="")
 
             if args.all:

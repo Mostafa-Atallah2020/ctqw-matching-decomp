@@ -19,11 +19,16 @@ Output files:
 import sys
 import json
 import argparse
+import warnings
 import numpy as np
 from pathlib import Path
 from collections import defaultdict
 from datetime import datetime
 import pandas as pd
+
+# Suppress scipy sparse matrix warnings
+from scipy.sparse import SparseEfficiencyWarning
+warnings.filterwarnings("ignore", category=SparseEfficiencyWarning)
 
 # Add parent directory to path for imports
 sys.path.append(str(Path(__file__).parent.parent))
@@ -37,7 +42,6 @@ from src.utils import get_exact_evolution_operator
 from src.utils.graph import load_graphs_from_g6
 
 # Qiskit imports
-from qiskit import transpile
 from qiskit.quantum_info import Operator
 
 
@@ -89,8 +93,7 @@ def create_matching_circuit_operator(edges, n_steps, total_time):
     G = MultiEdgeGraph(edges)
     decomp = MatchingDecomposition(G)
     qc = decomp.build_circuit(n_steps=n_steps, delta_t=total_time)
-    qc_transpiled = transpile(qc, basis_gates=["cx", "u3"], optimization_level=3)
-    return Operator(qc_transpiled)
+    return Operator(qc)
 
 
 def create_pauli_circuit_operator(edges, n_steps, total_time):
@@ -133,7 +136,7 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
                 diff = matching_op - exact_op
                 two_norm = np.linalg.norm(diff.data, ord=2)
                 matching_diffs.append(two_norm)
-                print(f"M={two_norm:.6f}", end=", ")
+                print(f"M={two_norm:.2e}", end=", ")
             except Exception as e:
                 print(f"M=Error", end=", ")
                 matching_diffs.append(np.nan)

@@ -20,9 +20,8 @@ Examples:
 Options:
   --error-type: std (default), minmax, iqr (interquartile range), none
   --no-log: Use linear scale instead of log scale for y-axis
-  --no-log-x: Use linear scale instead of log scale for x-axis
+  --no-log-x: Use linear scale for x-axis (default is log)
   --format: pdf (default), png, svg
-  --title: Custom plot title
   --all: Generate all plot types
 """
 
@@ -32,30 +31,31 @@ import argparse
 import numpy as np
 import matplotlib.pyplot as plt
 import matplotlib as mpl
+from matplotlib.ticker import ScalarFormatter, MaxNLocator
 from pathlib import Path
 import pandas as pd
 
-# Publication quality settings
+# PRX Quantum style settings
 plt.rcParams.update({
     'font.family': 'serif',
     'font.serif': ['Times New Roman', 'Times', 'DejaVu Serif'],
-    'font.size': 11,
-    'axes.labelsize': 12,
-    'axes.titlesize': 14,
-    'legend.fontsize': 10,
-    'xtick.labelsize': 11,
-    'ytick.labelsize': 11,
-    'figure.dpi': 150,
+    'mathtext.fontset': 'cm',
+    'font.size': 10,
+    'axes.labelsize': 11,
+    'axes.titlesize': 11,
+    'legend.fontsize': 9,
+    'xtick.labelsize': 9,
+    'ytick.labelsize': 9,
+    'figure.dpi': 300,
     'savefig.dpi': 300,
     'text.usetex': False,  # Set True if LaTeX is available
-    'axes.linewidth': 1.0,
-    'xtick.major.width': 1.0,
-    'ytick.major.width': 1.0,
-    'xtick.direction': 'in',
-    'ytick.direction': 'in',
-    'xtick.top': True,
-    'ytick.right': True,
+    'axes.linewidth': 0.8,
+    'xtick.major.width': 0.8,
+    'ytick.major.width': 0.8,
 })
+
+# Shading alpha for error regions
+SHADE_ALPHA = 0.25
 
 
 def find_timestamp_folders(data_dir):
@@ -161,15 +161,25 @@ def load_and_aggregate_data(data_dir):
     return stats_df, metadata, raw_df
 
 
-def create_convergence_plot(stats_df, metadata, args, output_dir):
-    """Create convergence plot with customizable error bars."""
+def get_filename_prefix(metadata):
+    """Build informative filename prefix from metadata."""
+    graph_type = metadata.get("graph_type", "unknown")
+    n_vertices = metadata.get("n_vertices", "")
+    n_graphs = metadata.get("n_graphs_processed", "")
+    n_runs = metadata.get("n_runs", 1)
+    return f"{graph_type}_{n_vertices}v_{n_graphs}graphs_{n_runs}runs"
+
+
+def create_convergence_plot(stats_df, metadata, args, output_dir, prefix):
+    """Create convergence plot with shaded error regions in PRX Quantum style."""
     time_values = stats_df["time"].unique()
 
-    plt.figure(figsize=(12, 8))
+    fig, ax = plt.subplots(figsize=(5, 4))
 
     matching_color = "#1f77b4"  # Blue
     pauli_color = "#ff7f0e"  # Orange
     line_styles = ["-", "--", "-.", ":"]
+    markers = {"matching": "o", "pauli": "s"}
 
     for time_idx, time_val in enumerate(sorted(time_values)):
         line_style = line_styles[time_idx % len(line_styles)]
@@ -179,31 +189,25 @@ def create_convergence_plot(stats_df, metadata, args, output_dir):
         matching_means = time_data["matching_mean"].values
         pauli_means = time_data["pauli_mean"].values
 
-        # Determine error bars based on type
+        # Determine error bounds based on type
         if args.error_type == "std":
-            matching_yerr = time_data["matching_std"].values
-            pauli_yerr = time_data["pauli_std"].values
+            matching_lower = matching_means - time_data["matching_std"].values
+            matching_upper = matching_means + time_data["matching_std"].values
+            pauli_lower = pauli_means - time_data["pauli_std"].values
+            pauli_upper = pauli_means + time_data["pauli_std"].values
         elif args.error_type == "minmax":
-            matching_yerr = [
-                matching_means - time_data["matching_min"].values,
-                time_data["matching_max"].values - matching_means,
-            ]
-            pauli_yerr = [
-                pauli_means - time_data["pauli_min"].values,
-                time_data["pauli_max"].values - pauli_means,
-            ]
+            matching_lower = time_data["matching_min"].values
+            matching_upper = time_data["matching_max"].values
+            pauli_lower = time_data["pauli_min"].values
+            pauli_upper = time_data["pauli_max"].values
         elif args.error_type == "iqr":
-            matching_yerr = [
-                matching_means - time_data["matching_q25"].values,
-                time_data["matching_q75"].values - matching_means,
-            ]
-            pauli_yerr = [
-                pauli_means - time_data["pauli_q25"].values,
-                time_data["pauli_q75"].values - pauli_means,
-            ]
+            matching_lower = time_data["matching_q25"].values
+            matching_upper = time_data["matching_q75"].values
+            pauli_lower = time_data["pauli_q25"].values
+            pauli_upper = time_data["pauli_q75"].values
         else:  # none
-            matching_yerr = None
-            pauli_yerr = None
+            matching_lower = matching_upper = None
+            pauli_lower = pauli_upper = None
 
         # Filter valid data
         valid_mask = ~np.isnan(matching_means) & ~np.isnan(pauli_means)
@@ -211,97 +215,83 @@ def create_convergence_plot(stats_df, metadata, args, output_dir):
         valid_matching = matching_means[valid_mask]
         valid_pauli = pauli_means[valid_mask]
 
-        if matching_yerr is not None:
-            if isinstance(matching_yerr, list):
-                valid_matching_yerr = [matching_yerr[0][valid_mask], matching_yerr[1][valid_mask]]
-                valid_pauli_yerr = [pauli_yerr[0][valid_mask], pauli_yerr[1][valid_mask]]
-            else:
-                valid_matching_yerr = matching_yerr[valid_mask]
-                valid_pauli_yerr = pauli_yerr[valid_mask]
-        else:
-            valid_matching_yerr = None
-            valid_pauli_yerr = None
-
         if len(valid_steps) > 0:
-            plt.errorbar(
-                valid_steps,
-                valid_matching,
-                yerr=valid_matching_yerr,
-                marker="o",
-                linewidth=2,
-                capsize=5,
-                label=f"Matching t={time_val}",
-                color=matching_color,
-                linestyle=line_style,
-            )
+            # Shaded error regions for matching
+            if matching_lower is not None:
+                valid_matching_lower = matching_lower[valid_mask]
+                valid_matching_upper = matching_upper[valid_mask]
+                ax.fill_between(valid_steps, valid_matching_lower, valid_matching_upper,
+                               color=matching_color, alpha=SHADE_ALPHA)
 
-            plt.errorbar(
-                valid_steps,
-                valid_pauli,
-                yerr=valid_pauli_yerr,
-                marker="s",
-                linewidth=2,
-                capsize=5,
-                label=f"Pauli t={time_val}",
-                color=pauli_color,
-                linestyle=line_style,
-            )
+            # Mean line with markers for matching
+            ax.plot(valid_steps, valid_matching, markers["matching"] + line_style,
+                   color=matching_color, label=f"Matching $t$={time_val}",
+                   markersize=5, linewidth=1.5)
 
-    plt.xlabel("Trotter Steps", fontsize=12)
-    plt.ylabel("2-norm Difference from Exact CTQW", fontsize=12)
+            # Shaded error regions for pauli
+            if pauli_lower is not None:
+                valid_pauli_lower = pauli_lower[valid_mask]
+                valid_pauli_upper = pauli_upper[valid_mask]
+                ax.fill_between(valid_steps, valid_pauli_lower, valid_pauli_upper,
+                               color=pauli_color, alpha=SHADE_ALPHA)
 
-    if args.title:
-        plt.title(args.title)
-    else:
-        graph_type = metadata.get("graph_type", "Unknown")
-        n_vertices = metadata.get("n_vertices", "?")
-        n_graphs = metadata.get("n_graphs_processed", "?")
-        n_runs = metadata.get("n_runs", 1)
-        plt.title(
-            f"Trotterization Error: Matching vs Pauli\n{graph_type} graphs, {n_vertices} vertices, {n_graphs} graphs, {n_runs} run(s)"
-        )
+            # Mean line with markers for pauli
+            ax.plot(valid_steps, valid_pauli, markers["pauli"] + line_style,
+                   color=pauli_color, label=f"Pauli $t$={time_val}",
+                   markersize=5, linewidth=1.5)
+
+    ax.set_xlabel("Number of Trotter Steps")
+    ax.set_ylabel(r"Operator Difference 2-Norm vs Exact")
 
     if not args.no_log:
-        plt.yscale("log")
+        ax.set_yscale("log")
 
     if not args.no_log_x:
-        plt.xscale("log")
+        ax.set_xscale("log")
+        # Use integer tick labels (not scientific notation) for log x-axis
+        ax.xaxis.set_major_formatter(ScalarFormatter())
+        ax.xaxis.get_major_formatter().set_scientific(False)
+        # Set ticks at actual data points
+        all_steps = sorted(stats_df["trotter_steps"].unique())
+        ax.set_xticks(all_steps)
+        ax.set_xticklabels([str(int(s)) for s in all_steps])
 
-    # Create two separate legends side by side: Matching on left, Pauli on right
-    handles, labels = plt.gca().get_legend_handles_labels()
+    # Create single unified legend with two columns (Matching column | Pauli column)
+    handles, labels = ax.get_legend_handles_labels()
+
+    # Separate Matching and Pauli entries
     matching_handles = [h for h, l in zip(handles, labels) if "Matching" in l]
-    matching_labels = [l.replace("Matching ", "") for l in labels if "Matching" in l]
+    matching_labels = [l for l in labels if "Matching" in l]
     pauli_handles = [h for h, l in zip(handles, labels) if "Pauli" in l]
-    pauli_labels = [l.replace("Pauli ", "") for l in labels if "Pauli" in l]
+    pauli_labels = [l for l in labels if "Pauli" in l]
 
-    # First legend for Matching (left side of pair)
-    leg1 = plt.legend(matching_handles, matching_labels,
-                      loc="upper right", title="Matching", fontsize=12, title_fontsize=13,
-                      bbox_to_anchor=(0.78, 1.0), framealpha=0.9, borderpad=0.3)
-    plt.gca().add_artist(leg1)
+    # Stack all Matching first, then all Pauli (column-major order for ncol=2)
+    combined_handles = matching_handles + pauli_handles
+    combined_labels = matching_labels + pauli_labels
 
-    # Second legend for Pauli (right side, adjacent to Matching)
-    leg2 = plt.legend(pauli_handles, pauli_labels,
-                      loc="upper right", title="Pauli", fontsize=12, title_fontsize=13,
-                      bbox_to_anchor=(1.0, 1.0), framealpha=0.9, borderpad=0.3)
-    plt.grid(True, alpha=0.3)
+    ax.legend(combined_handles, combined_labels,
+              loc="lower center", bbox_to_anchor=(0.5, 1.02), ncol=2,
+              frameon=True, fancybox=False,
+              edgecolor='black', framealpha=1)
+
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     plt.tight_layout()
 
-    # Save plot
+    # Save plot with informative filename
     error_suffix = f"_{args.error_type}" if args.error_type != "std" else ""
-    scale_suffix = "_linear" if args.no_log else ""
+    scale_suffix = "_lineary" if args.no_log else ""
     xscale_suffix = "_linearx" if args.no_log_x else ""
-    plot_file = output_dir / f"convergence{error_suffix}{scale_suffix}{xscale_suffix}.{args.format}"
-    plt.savefig(plot_file, format=args.format, bbox_inches="tight", dpi=150)
-    plt.close()
+    plot_file = output_dir / f"convergence_{prefix}{error_suffix}{scale_suffix}{xscale_suffix}.{args.format}"
+    fig.savefig(plot_file, format=args.format, bbox_inches="tight", pad_inches=0.05)
+    plt.close(fig)
     print(f"Plot saved to {plot_file}")
 
 
-def create_comparison_plot(stats_df, metadata, args, output_dir):
-    """Create a plot comparing matching vs pauli directly."""
+def create_comparison_plot(stats_df, metadata, args, output_dir, prefix):
+    """Create a plot comparing matching vs pauli directly in PRX Quantum style."""
     time_values = stats_df["time"].unique()
 
-    fig, axes = plt.subplots(1, len(time_values), figsize=(6 * len(time_values), 5), squeeze=False)
+    fig, axes = plt.subplots(1, len(time_values), figsize=(4 * len(time_values), 3.5), squeeze=False)
 
     for idx, time_val in enumerate(sorted(time_values)):
         ax = axes[0, idx]
@@ -319,25 +309,24 @@ def create_comparison_plot(stats_df, metadata, args, output_dir):
             pauli_means[valid_mask],
             c=steps[valid_mask],
             cmap="viridis",
-            s=100,
+            s=50,
             edgecolors="black",
+            linewidth=0.5,
         )
 
         # Add diagonal line (equal error)
         all_vals = np.concatenate([matching_means[valid_mask], pauli_means[valid_mask]])
         min_val, max_val = np.min(all_vals), np.max(all_vals)
-        ax.plot([min_val, max_val], [min_val, max_val], "k--", alpha=0.5, label="Equal error")
+        ax.plot([min_val, max_val], [min_val, max_val], "k--", alpha=0.5, linewidth=1)
 
-        ax.set_xlabel("Matching Error", fontsize=11)
-        ax.set_ylabel("Pauli Error", fontsize=11)
-        ax.set_title(f"t = {time_val}")
+        ax.set_xlabel("Matching Error")
+        ax.set_ylabel("Pauli Error")
 
         if not args.no_log:
             ax.set_xscale("log")
             ax.set_yscale("log")
 
-        ax.legend()
-        ax.grid(True, alpha=0.3)
+        ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
 
         # Add colorbar
         sm = plt.cm.ScalarMappable(
@@ -346,23 +335,22 @@ def create_comparison_plot(stats_df, metadata, args, output_dir):
         )
         sm.set_array([])
         cbar = plt.colorbar(sm, ax=ax)
-        cbar.set_label("Trotter Steps")
+        cbar.set_label("Trotter Steps $N$")
 
-    plt.suptitle("Matching vs Pauli Error Comparison", fontsize=14)
     plt.tight_layout()
 
     scale_suffix = "_linear" if args.no_log else ""
     plot_file = output_dir / f"comparison{scale_suffix}.{args.format}"
-    plt.savefig(plot_file, format=args.format, bbox_inches="tight", dpi=150)
-    plt.close()
+    fig.savefig(plot_file, format=args.format, bbox_inches="tight", pad_inches=0.05)
+    plt.close(fig)
     print(f"Comparison plot saved to {plot_file}")
 
 
-def create_ratio_plot(stats_df, metadata, args, output_dir):
-    """Create plot showing the ratio of matching/pauli errors."""
+def create_ratio_plot(stats_df, metadata, args, output_dir, prefix):
+    """Create plot showing the ratio of matching/pauli errors in PRX Quantum style."""
     time_values = stats_df["time"].unique()
 
-    plt.figure(figsize=(10, 6))
+    fig, ax = plt.subplots(figsize=(5, 4))
     line_styles = ["-", "--", "-.", ":"]
 
     for time_idx, time_val in enumerate(sorted(time_values)):
@@ -376,26 +364,26 @@ def create_ratio_plot(stats_df, metadata, args, output_dir):
         valid_mask = ~np.isnan(matching_means) & ~np.isnan(pauli_means) & (pauli_means > 0)
         ratio = matching_means[valid_mask] / pauli_means[valid_mask]
 
-        plt.plot(
+        ax.plot(
             steps[valid_mask],
             ratio,
             marker="o",
-            linewidth=2,
+            linewidth=1.5,
             linestyle=line_style,
-            label=f"t={time_val}",
+            markersize=5,
+            label=f"$t$={time_val}",
         )
 
-    plt.axhline(y=1.0, color="black", linestyle="--", alpha=0.5, label="Equal error")
-    plt.xlabel("Trotter Steps", fontsize=12)
-    plt.ylabel("Matching Error / Pauli Error", fontsize=12)
-    plt.title("Error Ratio: Matching vs Pauli\n(< 1 means Matching is better)")
-    plt.legend(fontsize=10)
-    plt.grid(True, alpha=0.3)
+    ax.axhline(y=1.0, color="black", linestyle="--", alpha=0.5, linewidth=1)
+    ax.set_xlabel("Trotter Steps $N$")
+    ax.set_ylabel("Matching Error / Pauli Error")
+    ax.legend(loc='upper left', frameon=True, fancybox=False, edgecolor='black', framealpha=1)
+    ax.grid(True, alpha=0.3, linestyle='-', linewidth=0.5)
     plt.tight_layout()
 
     plot_file = output_dir / f"ratio.{args.format}"
-    plt.savefig(plot_file, format=args.format, bbox_inches="tight", dpi=150)
-    plt.close()
+    fig.savefig(plot_file, format=args.format, bbox_inches="tight", pad_inches=0.05)
+    plt.close(fig)
     print(f"Ratio plot saved to {plot_file}")
 
 
@@ -408,14 +396,13 @@ def main():
         "--error-type",
         choices=["std", "minmax", "iqr", "none"],
         default="std",
-        help="Type of error bars",
+        help="Type of error regions (shaded)",
     )
     parser.add_argument("--no-log", action="store_true", help="Use linear scale instead of log for y-axis")
-    parser.add_argument("--no-log-x", action="store_true", help="Use linear scale instead of log for x-axis")
+    parser.add_argument("--no-log-x", action="store_true", help="Use linear scale for x-axis (default is log)")
     parser.add_argument(
         "--format", choices=["pdf", "png", "svg"], default="pdf", help="Output format"
     )
-    parser.add_argument("--title", type=str, default=None, help="Custom plot title")
     parser.add_argument("--all", action="store_true", help="Generate all plot types")
     parser.add_argument("--output", type=str, default=None, help="Output directory for plots")
 
@@ -440,6 +427,15 @@ def main():
     print(f"  Time values: {sorted(stats_df['time'].unique())}")
     print(f"  Trotter steps: {sorted(stats_df['trotter_steps'].unique())}")
 
+    # Build informative filename prefix from metadata
+    graph_type = metadata.get("graph_type", "unknown")
+    n_vertices = metadata.get("n_vertices", "")
+    n_graphs = metadata.get("n_graphs_processed", "")
+    n_runs = metadata.get("n_runs", 1)
+
+    # Create prefix like "disconnected_8v_74graphs_2runs"
+    prefix = f"{graph_type}_{n_vertices}v_{n_graphs}graphs_{n_runs}runs"
+
     # Save aggregated data to CSV files
     stats_file = output_dir / "aggregated_statistics.csv"
     stats_df.to_csv(stats_file, index=False)
@@ -456,11 +452,11 @@ def main():
     print(f"Metadata saved to {meta_file}")
 
     # Generate plots
-    create_convergence_plot(stats_df, metadata, args, output_dir)
+    create_convergence_plot(stats_df, metadata, args, output_dir, prefix)
 
     if args.all:
-        create_comparison_plot(stats_df, metadata, args, output_dir)
-        create_ratio_plot(stats_df, metadata, args, output_dir)
+        create_comparison_plot(stats_df, metadata, args, output_dir, prefix)
+        create_ratio_plot(stats_df, metadata, args, output_dir, prefix)
 
     print("\nPlotting complete!")
     return 0

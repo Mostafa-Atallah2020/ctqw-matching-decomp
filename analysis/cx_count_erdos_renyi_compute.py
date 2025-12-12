@@ -289,23 +289,19 @@ def main():
     print("\n" + "-" * 60)
     if "graph_type" in df.columns:
         unique_types = sorted(df["graph_type"].unique())
-        print(f"Saving results for {len(unique_types)} graph types...")
 
-        summary_dfs = []
-        for gtype in unique_types:
-            subset = df[df["graph_type"] == gtype]
-            # Create subfolder for this type (e.g., p0_10)
-            type_suffix = gtype.replace("erdos_renyi_", "")
-            type_dir = output_dir / type_suffix
+        # If only one graph type, save directly to output_dir (no subfolder)
+        if len(unique_types) == 1:
+            print(f"Saving results for {unique_types[0]}...")
+            gtype = unique_types[0]
+            type_dir = output_dir
             type_dir.mkdir(parents=True, exist_ok=True)
+            df.to_csv(type_dir / "raw_results.csv", index=False)
 
-            # Save subset results
-            subset.to_csv(type_dir / "raw_results.csv", index=False)
-
-            # Compute and save summary for this type
+            # Compute and save summary
             type_summary = []
-            for n_vertices in sorted(subset["n_vertices"].unique()):
-                sub = subset[subset["n_vertices"] == n_vertices]
+            for n_vertices in sorted(df["n_vertices"].unique()):
+                sub = df[df["n_vertices"] == n_vertices]
                 type_summary.append({
                     "n_vertices": n_vertices,
                     "n_qubits": int(np.log2(n_vertices)),
@@ -328,36 +324,93 @@ def main():
                     "pauli_wins": (sub["cx_diff"] > 0).sum(),
                     "draws": (sub["cx_diff"] == 0).sum(),
                 })
-            type_summary_df = pd.DataFrame(type_summary)
-            type_summary_df.to_csv(type_dir / "summary.csv", index=False)
-            summary_dfs.append(type_summary_df)
+            summary_df = pd.DataFrame(type_summary)
+            summary_df.to_csv(type_dir / "summary.csv", index=False)
 
-            # Save metadata for this type
+            # Save metadata
             type_meta = {
                 "timestamp": datetime.now().isoformat(),
                 "n_steps": args.n_steps,
                 "delta_t": args.delta_t,
                 "graph_type": gtype,
-                "n_graphs": len(subset)
+                "n_graphs": len(df)
             }
             with open(type_dir / "metadata.json", "w") as f:
                 json.dump(type_meta, f, indent=2)
 
             print(f"  Saved: {type_dir}")
 
-        # Combine summaries for printing
-        summary_df = pd.concat(summary_dfs).groupby("n_vertices").agg({
-            "n_qubits": "first",
-            "n_graphs": "sum",
-            "avg_edges": "mean",
-            "avg_matchings": "mean",
-            "matching_cx_mean": "mean",
-            "pauli_cx_mean": "mean",
-            "cx_diff_mean": "mean",
-            "matching_wins": "sum",
-            "pauli_wins": "sum",
-            "draws": "sum"
-        }).reset_index()
+        else:
+            # Multiple graph types: create subfolders
+            print(f"Saving results for {len(unique_types)} graph types...")
+
+            summary_dfs = []
+            for gtype in unique_types:
+                subset = df[df["graph_type"] == gtype]
+                # Create subfolder for this type (e.g., p0_10)
+                type_suffix = gtype.replace("erdos_renyi_", "")
+                type_dir = output_dir / type_suffix
+                type_dir.mkdir(parents=True, exist_ok=True)
+
+                # Save subset results
+                subset.to_csv(type_dir / "raw_results.csv", index=False)
+
+                # Compute and save summary for this type
+                type_summary = []
+                for n_vertices in sorted(subset["n_vertices"].unique()):
+                    sub = subset[subset["n_vertices"] == n_vertices]
+                    type_summary.append({
+                        "n_vertices": n_vertices,
+                        "n_qubits": int(np.log2(n_vertices)),
+                        "n_graphs": len(sub),
+                        "avg_edges": sub["n_edges"].mean(),
+                        "avg_matchings": sub["n_matchings"].mean(),
+                        "matching_cx_mean": sub["matching_cx"].mean(),
+                        "matching_cx_std": sub["matching_cx"].std(),
+                        "matching_cx_min": sub["matching_cx"].min(),
+                        "matching_cx_max": sub["matching_cx"].max(),
+                        "pauli_cx_mean": sub["pauli_cx"].mean(),
+                        "pauli_cx_std": sub["pauli_cx"].std(),
+                        "pauli_cx_min": sub["pauli_cx"].min(),
+                        "pauli_cx_max": sub["pauli_cx"].max(),
+                        "cx_diff_mean": sub["cx_diff"].mean(),
+                        "cx_diff_std": sub["cx_diff"].std(),
+                        "cx_ratio_mean": sub["cx_ratio"].mean(),
+                        "cx_ratio_std": sub["cx_ratio"].std(),
+                        "matching_wins": (sub["cx_diff"] < 0).sum(),
+                        "pauli_wins": (sub["cx_diff"] > 0).sum(),
+                        "draws": (sub["cx_diff"] == 0).sum(),
+                    })
+                type_summary_df = pd.DataFrame(type_summary)
+                type_summary_df.to_csv(type_dir / "summary.csv", index=False)
+                summary_dfs.append(type_summary_df)
+
+                # Save metadata for this type
+                type_meta = {
+                    "timestamp": datetime.now().isoformat(),
+                    "n_steps": args.n_steps,
+                    "delta_t": args.delta_t,
+                    "graph_type": gtype,
+                    "n_graphs": len(subset)
+                }
+                with open(type_dir / "metadata.json", "w") as f:
+                    json.dump(type_meta, f, indent=2)
+
+                print(f"  Saved: {type_dir}")
+
+            # Combine summaries for printing
+            summary_df = pd.concat(summary_dfs).groupby("n_vertices").agg({
+                "n_qubits": "first",
+                "n_graphs": "sum",
+                "avg_edges": "mean",
+                "avg_matchings": "mean",
+                "matching_cx_mean": "mean",
+                "pauli_cx_mean": "mean",
+                "cx_diff_mean": "mean",
+                "matching_wins": "sum",
+                "pauli_wins": "sum",
+                "draws": "sum"
+            }).reset_index()
     else:
         # Fallback: save everything to main folder if no graph_type column
         df, summary_df = save_results(all_results, output_dir)
