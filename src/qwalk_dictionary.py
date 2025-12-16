@@ -95,7 +95,7 @@ def getGateOps(z1: str, z2: str, little_endian: bool, target_qubit=None):
         zeros1 = [str(idx) for idx, elem in enumerate(z1) if elem == "0"]
         zeros2 = [str(idx) for idx, elem in enumerate(z2) if elem == "0"]
 
-        if target_qubit:
+        if target_qubit!=None:
             ctrlBit2=str(target_qubit)
         else:
             ctrlBit2 = list(set(zeros1) - set(zeros2))[
