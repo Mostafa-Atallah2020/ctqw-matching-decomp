@@ -312,7 +312,10 @@ class MatchingDecomposition:
 
         matchings = []
 
-        for bit_position, group_edges in edge_groups.items():
+        # Process in sorted order: single-bit edges first (high to low), then multi-bit edges
+        # This ensures single-bit matchings are created first, so multi-bit edges can join them
+        for bit_position in sorted(edge_groups.keys(), reverse=True):
+            group_edges = edge_groups[bit_position]
             if bit_position >= 0:
                 while group_edges:
                     current_matching = set()
