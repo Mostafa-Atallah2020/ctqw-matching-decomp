@@ -1,0 +1,186 @@
+{
+  "n_runs": 5,
+  "total_graphs_per_run": 200,
+  "statistics": {
+    "win": {
+      "mean": 200.0,
+      "std": 0.0,
+      "min": 200.0,
+      "max": 200.0
+    },
+    "win_pct": {
+      "mean": 100.0,
+      "std": 0.0,
+      "min": 100.0,
+      "max": 100.0
+    },
+    "lose": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "lose_pct": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "draw": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "draw_pct": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "timing_avg_per_graph": {
+      "mean": 1.94,
+      "std": 0.39314119600977965,
+      "min": 1.16,
+      "max": 2.19
+    },
+    "timing_min_per_graph": {
+      "mean": 1.546,
+      "std": 0.2656012048165444,
+      "min": 1.02,
+      "max": 1.72
+    },
+    "timing_max_per_graph": {
+      "mean": 2.848,
+      "std": 0.695166167185947,
+      "min": 1.46,
+      "max": 3.26
+    },
+    "timing_total_analysis": {
+      "mean": 388.01800000000003,
+      "std": 78.29981236248271,
+      "min": 232.77,
+      "max": 438.73
+    },
+    "win_matching_cx": {
+      "mean": 405.88,
+      "std": 0.855733603407041,
+      "min": 404.94,
+      "max": 407.32
+    },
+    "win_pauli_cx": {
+      "mean": 717.41,
+      "std": 0.0,
+      "min": 717.41,
+      "max": 717.41
+    },
+    "win_matching_depth": {
+      "mean": 591.418,
+      "std": 1.888082625310656,
+      "min": 589.5,
+      "max": 594.63
+    },
+    "win_pauli_depth": {
+      "mean": 1151.25,
+      "std": 0.0,
+      "min": 1151.25,
+      "max": 1151.25
+    },
+    "win_analysis_time": {
+      "mean": 1.94,
+      "std": 0.39314119600977965,
+      "min": 1.16,
+      "max": 2.19
+    },
+    "win_graph_edge_count": {
+      "mean": 9.65,
+      "std": 0.0,
+      "min": 9.65,
+      "max": 9.65
+    },
+    "win_graph_edge_density": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "win_graph_is_bipartite": {
+      "mean": 0.95,
+      "std": 0.0,
+      "min": 0.95,
+      "max": 0.95
+    },
+    "win_graph_clique_number": {
+      "mean": 2.04,
+      "std": 0.0,
+      "min": 2.04,
+      "max": 2.04
+    },
+    "win_graph_max_degree": {
+      "mean": 2.28,
+      "std": 0.0,
+      "min": 2.28,
+      "max": 2.28
+    },
+    "win_graph_avg_degree": {
+      "mean": 0.3,
+      "std": 0.0,
+      "min": 0.3,
+      "max": 0.3
+    },
+    "win_graph_avg_clustering": {
+      "mean": 0.0,
+      "std": 0.0,
+      "min": 0.0,
+      "max": 0.0
+    },
+    "win_graph_estimated_group_size": {
+      "mean": 16.0,
+      "std": 0.0,
+      "min": 16.0,
+      "max": 16.0
+    },
+    "win_graph_estimated_orbit_count": {
+      "mean": 3.2299999999999995,
+      "std": 4.440892098500626e-16,
+      "min": 3.23,
+      "max": 3.23
+    },
+    "config_n_qubits": {
+      "mean": 6.0,
+      "std": 0.0,
+      "min": 6.0,
+      "max": 6.0
+    },
+    "config_n_vertices": {
+      "mean": 64.0,
+      "std": 0.0,
+      "min": 64.0,
+      "max": 64.0
+    },
+    "config_delta_t": {
+      "mean": 0.1,
+      "std": 0.0,
+      "min": 0.1,
+      "max": 0.1
+    },
+    "config_matchings": {
+      "mean": null,
+      "std": null,
+      "min": null,
+      "max": null
+    },
+    "config_graph_type": {
+      "mean": null,
+      "std": null,
+      "min": null,
+      "max": null
+    },
+    "config_n_steps": {
+      "mean": 1.0,
+      "std": 0.0,
+      "min": 1.0,
+      "max": 1.0
+    }
+  }
+}

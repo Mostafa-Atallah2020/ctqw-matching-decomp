@@ -1,0 +1,40 @@
+# Aggregated Statistics
+# n_runs,5
+# total_graphs_per_run,200
+
+## Results (Matching vs Pauli)
+category,count_mean,count_std,count_min,count_max,pct_mean,pct_std
+WIN,200.00,0.00,200,200,100.00%,0.00%
+LOSE,0.00,0.00,0,0,0.00%,0.00%
+DRAW,0.00,0.00,0,0,0.00%,0.00%
+
+## Gate Counts by Category
+metric,mean,std,min,max
+win_matching_cx,621.87,0.30,621.57,622.36
+win_matching_depth,788.84,0.66,788.00,789.70
+win_pauli_cx,1502.49,0.00,1502.49,1502.49
+win_pauli_depth,2401.96,0.00,2401.96,2401.96
+
+## Graph Properties by Category
+metric,mean,std,min,max
+config_graph_type,,,,
+win_graph_avg_clustering,0.0000,0.0000,0.0000,0.0000
+win_graph_avg_degree,0.1700,0.0000,0.1700,0.1700
+win_graph_clique_number,2.0200,0.0000,2.0200,2.0200
+win_graph_edge_count,10.8800,0.0000,10.8800,10.8800
+win_graph_edge_density,0.0000,0.0000,0.0000,0.0000
+win_graph_estimated_group_size,32.0000,0.0000,32.0000,32.0000
+win_graph_estimated_orbit_count,3.2100,0.0000,3.2100,3.2100
+win_graph_is_bipartite,0.9700,0.0000,0.9700,0.9700
+win_graph_max_degree,2.2500,0.0000,2.2500,2.2500
+
+## Timing Statistics (seconds)
+metric,mean,std,min,max
+Avg Per Graph,12.554000,0.887031,11.440000,13.490000
+Max Per Graph,16.524000,1.269293,15.840000,19.060000
+Min Per Graph,6.960000,0.622672,6.390000,8.170000
+Total Analysis,2511.268000,177.721390,2287.900000,2698.820000
+
+## Summary
+win_rate,100.0% +/- 0.0%
+lose_rate,0.0% +/- 0.0%

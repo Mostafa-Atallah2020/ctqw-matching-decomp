@@ -7,102 +7,37 @@ Standalone script for processing large quantum graph datasets.
 import argparse
 import gc
 import json
-import math
 import os
+import random
 import sys
 import time
 from collections import defaultdict
 from pathlib import Path
+
+# Set global random seeds for reproducibility
+RANDOM_SEED = 42
+random.seed(RANDOM_SEED)
+
+import numpy as np
+
+np.random.seed(RANDOM_SEED)
 
 # Add the current directory to Python path for imports
 script_dir = Path(__file__).parent.absolute()
 sys.path.insert(0, str(script_dir))
 
 import networkx as nx
-import numpy as np
 from quantum_walk_utils import *
 
-
-def calculate_graph_properties(graph: nx.Graph) -> dict:
-    """Calculate various graph properties for analysis"""
-    properties = {}
-
-    # Basic properties
-    properties["edge_count"] = len(graph.edges())
-    properties["edge_density"] = nx.density(graph)
-    properties["is_bipartite"] = nx.is_bipartite(graph)
-
-    # Connected graph properties
-    if nx.is_connected(graph):
-        properties["diameter"] = nx.diameter(graph)
-    else:
-        properties["diameter"] = None
-
-    # Clique number (maximum clique size)
-    try:
-        properties["clique_number"] = len(max(nx.find_cliques(graph), key=len))
-    except:
-        properties["clique_number"] = 1
-
-    # Degree properties
-    degrees = [graph.degree(node) for node in graph.nodes()]
-    properties["max_degree"] = max(degrees) if degrees else 0
-    properties["avg_degree"] = sum(degrees) / len(degrees) if degrees else 0
-
-    # Clustering coefficient
-    properties["avg_clustering"] = nx.average_clustering(graph)
-
-    # Automorphism group size estimation (simplified)
-    try:
-        # This is a rough estimate - exact calculation is computationally expensive
-        properties["estimated_group_size"] = estimate_group_size(graph)
-    except:
-        properties["estimated_group_size"] = 1
-
-    # Orbit count estimation (simplified)
-    try:
-        properties["estimated_orbit_count"] = estimate_orbit_count(graph)
-    except:
-        properties["estimated_orbit_count"] = len(graph.nodes())
-
-    return properties
-
-
-def estimate_group_size(graph: nx.Graph) -> int:
-    """Rough estimation of automorphism group size"""
-    # Simple heuristic based on symmetry indicators
-    n = len(graph.nodes())
-    if n <= 1:
-        return 1
-
-    # Check for some common symmetric structures
-    if nx.is_regular(graph):
-        degree = list(graph.degree())[0][1]
-        if degree == n - 1:  # Complete graph
-            return math.factorial(n)
-        elif degree == 0:  # Empty graph
-            return math.factorial(n)
-        elif degree == 1:  # Matching or path-like
-            # Rough estimate for matching-like structures
-            return 2 ** (n // 2)
-
-    # Default conservative estimate
-    return max(1, n // 4)
-
-
-def estimate_orbit_count(graph: nx.Graph) -> int:
-    """Rough estimation of number of orbits under automorphism group"""
-    # Group nodes by degree sequence and other simple invariants
-    degree_sequence = sorted([graph.degree(node) for node in graph.nodes()])
-    unique_degrees = len(set(degree_sequence))
-
-    # Very rough heuristic
-    return min(len(graph.nodes()), max(1, unique_degrees))
+# Add parent directory to path for imports
+sys.path.insert(0, str(script_dir.parent))
+from src.utils.graph import calculate_graph_properties
+from src.utils.graph.g6_utils import parse_g6_filename
 
 
 class MatchingVsPauliAnalyzer:
-    def __init__(self, n_qubits: int, delta_t: float, matchings: str, logger: Logger):
-        self.analyzer = BaseAnalyzer(n_qubits, delta_t, matchings)
+    def __init__(self, n_qubits: int, delta_t: float, logger: Logger):
+        self.analyzer = BaseAnalyzer(n_qubits, delta_t)
         self.logger = logger
 
     def analyze_graph(self, edges: set, graph: nx.Graph, n_steps: int = 1) -> dict:
@@ -121,7 +56,7 @@ class MatchingVsPauliAnalyzer:
         )
 
         self.logger.log("Computing Pauli decomposition")
-        pauli_metrics = self.analyzer.analyze_pauli(edges)
+        pauli_metrics = self.analyzer.analyze_pauli(edges, n_steps)
         if not pauli_metrics:
             self.logger.log("Failed to get Pauli metrics")
             return None
@@ -171,7 +106,7 @@ def save_checkpoint(results, categories, checkpoint_file):
         }
         with open(checkpoint_file, "w") as f:
             json.dump(checkpoint_data, f, indent=2)
-        print(f"✓ Saved checkpoint: {len(results)} graphs processed")
+        print(f"[OK] Saved checkpoint: {len(results)} graphs processed")
     except Exception as e:
         print(f"Warning: Could not save checkpoint: {e}")
 
@@ -182,20 +117,32 @@ def load_checkpoint(checkpoint_file):
         if os.path.exists(checkpoint_file):
             with open(checkpoint_file, "r") as f:
                 data = json.load(f)
-                print(f"✓ Found checkpoint: resuming from {data['processed_count']} graphs")
+                print(f"[OK] Found checkpoint: resuming from {data['processed_count']} graphs")
                 return data
     except Exception as e:
         print(f"Warning: Could not load checkpoint: {e}")
     return None
 
 
-def setup_paths(script_dir):
-    """Setup and validate all necessary paths"""
+def setup_paths(script_dir, graph_type: str, n_vertices: int, output_subfolder: str = None):
+    """Setup and validate all necessary paths with graph type and timestamp."""
+    from datetime import datetime
+
     # Data directory - default to parent/data/graphs
     data_dir = script_dir.parent / "data" / "graphs"
 
-    # Output directory - default to script_dir/outputs
-    output_dir = script_dir / "outputs" / "matching_vs_pauli"
+    # Create timestamp for this run
+    timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
+
+    # Base output directory
+    base_output_dir = script_dir / "outputs" / "matching_vs_pauli"
+
+    # Output directory with graph type and timestamp
+    # Format: outputs/matching_vs_pauli/[subfolder/]{graph_type}_{n_vertices}v/{timestamp}/
+    if output_subfolder:
+        output_dir = base_output_dir / output_subfolder / f"{graph_type}_{n_vertices}v" / timestamp
+    else:
+        output_dir = base_output_dir / f"{graph_type}_{n_vertices}v" / timestamp
 
     # Create output directory if it doesn't exist
     output_dir.mkdir(parents=True, exist_ok=True)
@@ -210,55 +157,57 @@ def parse_arguments():
         formatter_class=argparse.ArgumentDefaultsHelpFormatter,
     )
 
-    # Core parameters
+    # Input file - primary way to specify graphs
+    parser.add_argument(
+        "input_file",
+        type=str,
+        nargs="?",
+        default=None,
+        help="Path to G6 file. If provided, n_graphs, graph_type, and n_vertices are auto-detected.",
+    )
+
+    # Parameters only needed when NOT using input file
     parser.add_argument(
         "--n-vertices",
         "-v",
         type=int,
         default=8,
-        help="Number of vertices (determines number of qubits as log2(n_vertices))",
+        help="Number of vertices (only used if no input_file provided)",
     )
-
-    parser.add_argument(
-        "--delta-t", "-dt", type=float, default=0.1, help="Time step for quantum walk evolution"
-    )
-
     parser.add_argument(
         "--n-graphs",
         "-n",
         type=int,
         default=100,
-        help="Number of graphs to process (overridden to 11117 when using BM graphs)",
+        help="Number of graphs (only used if no input_file provided)",
     )
-
     parser.add_argument(
         "--graph-type",
         "-t",
         type=str,
         default="random",
         choices=["BM", "random", "bipartite"],
-        help="Type of graphs to process",
+        help="Type of graphs (only used if no input_file provided)",
     )
 
+    # Parameters that apply to all modes
     parser.add_argument(
-        "--matchings",
-        "-m",
-        type=str,
-        default="parallel",
-        choices=["greedy", "parallel"],
-        help="Matching algorithm to use",
+        "--delta-t", "-dt", type=float, default=0.1, help="Time step for quantum walk evolution"
     )
-
-    # Processing options
+    parser.add_argument("--n-steps", type=int, default=1, help="Number of Trotter steps")
     parser.add_argument(
         "--checkpoint-interval", type=int, default=50, help="Save checkpoint every N graphs"
     )
-
     parser.add_argument(
         "--progress-interval", type=int, default=10, help="Show progress every N graphs"
     )
-
-    parser.add_argument("--n-steps", type=int, default=1, help="Number of Trotter steps")
+    parser.add_argument(
+        "--output-subfolder",
+        "-o",
+        type=str,
+        default=None,
+        help="Optional subfolder for output (e.g., 'random_32v' to save in outputs/matching_vs_pauli/random_32v/)",
+    )
 
     return parser.parse_args()
 
@@ -266,68 +215,92 @@ def parse_arguments():
 def main():
     """Main execution function"""
     args = parse_arguments()
-
-    # Calculate n_qubits from n_vertices and validate it's a power of 2
     import math
 
+    # Handle input file if provided - auto-detect parameters from filename
+    if args.input_file:
+        graph_file = Path(args.input_file)
+        if not graph_file.exists():
+            print(f"[ERROR] Input file not found: {graph_file}")
+            return 1
+
+        # Try to parse info from filename using g6_utils
+        file_info = parse_g6_filename(graph_file)
+        if file_info and "n_graphs" in file_info and "vertices" in file_info:
+            args.n_graphs = file_info["n_graphs"]
+            args.graph_type = file_info.get("type", "custom")
+            args.n_vertices = file_info["vertices"]
+            print(
+                f"[INFO] Parsed from filename: {args.n_graphs} graphs, type={args.graph_type}, {args.n_vertices} vertices"
+            )
+        else:
+            # Fallback: detect n_vertices from first graph in file
+            with open(graph_file, "r") as f:
+                first_line = f.readline().strip()
+                if first_line:
+                    first_graph = nx.from_graph6_bytes(first_line.encode())
+                    args.n_vertices = len(first_graph.nodes())
+            # Count total graphs
+            with open(graph_file, "r") as f:
+                args.n_graphs = sum(1 for _ in f)
+            args.graph_type = "custom"
+            print(f"[INFO] Detected from file: {args.n_graphs} graphs, {args.n_vertices} vertices")
+
+    # Validate n_vertices
     if args.n_vertices <= 0:
-        print(f"❌ Error: n_vertices must be positive, got {args.n_vertices}")
+        print(f"[ERROR] n_vertices must be positive, got {args.n_vertices}")
         return 1
 
-    # Check if n_vertices is a power of 2
     if (args.n_vertices & (args.n_vertices - 1)) != 0:
-        print(
-            f"❌ Error: n_vertices must be a power of 2 (2, 4, 8, 16, 32, ...), got {args.n_vertices}"
-        )
-        print(f"💡 Valid values: {[2**i for i in range(1, 8)]}")
+        print(f"[ERROR] n_vertices must be a power of 2, got {args.n_vertices}")
+        print(f"[TIP] Valid values: {[2**i for i in range(1, 8)]}")
         return 1
 
     n_qubits = int(math.log2(args.n_vertices))
+    n_vertices = args.n_vertices
 
-    # Override n_graphs to 11117 for BM graphs
-    if args.graph_type == "BM":
+    # Override n_graphs to 11117 for BM graphs (when not using input file)
+    if args.graph_type == "BM" and not args.input_file:
         args.n_graphs = 11117
 
     print("=" * 70)
-    print("🚀 CTQW ANALYSIS - MATCHING VS PAULI DECOMPOSITION")
+    print(">>> CTQW ANALYSIS - MATCHING VS PAULI DECOMPOSITION")
     print("=" * 70)
 
-    # Calculate derived values
-    n_vertices = args.n_vertices
-
-    # Setup paths
+    # Setup paths with graph type and timestamp
     script_dir = Path(__file__).parent.absolute()
-    data_dir, output_dir = setup_paths(script_dir)
+    data_dir, output_dir = setup_paths(script_dir, args.graph_type, n_vertices, args.output_subfolder)
 
-    # Determine input file automatically from arguments
-    graph_file = data_dir / f"{args.n_graphs}graph_{args.graph_type}_{n_vertices}c.g6"
+    # Determine input file - use provided file or construct from arguments
+    if not args.input_file:
+        graph_file = data_dir / f"{args.n_graphs}graph_{args.graph_type}_{n_vertices}c.g6"
 
-    print(f"📁 Script location: {script_dir}")
-    print(f"📊 Input file: {graph_file}")
-    print(f"💾 Output directory: {output_dir}")
+    print(f"[PATH] Script location: {script_dir}")
+    print(f"[INPUT] Input file: {graph_file}")
+    print(f"[OUTPUT] Output directory: {output_dir}")
     print(
-        f"📈 Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)"
+        f"[CONFIG] Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)"
     )
-    print(f"🔧 Using {args.matchings} matching algorithm")
-    print(f"⏱️  Delta t: {args.delta_t}")
+    print(
+        f"[CONFIG] Using automatic matching algorithm (bipartite/greedy based on graph structure)"
+    )
+    print(f"[CONFIG] Delta t: {args.delta_t}")
 
     # Verify input file exists
     if not graph_file.exists():
-        print(f"❌ Error: Input file not found: {graph_file}")
-        print(f"💡 Tip: Check --n-graphs, --graph-type, and --n-vertices arguments")
-        print(f"📁 Expected data directory: {data_dir}")
+        print(f"[ERROR] Input file not found: {graph_file}")
+        print(f"[TIP] Check --n-graphs, --graph-type, and --n-vertices arguments")
+        print(f"[PATH] Expected data directory: {data_dir}")
         return 1
 
     # Setup directories and logging
     try:
         dirs = setup_directories(str(output_dir))
-        log_filename = f"analysis_{args.matchings}_{args.graph_type}_{n_vertices}c.log"
+        log_filename = f"analysis_{args.graph_type}_{n_vertices}c.log"
         logger = Logger(os.path.join(dirs["logs"], log_filename))
-        checkpoint_file = (
-            output_dir / f"checkpoint_{args.matchings}_{args.graph_type}_{n_vertices}c.json"
-        )
+        checkpoint_file = output_dir / f"checkpoint_{args.graph_type}_{n_vertices}c.json"
     except Exception as e:
-        print(f"❌ Error setting up directories: {e}")
+        print(f"[ERROR] Error setting up directories: {e}")
         return 1
 
     # Log initial parameters
@@ -336,7 +309,7 @@ def main():
     logger.log(f"Number of qubits: {n_qubits}")
     logger.log(f"Number of vertices: {n_vertices}")
     logger.log(f"Delta t: {args.delta_t}")
-    logger.log(f"Matching algorithm: {args.matchings}")
+    logger.log(f"Matching algorithm: automatic (bipartite/greedy)")
     logger.log(f"Graph type: {args.graph_type}")
     logger.log(f"Input file: {graph_file}")
     logger.log(f"Output directory: {output_dir}")
@@ -347,7 +320,7 @@ def main():
         graph_info = GraphProcessor.parse_graph_filename(str(graph_file))
         logger.log(f"Parsed graph info: {graph_info}")
 
-        analyzer = MatchingVsPauliAnalyzer(n_qubits, args.delta_t, args.matchings, logger)
+        analyzer = MatchingVsPauliAnalyzer(n_qubits, args.delta_t, logger)
         results_manager = ResultsManager(dirs["results"], graph_info)
         plot_manager = PlotManager(dirs["plots"])
 
@@ -357,12 +330,12 @@ def main():
             results = checkpoint_data["results"]
             categories = checkpoint_data["categories"]
             start_index = len(results)
-            print(f"🔄 Resuming from graph {start_index}")
+            print(f"[RESUME] Resuming from graph {start_index}")
         else:
             results = []
             categories = {"win": 0, "lose": 0, "draw": 0}
             start_index = 0
-            print(f"🆕 Starting fresh analysis")
+            print(f"[NEW] Starting fresh analysis")
 
         original_graphs = []
         # Initialize property collections by category
@@ -376,11 +349,11 @@ def main():
         with open(graph_file, "r") as f:
             total_lines = sum(1 for _ in f)
         logger.log(f"Found {total_lines} graphs in file")
-        print(f"📈 Found {total_lines} total graphs")
+        print(f"[INFO] Found {total_lines} total graphs")
 
         # Process graphs
         start_time = time.time()
-        print(f"⏱️  Analysis started at {time.strftime('%H:%M:%S')}")
+        print(f"[TIME] Analysis started at {time.strftime('%H:%M:%S')}")
         print("-" * 70)
 
         with open(graph_file, "r") as f:
@@ -408,7 +381,7 @@ def main():
                                 current_avg_time = f" | Avg: {avg_time:.1f}s/graph"
 
                         print(
-                            f"📊 Progress: {progress:.1f}% ({i}/{total_lines}) | "
+                            f"[PROGRESS] {progress:.1f}% ({i}/{total_lines}) | "
                             f"Speed: {speed:.1f}/min | ETA: {eta_hours:.1f}h{current_avg_time} | "
                             f"Results: W{categories['win']} L{categories['lose']} D{categories['draw']}"
                         )
@@ -456,18 +429,18 @@ def main():
                         gc.collect()
 
                 except KeyboardInterrupt:
-                    print(f"\n⏹️  Interrupted by user at graph {i}")
+                    print(f"\n[STOP] Interrupted by user at graph {i}")
                     logger.log(f"Interrupted by user at graph {i}")
                     save_checkpoint(results, categories, checkpoint_file)
                     return 0
                 except Exception as e:
                     logger.log(f"Error processing graph {i}: {str(e)}")
-                    print(f"⚠️  Error at graph {i}: {str(e)}")
+                    print(f"[WARN] Error at graph {i}: {str(e)}")
                     continue
 
         # Final Results
         print("\n" + "=" * 70)
-        print("🏁 ANALYSIS COMPLETE")
+        print("=== ANALYSIS COMPLETE ===")
         print("=" * 70)
 
         total_processed = sum(categories.values())
@@ -476,7 +449,7 @@ def main():
         logger.log("\nFinal Results Summary:")
         logger.log(f"Total graphs in file: {total_lines}")
         logger.log(f"Successfully processed: {total_processed}")
-        logger.log(f"Matching algorithm used: {args.matchings}")
+        logger.log(f"Matching algorithm used: automatic (bipartite/greedy)")
         logger.log_final_stats(categories, total_processed)
 
         # Calculate overall timing statistics
@@ -589,13 +562,16 @@ def main():
                             f"Mean: {np.mean(orbit_counts):.2f}"
                         )
 
-        print(f"📊 Total graphs: {total_lines}")
-        print(f"✅ Successfully processed: {total_processed} ({success_rate:.1f}%)")
-        print(f"🔧 Matching algorithm: {args.matchings}")
-        print(f"🏆 Results breakdown:")
-        print(f"   🟢 Win (Matching better):  {categories['win']}")
-        print(f"   🔴 Lose (Pauli better):    {categories['lose']}")
-        print(f"   🟡 Draw (Equal):           {categories['draw']}")
+        print(f"[STATS] Total graphs: {total_lines}")
+        print(f"[OK] Successfully processed: {total_processed} ({success_rate:.1f}%)")
+        print(f"[CONFIG] Matching algorithm: automatic (bipartite/greedy)")
+        print(f"[RESULTS] Breakdown:")
+        win_pct = categories["win"] / total_processed * 100 if total_processed > 0 else 0
+        lose_pct = categories["lose"] / total_processed * 100 if total_processed > 0 else 0
+        draw_pct = categories["draw"] / total_processed * 100 if total_processed > 0 else 0
+        print(f"   [WIN]  Matching better:  {categories['win']:>4} ({win_pct:>5.1f}%)")
+        print(f"   [LOSE] Pauli better:     {categories['lose']:>4} ({lose_pct:>5.1f}%)")
+        print(f"   [DRAW] Equal:            {categories['draw']:>4} ({draw_pct:>5.1f}%)")
 
         # Display timing statistics
         if results:
@@ -605,12 +581,12 @@ def main():
                 min_time = min(analysis_times)
                 max_time = max(analysis_times)
                 total_analysis_time = sum(analysis_times)
-                print(f"⏱️  Timing Statistics:")
-                print(f"   📊 Average time per graph: {avg_time_per_graph:.2f}s")
-                print(f"   ⚡ Fastest graph: {min_time:.2f}s")
-                print(f"   🐌 Slowest graph: {max_time:.2f}s")
+                print(f"[TIME] Timing Statistics:")
+                print(f"   Average time per graph: {avg_time_per_graph:.2f}s")
+                print(f"   Fastest graph: {min_time:.2f}s")
+                print(f"   Slowest graph: {max_time:.2f}s")
                 print(
-                    f"   🕐 Total analysis time: {total_analysis_time:.2f}s ({total_analysis_time/60:.1f}m)"
+                    f"   Total analysis time: {total_analysis_time:.2f}s ({total_analysis_time/60:.1f}m)"
                 )
 
         if total_processed > 0:
@@ -682,7 +658,7 @@ def main():
                     "config_n_qubits": n_qubits,
                     "config_n_vertices": n_vertices,
                     "config_delta_t": args.delta_t,
-                    "config_matchings": args.matchings,
+                    "config_matchings": "automatic",
                     "config_graph_type": args.graph_type,
                     "config_n_steps": args.n_steps,
                 }
@@ -699,49 +675,45 @@ def main():
                     # End log with two solid lines
 
             logger.log("=" * 70 + "\n" + "=" * 70 + "\n")
-            print(f"\n💾 Saving results...")
+            print(f"\n[SAVE] Saving results...")
             # Save results with timing information
             summary_with_timing = {**categories}
             if timing_stats:
                 summary_with_timing.update(timing_stats)
 
-            results_manager.save_results(summary_with_timing, f"summary_{args.matchings}")
-            results_manager.save_results(
-                {"detailed_results": results}, f"detailed_{args.matchings}"
-            )
-            results_manager.save_results(avg_stats, f"averages_{args.matchings}")
+            results_manager.save_results(summary_with_timing, "summary")
+            results_manager.save_results({"detailed_results": results}, "detailed")
+            results_manager.save_results(avg_stats, "averages")
 
             # Save categorized graphs
             results_manager.save_categorized_graphs(results, original_graphs)
 
             # Create visualization
-            title = f"Matching ({args.matchings}) vs Pauli Results ({n_qubits} qubits)"
+            title = f"Matching vs Pauli Results ({n_qubits} qubits)"
             pie_chart = plot_manager.create_pie_chart(categories, title)
-            chart_filename = (
-                f'pie_chart_{args.matchings}_{graph_info["size"]}_{graph_info["vertices"]}c.png'
-            )
+            chart_filename = f'pie_chart_{graph_info["size"]}_{graph_info["vertices"]}c.png'
             plot_manager.save_plot(pie_chart, chart_filename)
 
             # Clean up checkpoint
             if checkpoint_file.exists():
                 checkpoint_file.unlink()
 
-            print(f"✅ Results saved to: {output_dir}")
-            print(f"📈 Chart saved as: {chart_filename}")
+            print(f"[OK] Results saved to: {output_dir}")
+            print(f"[OK] Chart saved as: {chart_filename}")
 
         else:
             logger.log("No results to save - all graphs failed processing")
-            print("❌ No results to save - all graphs failed processing")
+            print("[ERROR] No results to save - all graphs failed processing")
 
         total_time = time.time() - start_time
-        print(f"\n⏱️  Total runtime: {total_time/3600:.1f} hours")
-        print(f"🏁 Analysis completed at {time.strftime('%H:%M:%S')}")
+        print(f"\n[TIME] Total runtime: {total_time/3600:.1f} hours")
+        print(f"[DONE] Analysis completed at {time.strftime('%H:%M:%S')}")
 
         return 0
 
     except Exception as e:
         logger.log(f"Critical error in main execution: {str(e)}")
-        print(f"❌ Critical error: {str(e)}")
+        print(f"[ERROR] Critical error: {str(e)}")
         # Save whatever we have so far
         if "results" in locals() and "categories" in locals():
             save_checkpoint(results, categories, checkpoint_file)
@@ -754,10 +726,10 @@ if __name__ == "__main__":
         exit_code = main()
         sys.exit(exit_code)
     except KeyboardInterrupt:
-        print(f"\n⏹️  Script interrupted by user")
+        print(f"\n[STOP] Script interrupted by user")
         sys.exit(0)
     except Exception as e:
-        print(f"\n❌ Unexpected error: {e}")
+        print(f"\n[ERROR] Unexpected error: {e}")
         import traceback
 
         traceback.print_exc()
