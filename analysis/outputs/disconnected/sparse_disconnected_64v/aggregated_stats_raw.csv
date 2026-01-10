@@ -1,0 +1,10 @@
+run_id,timestamp,win,win_pct,lose,lose_pct,draw,draw_pct,win_matching_cx,win_matching_depth,win_pauli_cx,win_pauli_depth,config_graph_type,win_graph_avg_clustering,win_graph_avg_degree,win_graph_clique_number,win_graph_edge_count,win_graph_edge_density,win_graph_estimated_group_size,win_graph_estimated_orbit_count,win_graph_is_bipartite,win_graph_max_degree,timing_avg_per_graph,timing_max_per_graph,timing_min_per_graph,timing_total_analysis,config_delta_t,config_graph_type,config_matchings,config_n_qubits,config_n_steps,config_n_vertices,win_analysis_time
+1,20251203_155637,200,100.00%,0,0.00%,0,0.00%,406.03,591.27,717.41,1151.25,sparse_disconnected,0.0000,0.3000,2.0400,9.6500,0.0000,16.0000,3.2300,0.9500,2.2800,1.160000,1.460000,1.020000,232.770000,0.1,sparse_disconnected,automatic,6.0,1.0,64.0,1.16
+2,20251203_214744,200,100.00%,0,0.00%,0,0.00%,405.07,589.50,717.41,1151.25,sparse_disconnected,0.0000,0.3000,2.0400,9.6500,0.0000,16.0000,3.2300,0.9500,2.2800,2.090000,3.260000,1.680000,417.170000,0.1,sparse_disconnected,automatic,6.0,1.0,64.0,2.09
+3,20251203_215445,200,100.00%,0,0.00%,0,0.00%,407.32,594.63,717.41,1151.25,sparse_disconnected,0.0000,0.3000,2.0400,9.6500,0.0000,16.0000,3.2300,0.9500,2.2800,2.070000,3.140000,1.720000,413.680000,0.1,sparse_disconnected,automatic,6.0,1.0,64.0,2.07
+4,20251203_220142,200,100.00%,0,0.00%,0,0.00%,404.94,589.59,717.41,1151.25,sparse_disconnected,0.0000,0.3000,2.0400,9.6500,0.0000,16.0000,3.2300,0.9500,2.2800,2.190000,3.170000,1.700000,438.730000,0.1,sparse_disconnected,automatic,6.0,1.0,64.0,2.19
+5,20251203_220905,200,100.00%,0,0.00%,0,0.00%,406.04,592.10,717.41,1151.25,sparse_disconnected,0.0000,0.3000,2.0400,9.6500,0.0000,16.0000,3.2300,0.9500,2.2800,2.190000,3.210000,1.610000,437.740000,0.1,sparse_disconnected,automatic,6.0,1.0,64.0,2.19
+
+# Summary Statistics
+,MEAN,200.00,100.00%,0.00,0.00%,0.00,0.00%,405.88,591.42,717.41,1151.25,,0.0000,0.3000,2.0400,9.6500,0.0000,16.0000,3.2300,0.9500,2.2800,1.940000,2.848000,1.546000,388.018000
+,STD,0.00,0.00%,0.00,0.00%,0.00,0.00%,0.86,1.89,0.00,0.00,,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.0000,0.393141,0.695166,0.265601,78.299812

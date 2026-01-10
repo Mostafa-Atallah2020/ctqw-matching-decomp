@@ -1,0 +1,7 @@
+{
+  "timestamp": "2025-12-15T22:49:54.694424",
+  "n_steps": 1,
+  "delta_t": 0.1,
+  "graph_type": "erdos_renyi_p0_20",
+  "n_graphs": 509
+}

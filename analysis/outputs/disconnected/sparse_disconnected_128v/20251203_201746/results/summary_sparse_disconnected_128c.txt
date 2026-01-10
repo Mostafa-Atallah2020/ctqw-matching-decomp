@@ -1,0 +1,7 @@
+win: 200
+lose: 0
+draw: 0
+timing_avg_per_graph: 13.454749598503113
+timing_min_per_graph: 6.656315326690674
+timing_max_per_graph: 15.862454175949097
+timing_total_analysis: 2690.9499197006226

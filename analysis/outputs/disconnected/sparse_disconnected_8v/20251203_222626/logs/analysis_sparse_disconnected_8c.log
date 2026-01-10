@@ -1,0 +1,868 @@
+[2025-12-03 22:26:26] 
+
+Starting analysis with:
+[2025-12-03 22:26:26] Script location: F:\UTK\Research\DOE_FOA_project\code\dyn-CTQW\analysis
+[2025-12-03 22:26:26] Number of qubits: 3
+[2025-12-03 22:26:26] Number of vertices: 8
+[2025-12-03 22:26:26] Delta t: 0.1
+[2025-12-03 22:26:26] Matching algorithm: automatic (bipartite/greedy)
+[2025-12-03 22:26:26] Graph type: sparse_disconnected
+[2025-12-03 22:26:26] Input file: analysis\graphs\74graph_sparse_disconnected_8v.g6
+[2025-12-03 22:26:26] Output directory: F:\UTK\Research\DOE_FOA_project\code\dyn-CTQW\analysis\outputs\matching_vs_pauli\sparse_disconnected_8v\20251203_222626
+[2025-12-03 22:26:26] Checkpoint interval: 50
+[2025-12-03 22:26:26] Parsed graph info: {'num_graphs': 74, 'size': 'sparse_disconnected', 'vertices': '8', 'type': 'v'}
+[2025-12-03 22:26:26] Found 74 graphs in file
+[2025-12-03 22:26:26] 
+Processing graph 0/74
+[2025-12-03 22:26:26] Graph 0 has 8 nodes and 3 edges
+[2025-12-03 22:26:26] Converted to 3 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 24.0, U3: 27.0, Depth: 39.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 9.0, U3: 17.0, Depth: 18.0
+[2025-12-03 22:26:26] Analysis completed in 0.05s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 0 - Category: lose - Time: 0.05s
+[2025-12-03 22:26:26] 
+Processing graph 1/74
+[2025-12-03 22:26:26] Graph 1 has 8 nodes and 5 edges
+[2025-12-03 22:26:26] Converted to 5 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 27.0, U3: 33.0, Depth: 45.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 25.0, U3: 37.0, Depth: 45.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 1 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 2/74
+[2025-12-03 22:26:26] Graph 2 has 8 nodes and 6 edges
+[2025-12-03 22:26:26] Converted to 6 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 33.0, U3: 35.0, Depth: 53.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 18.0, U3: 24.0, Depth: 34.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 2 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 3/74
+[2025-12-03 22:26:26] Graph 3 has 8 nodes and 4 edges
+[2025-12-03 22:26:26] Converted to 4 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 30.0, U3: 38.0, Depth: 50.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 27.0, U3: 45.0, Depth: 50.0
+[2025-12-03 22:26:26] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 3 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:26] 
+Processing graph 4/74
+[2025-12-03 22:26:26] Graph 4 has 8 nodes and 4 edges
+[2025-12-03 22:26:26] Converted to 4 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 34.0, U3: 37.0, Depth: 54.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 15.0, U3: 21.0, Depth: 27.0
+[2025-12-03 22:26:26] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 4 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:26] 
+Processing graph 5/74
+[2025-12-03 22:26:26] Graph 5 has 8 nodes and 3 edges
+[2025-12-03 22:26:26] Converted to 3 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 25.0, U3: 30.0, Depth: 41.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 17.0, U3: 31.0, Depth: 34.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 5 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 6/74
+[2025-12-03 22:26:26] Graph 6 has 8 nodes and 5 edges
+[2025-12-03 22:26:26] Converted to 5 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 27.0, U3: 33.0, Depth: 45.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 23.0, U3: 27.0, Depth: 39.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 6 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 7/74
+[2025-12-03 22:26:26] Graph 7 has 8 nodes and 4 edges
+[2025-12-03 22:26:26] Converted to 4 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 4.0, U3: 1.0, Depth: 5.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 4.0, U3: 7.0, Depth: 7.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: draw
+[2025-12-03 22:26:26] Successfully processed graph 7 - Category: draw - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 8/74
+[2025-12-03 22:26:26] Graph 8 has 8 nodes and 5 edges
+[2025-12-03 22:26:26] Converted to 5 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 30.0, U3: 35.0, Depth: 50.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 22.0, U3: 31.0, Depth: 39.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 8 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 9/74
+[2025-12-03 22:26:26] Graph 9 has 8 nodes and 6 edges
+[2025-12-03 22:26:26] Converted to 6 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 23.0, U3: 26.0, Depth: 38.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 20.0, U3: 31.0, Depth: 36.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 9 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 10/74
+[2025-12-03 22:26:26] Graph 10 has 8 nodes and 4 edges
+[2025-12-03 22:26:26] Converted to 4 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 21.0, U3: 28.0, Depth: 37.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 23.0, U3: 34.0, Depth: 41.0
+[2025-12-03 22:26:26] Analysis completed in 0.03s - Category: win
+[2025-12-03 22:26:26] Successfully processed graph 10 - Category: win - Time: 0.03s
+[2025-12-03 22:26:26] 
+Processing graph 11/74
+[2025-12-03 22:26:26] Graph 11 has 8 nodes and 6 edges
+[2025-12-03 22:26:26] Converted to 6 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 54.0, U3: 56.0, Depth: 87.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 27.0, U3: 49.0, Depth: 52.0
+[2025-12-03 22:26:26] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 11 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:26] 
+Processing graph 12/74
+[2025-12-03 22:26:26] Graph 12 has 8 nodes and 3 edges
+[2025-12-03 22:26:26] Converted to 3 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 10.0, U3: 13.0, Depth: 17.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 8.0, U3: 10.0, Depth: 15.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 12 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 13/74
+[2025-12-03 22:26:26] Graph 13 has 8 nodes and 4 edges
+[2025-12-03 22:26:26] Converted to 4 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 19.0, U3: 20.0, Depth: 31.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 14.0, U3: 20.0, Depth: 28.0
+[2025-12-03 22:26:26] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 13 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:26] 
+Processing graph 14/74
+[2025-12-03 22:26:26] Graph 14 has 8 nodes and 5 edges
+[2025-12-03 22:26:26] Converted to 5 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 39.0, U3: 40.0, Depth: 61.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 17.0, U3: 31.0, Depth: 33.0
+[2025-12-03 22:26:26] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 14 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:26] 
+Processing graph 15/74
+[2025-12-03 22:26:26] Graph 15 has 8 nodes and 6 edges
+[2025-12-03 22:26:26] Converted to 6 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 23.0, U3: 27.0, Depth: 39.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:26] Pauli - CX: 18.0, U3: 26.0, Depth: 32.0
+[2025-12-03 22:26:26] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:26] Successfully processed graph 15 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:26] 
+Processing graph 16/74
+[2025-12-03 22:26:26] Graph 16 has 8 nodes and 6 edges
+[2025-12-03 22:26:26] Converted to 6 bitstring edges
+[2025-12-03 22:26:26] Computing Matchings Dynamic walk
+[2025-12-03 22:26:26] Matchings - CX: 54.0, U3: 62.0, Depth: 88.0
+[2025-12-03 22:26:26] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 30.0, U3: 54.0, Depth: 58.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 16 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 17/74
+[2025-12-03 22:26:27] Graph 17 has 8 nodes and 3 edges
+[2025-12-03 22:26:27] Converted to 3 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 28.0, U3: 29.0, Depth: 45.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 22.0, U3: 31.0, Depth: 39.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 17 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 18/74
+[2025-12-03 22:26:27] Graph 18 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 35.0, U3: 36.0, Depth: 55.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 23.0, U3: 35.0, Depth: 44.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 18 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 19/74
+[2025-12-03 22:26:27] Graph 19 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 36.0, U3: 43.0, Depth: 59.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 26.0, U3: 44.0, Depth: 50.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 19 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 20/74
+[2025-12-03 22:26:27] Graph 20 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 56.0, U3: 60.0, Depth: 90.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 26.0, U3: 44.0, Depth: 50.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 20 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 21/74
+[2025-12-03 22:26:27] Graph 21 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 40.0, U3: 47.0, Depth: 67.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 20.0, U3: 33.0, Depth: 39.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 21 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 22/74
+[2025-12-03 22:26:27] Graph 22 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 44.0, U3: 48.0, Depth: 70.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 26.0, U3: 47.0, Depth: 50.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 22 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 23/74
+[2025-12-03 22:26:27] Graph 23 has 8 nodes and 4 edges
+[2025-12-03 22:26:27] Converted to 4 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 37.0, U3: 41.0, Depth: 61.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 18.0, U3: 31.0, Depth: 35.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 23 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 24/74
+[2025-12-03 22:26:27] Graph 24 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 52.0, U3: 61.0, Depth: 85.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 22.0, U3: 42.0, Depth: 43.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 24 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 25/74
+[2025-12-03 22:26:27] Graph 25 has 8 nodes and 4 edges
+[2025-12-03 22:26:27] Converted to 4 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 36.0, U3: 39.0, Depth: 58.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 17.0, U3: 27.0, Depth: 31.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 25 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 26/74
+[2025-12-03 22:26:27] Graph 26 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 31.0, U3: 33.0, Depth: 48.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 15.0, U3: 19.0, Depth: 25.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 26 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 27/74
+[2025-12-03 22:26:27] Graph 27 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 38.0, U3: 44.0, Depth: 63.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 27.0, U3: 47.0, Depth: 51.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 27 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 28/74
+[2025-12-03 22:26:27] Graph 28 has 8 nodes and 4 edges
+[2025-12-03 22:26:27] Converted to 4 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 6.0, U3: 8.0, Depth: 11.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 8.0, U3: 12.0, Depth: 14.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: win
+[2025-12-03 22:26:27] Successfully processed graph 28 - Category: win - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 29/74
+[2025-12-03 22:26:27] Graph 29 has 8 nodes and 4 edges
+[2025-12-03 22:26:27] Converted to 4 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 37.0, U3: 41.0, Depth: 61.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 25.0, U3: 45.0, Depth: 48.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 29 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 30/74
+[2025-12-03 22:26:27] Graph 30 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 10.0, U3: 17.0, Depth: 19.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 6.0, U3: 11.0, Depth: 11.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 30 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 31/74
+[2025-12-03 22:26:27] Graph 31 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 31.0, U3: 30.0, Depth: 48.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 24.0, U3: 33.0, Depth: 43.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 31 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 32/74
+[2025-12-03 22:26:27] Graph 32 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 51.0, U3: 56.0, Depth: 81.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 27.0, U3: 40.0, Depth: 48.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 32 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 33/74
+[2025-12-03 22:26:27] Graph 33 has 8 nodes and 4 edges
+[2025-12-03 22:26:27] Converted to 4 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 38.0, U3: 42.0, Depth: 62.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 27.0, U3: 46.0, Depth: 51.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 33 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 34/74
+[2025-12-03 22:26:27] Graph 34 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 37.0, U3: 44.0, Depth: 60.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 25.0, U3: 41.0, Depth: 46.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 34 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 35/74
+[2025-12-03 22:26:27] Graph 35 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 49.0, U3: 53.0, Depth: 81.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 24.0, U3: 44.0, Depth: 47.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 35 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 36/74
+[2025-12-03 22:26:27] Graph 36 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 26.0, U3: 30.0, Depth: 43.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 26.0, U3: 37.0, Depth: 46.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: draw
+[2025-12-03 22:26:27] Successfully processed graph 36 - Category: draw - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 37/74
+[2025-12-03 22:26:27] Graph 37 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 26.0, U3: 32.0, Depth: 45.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 23.0, U3: 33.0, Depth: 41.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 37 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 38/74
+[2025-12-03 22:26:27] Graph 38 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 32.0, U3: 42.0, Depth: 54.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 21.0, U3: 35.0, Depth: 42.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 38 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 39/74
+[2025-12-03 22:26:27] Graph 39 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 40.0, U3: 43.0, Depth: 63.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 28.0, U3: 46.0, Depth: 52.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 39 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 40/74
+[2025-12-03 22:26:27] Graph 40 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 57.0, U3: 64.0, Depth: 93.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 24.0, U3: 34.0, Depth: 43.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 40 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 41/74
+[2025-12-03 22:26:27] Graph 41 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 44.0, U3: 43.0, Depth: 69.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 30.0, U3: 49.0, Depth: 56.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 41 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 42/74
+[2025-12-03 22:26:27] Graph 42 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 45.0, U3: 50.0, Depth: 72.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 29.0, U3: 48.0, Depth: 55.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 42 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 43/74
+[2025-12-03 22:26:27] Graph 43 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 37.0, U3: 44.0, Depth: 59.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 27.0, U3: 42.0, Depth: 49.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 43 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 44/74
+[2025-12-03 22:26:27] Graph 44 has 8 nodes and 3 edges
+[2025-12-03 22:26:27] Converted to 3 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 25.0, U3: 26.0, Depth: 38.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 17.0, U3: 26.0, Depth: 31.0
+[2025-12-03 22:26:27] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 44 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:27] 
+Processing graph 45/74
+[2025-12-03 22:26:27] Graph 45 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 36.0, U3: 42.0, Depth: 59.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 23.0, U3: 39.0, Depth: 44.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 45 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 46/74
+[2025-12-03 22:26:27] Graph 46 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 50.0, U3: 49.0, Depth: 79.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 26.0, U3: 45.0, Depth: 49.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 46 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 47/74
+[2025-12-03 22:26:27] Graph 47 has 8 nodes and 5 edges
+[2025-12-03 22:26:27] Converted to 5 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 41.0, U3: 47.0, Depth: 67.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 23.0, U3: 34.0, Depth: 42.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 47 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 48/74
+[2025-12-03 22:26:27] Graph 48 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 38.0, U3: 39.0, Depth: 60.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 26.0, U3: 41.0, Depth: 49.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 48 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 49/74
+[2025-12-03 22:26:27] Graph 49 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 34.0, U3: 42.0, Depth: 56.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 22.0, U3: 41.0, Depth: 43.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 49 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 50/74
+[2025-12-03 22:26:27] Graph 50 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 23.0, U3: 26.0, Depth: 39.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 14.0, U3: 17.0, Depth: 24.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 50 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 51/74
+[2025-12-03 22:26:27] Graph 51 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 38.0, U3: 42.0, Depth: 62.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:27] Pauli - CX: 18.0, U3: 32.0, Depth: 35.0
+[2025-12-03 22:26:27] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:27] Successfully processed graph 51 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:27] 
+Processing graph 52/74
+[2025-12-03 22:26:27] Graph 52 has 8 nodes and 6 edges
+[2025-12-03 22:26:27] Converted to 6 bitstring edges
+[2025-12-03 22:26:27] Computing Matchings Dynamic walk
+[2025-12-03 22:26:27] Matchings - CX: 54.0, U3: 56.0, Depth: 87.0
+[2025-12-03 22:26:27] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 24.0, U3: 40.0, Depth: 45.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 52 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 53/74
+[2025-12-03 22:26:28] Graph 53 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 38.0, U3: 42.0, Depth: 62.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 25.0, U3: 43.0, Depth: 49.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 53 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 54/74
+[2025-12-03 22:26:28] Graph 54 has 8 nodes and 5 edges
+[2025-12-03 22:26:28] Converted to 5 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 29.0, U3: 35.0, Depth: 48.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 18.0, U3: 32.0, Depth: 35.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 54 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 55/74
+[2025-12-03 22:26:28] Graph 55 has 8 nodes and 5 edges
+[2025-12-03 22:26:28] Converted to 5 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 41.0, U3: 43.0, Depth: 63.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 17.0, U3: 29.0, Depth: 32.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 55 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 56/74
+[2025-12-03 22:26:28] Graph 56 has 8 nodes and 5 edges
+[2025-12-03 22:26:28] Converted to 5 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 12.0, U3: 16.0, Depth: 21.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 16.0, U3: 26.0, Depth: 29.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: win
+[2025-12-03 22:26:28] Successfully processed graph 56 - Category: win - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 57/74
+[2025-12-03 22:26:28] Graph 57 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 37.0, U3: 42.0, Depth: 60.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 22.0, U3: 40.0, Depth: 43.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 57 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 58/74
+[2025-12-03 22:26:28] Graph 58 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 32.0, U3: 42.0, Depth: 54.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 22.0, U3: 37.0, Depth: 42.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 58 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 59/74
+[2025-12-03 22:26:28] Graph 59 has 8 nodes and 5 edges
+[2025-12-03 22:26:28] Converted to 5 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 44.0, U3: 51.0, Depth: 71.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 29.0, U3: 47.0, Depth: 53.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 59 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 60/74
+[2025-12-03 22:26:28] Graph 60 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 21.0, U3: 30.0, Depth: 36.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 16.0, U3: 28.0, Depth: 32.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 60 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 61/74
+[2025-12-03 22:26:28] Graph 61 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 36.0, U3: 38.0, Depth: 58.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 21.0, U3: 35.0, Depth: 42.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 61 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 62/74
+[2025-12-03 22:26:28] Graph 62 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 53.0, U3: 55.0, Depth: 84.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 27.0, U3: 47.0, Depth: 51.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 62 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 63/74
+[2025-12-03 22:26:28] Graph 63 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 38.0, U3: 47.0, Depth: 64.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 27.0, U3: 46.0, Depth: 51.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 63 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 64/74
+[2025-12-03 22:26:28] Graph 64 has 8 nodes and 5 edges
+[2025-12-03 22:26:28] Converted to 5 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 31.0, U3: 36.0, Depth: 51.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 22.0, U3: 31.0, Depth: 39.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 64 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 65/74
+[2025-12-03 22:26:28] Graph 65 has 8 nodes and 5 edges
+[2025-12-03 22:26:28] Converted to 5 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 25.0, U3: 31.0, Depth: 41.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 16.0, U3: 29.0, Depth: 32.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 65 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 66/74
+[2025-12-03 22:26:28] Graph 66 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 49.0, U3: 48.0, Depth: 75.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 15.0, U3: 25.0, Depth: 27.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 66 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 67/74
+[2025-12-03 22:26:28] Graph 67 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 22.0, U3: 26.0, Depth: 38.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 23.0, U3: 28.0, Depth: 40.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: win
+[2025-12-03 22:26:28] Successfully processed graph 67 - Category: win - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 68/74
+[2025-12-03 22:26:28] Graph 68 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 54.0, U3: 58.0, Depth: 85.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 26.0, U3: 39.0, Depth: 47.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 68 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 69/74
+[2025-12-03 22:26:28] Graph 69 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 20.0, U3: 26.0, Depth: 34.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 24.0, U3: 30.0, Depth: 40.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: win
+[2025-12-03 22:26:28] Successfully processed graph 69 - Category: win - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 70/74
+[2025-12-03 22:26:28] Graph 70 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 50.0, U3: 54.0, Depth: 79.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 27.0, U3: 43.0, Depth: 49.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 70 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 71/74
+[2025-12-03 22:26:28] Graph 71 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 8.0, U3: 14.0, Depth: 17.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 8.0, U3: 15.0, Depth: 16.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: draw
+[2025-12-03 22:26:28] Successfully processed graph 71 - Category: draw - Time: 0.02s
+[2025-12-03 22:26:28] 
+Processing graph 72/74
+[2025-12-03 22:26:28] Graph 72 has 8 nodes and 5 edges
+[2025-12-03 22:26:28] Converted to 5 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 44.0, U3: 41.0, Depth: 70.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 25.0, U3: 47.0, Depth: 49.0
+[2025-12-03 22:26:28] Analysis completed in 0.03s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 72 - Category: lose - Time: 0.03s
+[2025-12-03 22:26:28] 
+Processing graph 73/74
+[2025-12-03 22:26:28] Graph 73 has 8 nodes and 6 edges
+[2025-12-03 22:26:28] Converted to 6 bitstring edges
+[2025-12-03 22:26:28] Computing Matchings Dynamic walk
+[2025-12-03 22:26:28] Matchings - CX: 47.0, U3: 51.0, Depth: 73.0
+[2025-12-03 22:26:28] Computing Pauli decomposition
+[2025-12-03 22:26:28] Pauli - CX: 12.0, U3: 17.0, Depth: 21.0
+[2025-12-03 22:26:28] Analysis completed in 0.02s - Category: lose
+[2025-12-03 22:26:28] Successfully processed graph 73 - Category: lose - Time: 0.02s
+[2025-12-03 22:26:28] 
+Final Results Summary:
+[2025-12-03 22:26:28] Total graphs in file: 74
+[2025-12-03 22:26:28] Successfully processed: 74
+[2025-12-03 22:26:28] Matching algorithm used: automatic (bipartite/greedy)
+[2025-12-03 22:26:28] win: 5 (6.8%)
+[2025-12-03 22:26:28] lose: 66 (89.2%)
+[2025-12-03 22:26:28] draw: 3 (4.1%)
+[2025-12-03 22:26:28] Average time per graph: 0.03s
+[2025-12-03 22:26:28] Min time per graph: 0.02s
+[2025-12-03 22:26:28] Max time per graph: 0.05s
+[2025-12-03 22:26:28] Total analysis time: 1.89s
+[2025-12-03 22:26:28] 
+Detailed Graph Properties by Category:
+
+[2025-12-03 22:26:28] 
+WIN Graphs Statistics:
+[2025-12-03 22:26:28] Total graphs processed: 5
+[2025-12-03 22:26:28] Edge count - Min: 4, Max: 6, Mean: 5.00
+[2025-12-03 22:26:28] Edge density - Min: 0.1429, Max: 0.2143, Mean: 0.1786
+[2025-12-03 22:26:28] Bipartite graphs: 4, Non-bipartite graphs: 1
+[2025-12-03 22:26:28] Clique number - Min: 2, Max: 3, Mean: 2.20
+[2025-12-03 22:26:28] Maximum degree - Min: 2, Max: 3, Mean: 2.40
+[2025-12-03 22:26:28] Average degree - Min: 1.00, Max: 1.50, Mean: 1.25
+[2025-12-03 22:26:28] Clustering coefficient - Min: 0.0000, Max: 0.3333, Mean: 0.0667
+[2025-12-03 22:26:28] Estimated group size - Min: 2, Max: 2, Mean: 2.00
+[2025-12-03 22:26:28] Estimated orbit count - Min: 3, Max: 4, Mean: 3.20
+[2025-12-03 22:26:28] 
+LOSE Graphs Statistics:
+[2025-12-03 22:26:28] Total graphs processed: 66
+[2025-12-03 22:26:28] Edge count - Min: 3, Max: 6, Mean: 5.29
+[2025-12-03 22:26:28] Edge density - Min: 0.1071, Max: 0.2143, Mean: 0.1889
+[2025-12-03 22:26:28] Bipartite graphs: 41, Non-bipartite graphs: 25
+[2025-12-03 22:26:28] Clique number - Min: 2, Max: 3, Mean: 2.33
+[2025-12-03 22:26:28] Maximum degree - Min: 1, Max: 3, Mean: 2.61
+[2025-12-03 22:26:28] Average degree - Min: 0.75, Max: 1.50, Mean: 1.32
+[2025-12-03 22:26:28] Clustering coefficient - Min: 0.0000, Max: 0.4167, Mean: 0.1023
+[2025-12-03 22:26:28] Estimated group size - Min: 2, Max: 2, Mean: 2.00
+[2025-12-03 22:26:28] Estimated orbit count - Min: 2, Max: 4, Mean: 3.23
+[2025-12-03 22:26:28] 
+DRAW Graphs Statistics:
+[2025-12-03 22:26:28] Total graphs processed: 3
+[2025-12-03 22:26:28] Edge count - Min: 4, Max: 6, Mean: 5.00
+[2025-12-03 22:26:28] Edge density - Min: 0.1429, Max: 0.2143, Mean: 0.1786
+[2025-12-03 22:26:28] Bipartite graphs: 3, Non-bipartite graphs: 0
+[2025-12-03 22:26:28] Clique number - Min: 2, Max: 2, Mean: 2.00
+[2025-12-03 22:26:28] Maximum degree - Min: 1, Max: 3, Mean: 2.00
+[2025-12-03 22:26:28] Average degree - Min: 1.00, Max: 1.50, Mean: 1.25
+[2025-12-03 22:26:28] Clustering coefficient - Min: 0.0000, Max: 0.0000, Mean: 0.0000
+[2025-12-03 22:26:28] Estimated group size - Min: 2, Max: 16, Mean: 6.67
+[2025-12-03 22:26:28] Estimated orbit count - Min: 1, Max: 2, Mean: 1.67
+[2025-12-03 22:26:28] 
+Average Gate Counts by Category:
+[2025-12-03 22:26:28] win_matching_cx: 16.20
+[2025-12-03 22:26:28] win_matching_u3: 20.80
+[2025-12-03 22:26:28] win_pauli_cx: 18.80
+[2025-12-03 22:26:28] win_pauli_u3: 26.00
+[2025-12-03 22:26:28] win_matching_depth: 28.20
+[2025-12-03 22:26:28] win_pauli_depth: 32.80
+[2025-12-03 22:26:28] win_analysis_time: 0.02
+[2025-12-03 22:26:28] win_graph_edge_count: 5.00
+[2025-12-03 22:26:28] win_graph_edge_density: 0.18
+[2025-12-03 22:26:28] win_graph_is_bipartite: 0.80
+[2025-12-03 22:26:28] win_graph_clique_number: 2.20
+[2025-12-03 22:26:28] win_graph_max_degree: 2.40
+[2025-12-03 22:26:28] win_graph_avg_degree: 1.25
+[2025-12-03 22:26:28] win_graph_avg_clustering: 0.07
+[2025-12-03 22:26:28] win_graph_estimated_group_size: 2.00
+[2025-12-03 22:26:28] win_graph_estimated_orbit_count: 3.20
+[2025-12-03 22:26:28] lose_matching_cx: 36.77
+[2025-12-03 22:26:28] lose_matching_u3: 41.02
+[2025-12-03 22:26:28] lose_pauli_cx: 21.70
+[2025-12-03 22:26:28] lose_pauli_u3: 35.32
+[2025-12-03 22:26:28] lose_matching_depth: 59.50
+[2025-12-03 22:26:28] lose_pauli_depth: 40.68
+[2025-12-03 22:26:28] lose_analysis_time: 0.03
+[2025-12-03 22:26:28] lose_graph_edge_count: 5.29
+[2025-12-03 22:26:28] lose_graph_edge_density: 0.19
+[2025-12-03 22:26:28] lose_graph_is_bipartite: 0.62
+[2025-12-03 22:26:28] lose_graph_clique_number: 2.33
+[2025-12-03 22:26:28] lose_graph_max_degree: 2.61
+[2025-12-03 22:26:28] lose_graph_avg_degree: 1.32
+[2025-12-03 22:26:28] lose_graph_avg_clustering: 0.10
+[2025-12-03 22:26:28] lose_graph_estimated_group_size: 2.00
+[2025-12-03 22:26:28] lose_graph_estimated_orbit_count: 3.23
+[2025-12-03 22:26:28] draw_matching_cx: 12.67
+[2025-12-03 22:26:28] draw_matching_u3: 15.00
+[2025-12-03 22:26:28] draw_pauli_cx: 12.67
+[2025-12-03 22:26:28] draw_pauli_u3: 19.67
+[2025-12-03 22:26:28] draw_matching_depth: 21.67
+[2025-12-03 22:26:28] draw_pauli_depth: 23.00
+[2025-12-03 22:26:28] draw_analysis_time: 0.02
+[2025-12-03 22:26:28] draw_graph_edge_count: 5.00
+[2025-12-03 22:26:28] draw_graph_edge_density: 0.18
+[2025-12-03 22:26:28] draw_graph_is_bipartite: 1.00
+[2025-12-03 22:26:28] draw_graph_clique_number: 2.00
+[2025-12-03 22:26:28] draw_graph_max_degree: 2.00
+[2025-12-03 22:26:28] draw_graph_avg_degree: 1.25
+[2025-12-03 22:26:28] draw_graph_avg_clustering: 0.00
+[2025-12-03 22:26:28] draw_graph_estimated_group_size: 6.67
+[2025-12-03 22:26:28] draw_graph_estimated_orbit_count: 1.67
+[2025-12-03 22:26:28] config_n_qubits: 3.00
+[2025-12-03 22:26:28] config_n_vertices: 8.00
+[2025-12-03 22:26:28] config_delta_t: 0.10
+[2025-12-03 22:26:28] config_matchings: automatic
+[2025-12-03 22:26:28] config_graph_type: sparse_disconnected
+[2025-12-03 22:26:28] config_n_steps: 1.00
+[2025-12-03 22:26:28] timing_avg_per_graph: 0.03
+[2025-12-03 22:26:28] timing_min_per_graph: 0.02
+[2025-12-03 22:26:28] timing_max_per_graph: 0.05
+[2025-12-03 22:26:28] timing_total_analysis: 1.89
+[2025-12-03 22:26:28] ======================================================================
+======================================================================
+

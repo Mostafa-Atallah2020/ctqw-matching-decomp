@@ -1,0 +1,18 @@
+{
+  "timestamp": "2025-12-10T18:21:06.523539",
+  "n_steps": 1,
+  "delta_t": 0.1,
+  "input_files": [
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_128v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_16v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_32v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_64v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_8v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_128v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_16v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_32v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_64v.g6",
+    "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_8v.g6"
+  ],
+  "n_files": 10
+}

@@ -1,0 +1,66 @@
+# Aggregated Statistics
+# n_runs,5
+# total_graphs_per_run,200
+
+## Results (Matching vs Pauli)
+category,count_mean,count_std,count_min,count_max,pct_mean,pct_std
+WIN,6.80,0.98,6,8,3.40%,0.49%
+LOSE,191.80,1.72,189,194,95.90%,0.86%
+DRAW,1.40,1.02,0,3,0.70%,0.51%
+
+## Gate Counts by Category
+metric,mean,std,min,max
+draw_matching_cx,105.38,9.09,94.00,117.00
+draw_matching_depth,150.50,12.58,135.00,168.00
+draw_pauli_cx,105.38,9.09,94.00,117.00
+draw_pauli_depth,176.21,16.65,157.33,201.00
+lose_matching_cx,138.53,1.22,137.39,140.74
+lose_matching_depth,198.80,1.72,197.25,201.93
+lose_pauli_cx,91.61,0.10,91.50,91.77
+lose_pauli_depth,157.82,0.19,157.62,158.12
+win_matching_cx,85.23,5.91,78.50,94.67
+win_matching_depth,123.78,8.24,114.50,136.67
+win_pauli_cx,95.22,3.84,90.12,100.83
+win_pauli_depth,156.32,6.26,148.38,165.00
+
+## Graph Properties by Category
+metric,mean,std,min,max
+config_graph_type,,,,
+draw_graph_avg_clustering,0.1725,0.0303,0.1200,0.1900
+draw_graph_avg_degree,0.6825,0.1205,0.5600,0.8800
+draw_graph_clique_number,2.9175,0.1429,2.6700,3.0000
+draw_graph_edge_count,5.4575,0.9383,4.5000,7.0000
+draw_graph_edge_density,0.0450,0.0087,0.0400,0.0600
+draw_graph_estimated_group_size,4.0000,0.0000,4.0000,4.0000
+draw_graph_estimated_orbit_count,3.0000,0.0000,3.0000,3.0000
+draw_graph_is_bipartite,0.0825,0.1429,0.0000,0.3300
+draw_graph_max_degree,2.0000,0.0000,2.0000,2.0000
+lose_graph_avg_clustering,0.0300,0.0000,0.0300,0.0300
+lose_graph_avg_degree,0.8700,0.0000,0.8700,0.8700
+lose_graph_clique_number,2.1880,0.0040,2.1800,2.1900
+lose_graph_edge_count,6.9480,0.0160,6.9300,6.9700
+lose_graph_edge_density,0.0600,0.0000,0.0600,0.0600
+lose_graph_estimated_group_size,4.0000,0.0000,4.0000,4.0000
+lose_graph_estimated_orbit_count,3.4900,0.0000,3.4900,3.4900
+lose_graph_is_bipartite,0.7980,0.0040,0.7900,0.8000
+lose_graph_max_degree,2.5380,0.0040,2.5300,2.5400
+win_graph_avg_clustering,0.0280,0.0271,0.0000,0.0600
+win_graph_avg_degree,0.5780,0.0325,0.5500,0.6400
+win_graph_clique_number,2.1560,0.1487,2.0000,2.3300
+win_graph_edge_count,4.6340,0.2600,4.3800,5.1200
+win_graph_edge_density,0.0400,0.0000,0.0400,0.0400
+win_graph_estimated_group_size,4.0000,0.0000,4.0000,4.0000
+win_graph_estimated_orbit_count,3.1420,0.0823,3.0000,3.2500
+win_graph_is_bipartite,0.8440,0.1487,0.6700,1.0000
+win_graph_max_degree,2.4000,0.1325,2.1700,2.5000
+
+## Timing Statistics (seconds)
+metric,mean,std,min,max
+Avg Per Graph,0.050000,0.000000,0.050000,0.050000
+Max Per Graph,0.102000,0.014697,0.080000,0.120000
+Min Per Graph,0.040000,0.000000,0.040000,0.040000
+Total Analysis,10.090000,0.127593,9.940000,10.260000
+
+## Summary
+win_rate,3.4% +/- 0.5%
+lose_rate,95.9% +/- 0.9%
