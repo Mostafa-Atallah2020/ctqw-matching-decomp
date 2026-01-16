@@ -1,0 +1,1015 @@
+{
+  "timestamp": "20260113_212832",
+  "summaries": [
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_01_128v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_01",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_01_128v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_01_32v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_01",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_01_32v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 8,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 7,
+      "pct_matchings_commute": 8.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 7.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_01_64v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_01",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_01_64v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_02_128v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_02",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_02_128v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_02_16v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_02",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_02_16v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 5,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 4,
+      "pct_matchings_commute": 5.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 4.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_02_32v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_02",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_02_32v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 2,
+      "pct_matchings_commute": 2.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 2.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_02_64v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_02",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_02_64v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_03_128v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_03",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_03_128v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_03_16v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_03",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_03_16v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 5,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 4,
+      "pct_matchings_commute": 5.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 4.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_03_32v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_03",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_03_32v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 1,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 1,
+      "pct_matchings_commute": 1.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 1.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_03_64v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_03",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_03_64v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_04_128v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_04",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_04_128v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_04_16v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_04",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_04_16v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 4,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 3,
+      "pct_matchings_commute": 4.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 3.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_04_32v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_04",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_04_32v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_04_64v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_04",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_04_64v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_05_128v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_05",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_05_128v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_05_16v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_05",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_05_16v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 4,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 3,
+      "pct_matchings_commute": 4.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 3.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_05_32v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_05",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_05_32v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_05_64v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_05",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_05_64v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_128v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_10",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_10_128v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_16v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_10",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_10_16v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_32v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_10",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_10_32v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_64v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_10",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_10_64v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_10_8v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_10",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_10_8v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 4,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 3,
+      "pct_matchings_commute": 4.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 3.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_128v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_20",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_20_128v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_16v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_20",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_20_16v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_32v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_20",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_20_32v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_64v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_20",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_20_64v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\100graph_erdos_renyi_p0_20_8v.g6",
+      "metadata": {
+        "n_graphs": 100,
+        "type": "erdos_renyi_p0_20",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "100graph_erdos_renyi_p0_20_8v.g6"
+      },
+      "n_graphs": 100,
+      "n_matchings_commute": 3,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 2,
+      "pct_matchings_commute": 3.0,
+      "pct_pauli_commutes": 2.0,
+      "pct_matching_exact_pauli_not": 2.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\18graph_erdos_renyi_p0_02_8v.g6",
+      "metadata": {
+        "n_graphs": 18,
+        "type": "erdos_renyi_p0_02",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "18graph_erdos_renyi_p0_02_8v.g6"
+      },
+      "n_graphs": 18,
+      "n_matchings_commute": 3,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 1,
+      "pct_matchings_commute": 16.666666666666668,
+      "pct_pauli_commutes": 11.11111111111111,
+      "pct_matching_exact_pauli_not": 5.555555555555555
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\30graph_erdos_renyi_p0_03_8v.g6",
+      "metadata": {
+        "n_graphs": 30,
+        "type": "erdos_renyi_p0_03",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "30graph_erdos_renyi_p0_03_8v.g6"
+      },
+      "n_graphs": 30,
+      "n_matchings_commute": 3,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 1,
+      "pct_matchings_commute": 10.0,
+      "pct_pauli_commutes": 6.666666666666667,
+      "pct_matching_exact_pauli_not": 3.3333333333333335
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\3graph_erdos_renyi_p0_01_4v.g6",
+      "metadata": {
+        "n_graphs": 3,
+        "type": "erdos_renyi_p0_01",
+        "vertices": 4,
+        "suffix": "v",
+        "filename": "3graph_erdos_renyi_p0_01_4v.g6"
+      },
+      "n_graphs": 3,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 66.66666666666667,
+      "pct_pauli_commutes": 66.66666666666667,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\3graph_erdos_renyi_p0_02_4v.g6",
+      "metadata": {
+        "n_graphs": 3,
+        "type": "erdos_renyi_p0_02",
+        "vertices": 4,
+        "suffix": "v",
+        "filename": "3graph_erdos_renyi_p0_02_4v.g6"
+      },
+      "n_graphs": 3,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 66.66666666666667,
+      "pct_pauli_commutes": 66.66666666666667,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\40graph_erdos_renyi_p0_01_16v.g6",
+      "metadata": {
+        "n_graphs": 40,
+        "type": "erdos_renyi_p0_01",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "40graph_erdos_renyi_p0_01_16v.g6"
+      },
+      "n_graphs": 40,
+      "n_matchings_commute": 5,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 4,
+      "pct_matchings_commute": 12.5,
+      "pct_pauli_commutes": 2.5,
+      "pct_matching_exact_pauli_not": 10.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\40graph_erdos_renyi_p0_04_8v.g6",
+      "metadata": {
+        "n_graphs": 40,
+        "type": "erdos_renyi_p0_04",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "40graph_erdos_renyi_p0_04_8v.g6"
+      },
+      "n_graphs": 40,
+      "n_matchings_commute": 3,
+      "n_pauli_commutes": 1,
+      "n_matching_exact_pauli_not": 2,
+      "pct_matchings_commute": 7.5,
+      "pct_pauli_commutes": 2.5,
+      "pct_matching_exact_pauli_not": 5.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\57graph_erdos_renyi_p0_05_8v.g6",
+      "metadata": {
+        "n_graphs": 57,
+        "type": "erdos_renyi_p0_05",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "57graph_erdos_renyi_p0_05_8v.g6"
+      },
+      "n_graphs": 57,
+      "n_matchings_commute": 4,
+      "n_pauli_commutes": 3,
+      "n_matching_exact_pauli_not": 2,
+      "pct_matchings_commute": 7.017543859649122,
+      "pct_pauli_commutes": 5.2631578947368425,
+      "pct_matching_exact_pauli_not": 3.508771929824561
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\6graph_erdos_renyi_p0_04_4v.g6",
+      "metadata": {
+        "n_graphs": 6,
+        "type": "erdos_renyi_p0_04",
+        "vertices": 4,
+        "suffix": "v",
+        "filename": "6graph_erdos_renyi_p0_04_4v.g6"
+      },
+      "n_graphs": 6,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 33.333333333333336,
+      "pct_pauli_commutes": 33.333333333333336,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\7graph_erdos_renyi_p0_03_4v.g6",
+      "metadata": {
+        "n_graphs": 7,
+        "type": "erdos_renyi_p0_03",
+        "vertices": 4,
+        "suffix": "v",
+        "filename": "7graph_erdos_renyi_p0_03_4v.g6"
+      },
+      "n_graphs": 7,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 28.571428571428573,
+      "pct_pauli_commutes": 28.571428571428573,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\7graph_erdos_renyi_p0_05_4v.g6",
+      "metadata": {
+        "n_graphs": 7,
+        "type": "erdos_renyi_p0_05",
+        "vertices": 4,
+        "suffix": "v",
+        "filename": "7graph_erdos_renyi_p0_05_4v.g6"
+      },
+      "n_graphs": 7,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 28.571428571428573,
+      "pct_pauli_commutes": 28.571428571428573,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\7graph_erdos_renyi_p0_10_4v.g6",
+      "metadata": {
+        "n_graphs": 7,
+        "type": "erdos_renyi_p0_10",
+        "vertices": 4,
+        "suffix": "v",
+        "filename": "7graph_erdos_renyi_p0_10_4v.g6"
+      },
+      "n_graphs": 7,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 28.571428571428573,
+      "pct_pauli_commutes": 28.571428571428573,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\9graph_erdos_renyi_p0_01_8v.g6",
+      "metadata": {
+        "n_graphs": 9,
+        "type": "erdos_renyi_p0_01",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "9graph_erdos_renyi_p0_01_8v.g6"
+      },
+      "n_graphs": 9,
+      "n_matchings_commute": 3,
+      "n_pauli_commutes": 2,
+      "n_matching_exact_pauli_not": 1,
+      "pct_matchings_commute": 33.333333333333336,
+      "pct_pauli_commutes": 22.22222222222222,
+      "pct_matching_exact_pauli_not": 11.11111111111111
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\erdos_renyi\\9graph_erdos_renyi_p0_20_4v.g6",
+      "metadata": {
+        "n_graphs": 9,
+        "type": "erdos_renyi_p0_20",
+        "vertices": 4,
+        "suffix": "v",
+        "filename": "9graph_erdos_renyi_p0_20_4v.g6"
+      },
+      "n_graphs": 9,
+      "n_matchings_commute": 2,
+      "n_pauli_commutes": 3,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 22.22222222222222,
+      "pct_pauli_commutes": 33.333333333333336,
+      "pct_matching_exact_pauli_not": 0.0
+    }
+  ],
+  "table_data": [
+    {
+      "vertices": 4,
+      "n_graphs": 3,
+      "pct_matchings_commute": 66.66666666666667,
+      "pct_pauli_commutes": 66.66666666666667,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 4,
+      "n_graphs": 3,
+      "pct_matchings_commute": 66.66666666666667,
+      "pct_pauli_commutes": 66.66666666666667,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 4,
+      "n_graphs": 6,
+      "pct_matchings_commute": 33.333333333333336,
+      "pct_pauli_commutes": 33.333333333333336,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 4,
+      "n_graphs": 7,
+      "pct_matchings_commute": 28.571428571428573,
+      "pct_pauli_commutes": 28.571428571428573,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 4,
+      "n_graphs": 7,
+      "pct_matchings_commute": 28.571428571428573,
+      "pct_pauli_commutes": 28.571428571428573,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 4,
+      "n_graphs": 7,
+      "pct_matchings_commute": 28.571428571428573,
+      "pct_pauli_commutes": 28.571428571428573,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 4,
+      "n_graphs": 9,
+      "pct_matchings_commute": 22.22222222222222,
+      "pct_pauli_commutes": 33.333333333333336,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 8,
+      "n_graphs": 100,
+      "pct_matchings_commute": 4.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 3.0
+    },
+    {
+      "vertices": 8,
+      "n_graphs": 100,
+      "pct_matchings_commute": 3.0,
+      "pct_pauli_commutes": 2.0,
+      "pct_matching_exact_pauli_not": 2.0
+    },
+    {
+      "vertices": 8,
+      "n_graphs": 18,
+      "pct_matchings_commute": 16.666666666666668,
+      "pct_pauli_commutes": 11.11111111111111,
+      "pct_matching_exact_pauli_not": 5.555555555555555
+    },
+    {
+      "vertices": 8,
+      "n_graphs": 30,
+      "pct_matchings_commute": 10.0,
+      "pct_pauli_commutes": 6.666666666666667,
+      "pct_matching_exact_pauli_not": 3.3333333333333335
+    },
+    {
+      "vertices": 8,
+      "n_graphs": 40,
+      "pct_matchings_commute": 7.5,
+      "pct_pauli_commutes": 2.5,
+      "pct_matching_exact_pauli_not": 5.0
+    },
+    {
+      "vertices": 8,
+      "n_graphs": 57,
+      "pct_matchings_commute": 7.017543859649122,
+      "pct_pauli_commutes": 5.2631578947368425,
+      "pct_matching_exact_pauli_not": 3.508771929824561
+    },
+    {
+      "vertices": 8,
+      "n_graphs": 9,
+      "pct_matchings_commute": 33.333333333333336,
+      "pct_pauli_commutes": 22.22222222222222,
+      "pct_matching_exact_pauli_not": 11.11111111111111
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 100,
+      "pct_matchings_commute": 5.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 4.0
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 100,
+      "pct_matchings_commute": 5.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 4.0
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 100,
+      "pct_matchings_commute": 4.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 3.0
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 100,
+      "pct_matchings_commute": 4.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 3.0
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 40,
+      "pct_matchings_commute": 12.5,
+      "pct_pauli_commutes": 2.5,
+      "pct_matching_exact_pauli_not": 10.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 100,
+      "pct_matchings_commute": 8.0,
+      "pct_pauli_commutes": 1.0,
+      "pct_matching_exact_pauli_not": 7.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 100,
+      "pct_matchings_commute": 2.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 2.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 100,
+      "pct_matchings_commute": 1.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 1.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 100,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    }
+  ]
+}

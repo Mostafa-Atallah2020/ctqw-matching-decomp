@@ -1,0 +1,127 @@
+{
+  "timestamp": "20260113_020735",
+  "summaries": [
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\connected\\200graph_counting_128v.g6",
+      "metadata": {
+        "n_graphs": 200,
+        "type": "counting",
+        "vertices": 128,
+        "suffix": "v",
+        "filename": "200graph_counting_128v.g6"
+      },
+      "n_graphs": 200,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\connected\\200graph_counting_16v.g6",
+      "metadata": {
+        "n_graphs": 200,
+        "type": "counting",
+        "vertices": 16,
+        "suffix": "v",
+        "filename": "200graph_counting_16v.g6"
+      },
+      "n_graphs": 200,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\connected\\200graph_counting_32v.g6",
+      "metadata": {
+        "n_graphs": 200,
+        "type": "counting",
+        "vertices": 32,
+        "suffix": "v",
+        "filename": "200graph_counting_32v.g6"
+      },
+      "n_graphs": 200,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\connected\\200graph_counting_64v.g6",
+      "metadata": {
+        "n_graphs": 200,
+        "type": "counting",
+        "vertices": 64,
+        "suffix": "v",
+        "filename": "200graph_counting_64v.g6"
+      },
+      "n_graphs": 200,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "filepath": "F:\\UTK\\Research\\DOE_FOA_project\\code\\dyn-CTQW\\analysis\\graphs\\connected\\80graph_counting_8v.g6",
+      "metadata": {
+        "n_graphs": 80,
+        "type": "counting",
+        "vertices": 8,
+        "suffix": "v",
+        "filename": "80graph_counting_8v.g6"
+      },
+      "n_graphs": 80,
+      "n_matchings_commute": 0,
+      "n_pauli_commutes": 0,
+      "n_matching_exact_pauli_not": 0,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    }
+  ],
+  "table_data": [
+    {
+      "vertices": 8,
+      "n_graphs": 80,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 16,
+      "n_graphs": 200,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 32,
+      "n_graphs": 200,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 64,
+      "n_graphs": 200,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    },
+    {
+      "vertices": 128,
+      "n_graphs": 200,
+      "pct_matchings_commute": 0.0,
+      "pct_pauli_commutes": 0.0,
+      "pct_matching_exact_pauli_not": 0.0
+    }
+  ]
+}
