@@ -351,10 +351,19 @@ class MatchingDecomposition:
         """
         Compute matchings using compression-aware heuristic.
 
-        Groups edges by XOR mask and prefers placing edges with the same
-        mask into the same matching to maximize compression opportunities.
-        Tries multiple random shuffles and keeps the best coloring.
+        For complete bipartite graphs, uses the same commuting-matching
+        strategy as the greedy heuristic (which is already optimal for
+        this structure). Otherwise, groups edges by XOR mask and prefers
+        placing edges with the same mask into the same matching to
+        maximize compression opportunities. Tries multiple random
+        shuffles and keeps the best coloring.
         """
+        edges_list = list(edges)
+        is_complete, left_set, right_set = self._is_complete_bipartite(edges_list)
+
+        if is_complete:
+            return self._compute_bipartite_matchings(edges_list, left_set, right_set)
+
         best_matchings = None
         best_cx = float('inf')
 
@@ -372,8 +381,13 @@ class MatchingDecomposition:
         """
         Compute one compression-aware coloring.
 
-        Strategy: group edges by XOR mask, process largest groups first.
-        For each edge, prefer a matching that already has same-mask edges.
+        Strategy: group edges by XOR mask, then assign to matchings
+        preferring same-mask placement. The group processing order is
+        varied across trials to explore different colorings:
+          - trial 0: largest group first (default)
+          - trial 1: smallest group first
+          - trial 2+: random shuffle of group order
+        Within each group, edges are shuffled randomly.
         """
         random.seed(self._seed + trial * 257)
 
@@ -386,19 +400,23 @@ class MatchingDecomposition:
             mask = int(z1, 2) ^ int(z2, 2)
             xor_groups[mask].append(edge)
 
-        # Sort groups: largest first
-        sorted_groups = sorted(xor_groups.items(), key=lambda x: -len(x[1]))
+        # Vary group processing order across trials
+        group_items = list(xor_groups.items())
+        if trial == 0:
+            # Largest groups first (most compression opportunities)
+            group_items.sort(key=lambda x: -len(x[1]))
+        elif trial == 1:
+            # Smallest groups first (fill small matchings, leave room for large)
+            group_items.sort(key=lambda x: len(x[1]))
+        else:
+            # Random order
+            random.shuffle(group_items)
 
-        matchings = []
-        matching_vertices = []
-        matching_masks = [defaultdict(int)]  # Track XOR masks per matching
-
-        # Pre-initialize empty
         matchings = []
         matching_vertices = []
         matching_masks = []
 
-        for mask, group_edges in sorted_groups:
+        for mask, group_edges in group_items:
             random.shuffle(group_edges)
 
             for edge in group_edges:
