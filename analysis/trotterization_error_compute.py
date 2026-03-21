@@ -88,10 +88,10 @@ def create_exact_ctqw_operator(edges, time):
     return exact_op
 
 
-def create_matching_circuit_operator(edges, n_steps, total_time):
+def create_matching_circuit_operator(edges, n_steps, total_time, heuristic='greedy'):
     """Create quantum operator using MatchingDecomposition class."""
     G = MultiEdgeGraph(edges)
-    decomp = MatchingDecomposition(G)
+    decomp = MatchingDecomposition(G, heuristic=heuristic)
     qc = decomp.build_circuit(n_steps=n_steps, delta_t=total_time)
     return Operator(qc)
 
@@ -104,7 +104,7 @@ def create_pauli_circuit_operator(edges, n_steps, total_time):
     return Operator(qc)
 
 
-def compute_operator_differences(edges, trotter_steps_list, time_values):
+def compute_operator_differences(edges, trotter_steps_list, time_values, heuristic='greedy'):
     """Compute 2-norm differences between matching/Pauli and exact CTQW."""
     results = {
         "trotter_steps": trotter_steps_list,
@@ -132,7 +132,7 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
             print(f"      Trotter steps: {n_steps}", end=" ")
 
             try:
-                matching_op = create_matching_circuit_operator(edges, n_steps, time_val)
+                matching_op = create_matching_circuit_operator(edges, n_steps, time_val, heuristic)
                 diff = matching_op - exact_op
                 two_norm = np.linalg.norm(diff.data, ord=2)
                 matching_diffs.append(two_norm)
@@ -157,7 +157,8 @@ def compute_operator_differences(edges, trotter_steps_list, time_values):
     return results
 
 
-def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertices=None):
+def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertices=None,
+                       heuristic='greedy'):
     """Process all graphs and compute operator differences.
 
     Args:
@@ -165,6 +166,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
         trotter_steps_list: List of Trotter step counts to test
         time_values: List of time values to test
         expected_vertices: Expected number of vertices from metadata (used for reporting)
+        heuristic: Matching heuristic ('greedy' or 'compression_aware')
     """
     all_results = []
     valid_graphs = 0
@@ -197,7 +199,7 @@ def process_all_graphs(graphs, trotter_steps_list, time_values, expected_vertice
             print(f"    WARNING: {n_qubits} qubits will create large operators")
 
         try:
-            results = compute_operator_differences(edges, trotter_steps_list, time_values)
+            results = compute_operator_differences(edges, trotter_steps_list, time_values, heuristic)
             results["graph_index"] = i
             results["n_qubits"] = n_qubits
             results["properties"] = props  # Update with correct n_vertices
@@ -265,6 +267,7 @@ def save_metadata(metadata, args, output_dir, n_graphs_processed):
         "trotter_steps": list(range(args.min_steps, args.max_steps + 1, args.step_inc)),
         "time_values": args.time_values,
         "timestamp": datetime.now().isoformat(),
+        "heuristic": args.heuristic,
         "g6_file": str(args.g6_file),
     }
 
@@ -284,6 +287,11 @@ def main():
         "-t", "--time_values", nargs="+", type=float, default=[0.1], help="Time values"
     )
     parser.add_argument("-o", "--output", type=str, default=None, help="Output directory")
+    parser.add_argument(
+        "--heuristic", type=str, default="greedy",
+        choices=["greedy", "compression_aware"],
+        help="Matching heuristic (default: greedy)"
+    )
 
     args = parser.parse_args()
 
@@ -299,12 +307,13 @@ def main():
     n_vertices = metadata.get("vertices", "N")
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
+    base = "outputs_comp_aware" if args.heuristic == "compression_aware" else "outputs"
     if args.output:
         output_dir = Path(args.output) / timestamp
     else:
         output_dir = (
             script_dir
-            / "outputs"
+            / base
             / "trotterization_error"
             / f"{graph_type}_{n_vertices}v"
             / timestamp
@@ -315,13 +324,15 @@ def main():
     trotter_steps = list(range(args.min_steps, args.max_steps + 1, args.step_inc))
 
     print(f"\nComputation Configuration:")
+    print(f"  Matching heuristic: {args.heuristic}")
     print(f"  Trotter steps: {trotter_steps}")
     print(f"  Time values: {args.time_values}")
     print(f"  Output: {output_dir}")
 
     # Process graphs
     expected_vertices = metadata.get("vertices")
-    all_results = process_all_graphs(graphs, trotter_steps, args.time_values, expected_vertices)
+    all_results = process_all_graphs(graphs, trotter_steps, args.time_values, expected_vertices,
+                                     heuristic=args.heuristic)
 
     # Save all data
     if all_results:
