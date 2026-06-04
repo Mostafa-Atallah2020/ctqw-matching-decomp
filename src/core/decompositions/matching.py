@@ -5,7 +5,7 @@ import random
 
 import numpy as np
 from qiskit import QuantumCircuit
-from src.utils.circuit.space_reduction import build_matching_circuit_iteratively
+from src.utils.circuit.space_reduction import build_matching_circuit_iteratively, compress_edges_iteratively
 
 if TYPE_CHECKING:
     from src.core.multi_edge_graph import MultiEdgeGraph
@@ -19,22 +19,38 @@ class MatchingDecomposition:
     Continuous-Time Quantum Walks (CTQW). It decomposes the graph Hamiltonian
     into matchings and builds quantum circuits accordingly.
 
+    Two heuristics are available for computing matchings:
+      - 'greedy' (default): Groups edges by bit-flip position, then greedily
+        assigns to matchings. This is the original algorithm from the paper.
+      - 'compression_aware': Groups edges by XOR mask to maximize compression
+        opportunities during space reduction. Tries multiple random shuffles
+        and keeps the coloring with lowest estimated CX cost.
+
     Attributes:
         graph: MultiEdgeGraph instance
         n_qubits: Number of qubits in the system
         edges: Set of edges defining the graph
         matchings: List of matchings computed from the edges
+        heuristic: Name of the heuristic used
     """
 
-    def __init__(self, graph: MultiEdgeGraph):
+    def __init__(self, graph: MultiEdgeGraph, heuristic: str = 'greedy',
+                 n_trials: int = 30, seed: int = 99):
         """
         Initialize MatchingDecomposition with a MultiEdgeGraph.
 
         Args:
             graph: MultiEdgeGraph instance containing the graph edges
+            heuristic: Matching heuristic to use. One of:
+                - 'greedy': Original bit-flip-position grouping (default)
+                - 'compression_aware': XOR-mask grouping for better compression
+            n_trials: Number of random shuffles to try for compression_aware
+                      heuristic (ignored for greedy). Default: 30.
+            seed: Base random seed for compression_aware (ignored for greedy).
 
         Raises:
             TypeError: If graph is not a MultiEdgeGraph instance
+            ValueError: If heuristic is not recognized
         """
         # Check by class name to avoid issues with module reloading in notebooks
         if type(graph).__name__ != 'MultiEdgeGraph':
@@ -43,10 +59,27 @@ class MatchingDecomposition:
                 "Please create a MultiEdgeGraph from your edges first."
             )
 
+        valid_heuristics = ('greedy', 'compression_aware')
+        if heuristic not in valid_heuristics:
+            raise ValueError(
+                f"Unknown heuristic '{heuristic}'. Must be one of: {valid_heuristics}"
+            )
+
         self.graph = graph
         self.edges = graph.edges
         self.n_qubits = graph.n_qubits
-        self.matchings = self._compute_matchings(self.edges)
+        self.heuristic = heuristic
+        self._n_trials = n_trials
+        self._seed = seed
+
+        if heuristic == 'greedy':
+            self.matchings = self._compute_matchings_greedy(self.edges)
+        elif heuristic == 'compression_aware':
+            self.matchings = self._compute_matchings_compression_aware(self.edges)
+
+    # =================================================================
+    # Greedy heuristic (original)
+    # =================================================================
 
     def _get_bit_flip_position(self, edge: Tuple[str, str]) -> int:
         """
@@ -116,15 +149,6 @@ class MatchingDecomposition:
     def _matchings_commute(self, matching1: Set, matching2: Set, left_set: List[str], right_set: List[str]) -> bool:
         """
         Check if two matchings have commuting Hamiltonians.
-
-        Args:
-            matching1: First matching
-            matching2: Second matching
-            left_set: Left partition vertices
-            right_set: Right partition vertices
-
-        Returns:
-            True if matchings commute
         """
         all_vertices = sorted(set(left_set) | set(right_set))
         n = len(all_vertices)
@@ -149,18 +173,12 @@ class MatchingDecomposition:
 
         return commutator_norm < 1e-10
 
-    def _compute_matchings(self, edges: Set[Tuple[str, str]]) -> List[Set[Tuple[str, str]]]:
+    def _compute_matchings_greedy(self, edges: Set[Tuple[str, str]]) -> List[Set[Tuple[str, str]]]:
         """
-        Compute optimal matchings for the graph edges.
+        Compute matchings using the greedy heuristic.
 
-        Decomposes graph edges into matchings (sets of non-adjacent edges)
-        that can be executed in parallel during Trotterization.
-
-        Args:
-            edges: Set of graph edges
-
-        Returns:
-            List of matchings, where each matching is a set of edges
+        For complete bipartite graphs, uses a commuting-matching strategy.
+        Otherwise, groups edges by bit-flip position and greedily assigns.
         """
         edges_list = list(edges)
         is_complete, left_set, right_set = self._is_complete_bipartite(edges_list)
@@ -168,7 +186,7 @@ class MatchingDecomposition:
         if is_complete:
             return self._compute_bipartite_matchings(edges_list, left_set, right_set)
 
-        return self._compute_greedy_matchings(edges_list)
+        return self._compute_greedy_matchings_by_bitflip(edges_list)
 
     def _compute_bipartite_matchings(
         self,
@@ -178,14 +196,6 @@ class MatchingDecomposition:
     ) -> List[Set[Tuple[str, str]]]:
         """
         Compute matchings for complete bipartite graphs using commuting strategy.
-
-        Args:
-            edges_list: List of edges
-            left_set: Left partition vertices
-            right_set: Right partition vertices
-
-        Returns:
-            List of matchings
         """
         import networkx as nx
         from networkx.algorithms import bipartite
@@ -209,7 +219,6 @@ class MatchingDecomposition:
 
             matchings = []
 
-            # Strategy 1: Natural ordering
             matching = set()
             matched_right = set()
             for u in available_left:
@@ -223,7 +232,6 @@ class MatchingDecomposition:
             if len(matching) == len(available_left):
                 matchings.append(matching)
 
-            # Strategy 2-N: Random orderings
             for attempt in range(min(num_attempts - 1, 9)):
                 random.seed(attempt)
                 shuffled_right = available_right.copy()
@@ -295,15 +303,9 @@ class MatchingDecomposition:
 
         return matchings
 
-    def _compute_greedy_matchings(self, edges_list: List[Tuple[str, str]]) -> List[Set[Tuple[str, str]]]:
+    def _compute_greedy_matchings_by_bitflip(self, edges_list: List[Tuple[str, str]]) -> List[Set[Tuple[str, str]]]:
         """
         Compute matchings using greedy algorithm grouped by bit flip position.
-
-        Args:
-            edges_list: List of edges
-
-        Returns:
-            List of matchings
         """
         edge_groups = defaultdict(list)
         for edge in edges_list:
@@ -312,8 +314,6 @@ class MatchingDecomposition:
 
         matchings = []
 
-        # Process in sorted order: single-bit edges first (high to low), then multi-bit edges
-        # This ensures single-bit matchings are created first, so multi-bit edges can join them
         for bit_position in sorted(edge_groups.keys(), reverse=True):
             group_edges = edge_groups[bit_position]
             if bit_position >= 0:
@@ -342,6 +342,142 @@ class MatchingDecomposition:
                         matchings.append({edge})
 
         return matchings
+
+    # =================================================================
+    # Compression-aware heuristic
+    # =================================================================
+
+    def _compute_matchings_compression_aware(self, edges: Set[Tuple[str, str]]) -> List[Set[Tuple[str, str]]]:
+        """
+        Compute matchings using compression-aware heuristic.
+
+        For complete bipartite graphs, uses the same commuting-matching
+        strategy as the greedy heuristic (which is already optimal for
+        this structure). Otherwise, groups edges by XOR mask and prefers
+        placing edges with the same mask into the same matching to
+        maximize compression opportunities. Tries multiple random
+        shuffles and keeps the best coloring.
+        """
+        edges_list = list(edges)
+        is_complete, left_set, right_set = self._is_complete_bipartite(edges_list)
+
+        if is_complete:
+            return self._compute_bipartite_matchings(edges_list, left_set, right_set)
+
+        best_matchings = None
+        best_cx = float('inf')
+
+        for trial in range(self._n_trials):
+            matchings = self._single_compression_aware_coloring(edges, trial)
+            cx = self._estimate_cx(matchings)
+
+            if cx < best_cx:
+                best_cx = cx
+                best_matchings = matchings
+
+        return best_matchings
+
+    def _single_compression_aware_coloring(self, edges: Set[Tuple[str, str]], trial: int) -> List[Set[Tuple[str, str]]]:
+        """
+        Compute one compression-aware coloring.
+
+        Strategy: group edges by XOR mask, then assign to matchings
+        preferring same-mask placement. The group processing order is
+        varied across trials to explore different colorings:
+          - trial 0: largest group first (default)
+          - trial 1: smallest group first
+          - trial 2+: random shuffle of group order
+        Within each group, edges are shuffled randomly.
+        """
+        random.seed(self._seed + trial * 257)
+
+        edges_list = list(edges)
+
+        # Group edges by XOR mask
+        xor_groups = defaultdict(list)
+        for edge in edges_list:
+            z1, z2 = edge
+            mask = int(z1, 2) ^ int(z2, 2)
+            xor_groups[mask].append(edge)
+
+        # Vary group processing order across trials
+        group_items = list(xor_groups.items())
+        if trial == 0:
+            # Largest groups first (most compression opportunities)
+            group_items.sort(key=lambda x: -len(x[1]))
+        elif trial == 1:
+            # Smallest groups first (fill small matchings, leave room for large)
+            group_items.sort(key=lambda x: len(x[1]))
+        else:
+            # Random order
+            random.shuffle(group_items)
+
+        matchings = []
+        matching_vertices = []
+        matching_masks = []
+
+        for mask, group_edges in group_items:
+            random.shuffle(group_edges)
+
+            for edge in group_edges:
+                verts = {edge[0], edge[1]}
+                placed = False
+
+                # Priority 1: matching with same XOR mask and no vertex conflict
+                for mi in range(len(matchings)):
+                    if verts & matching_vertices[mi]:
+                        continue
+                    if matching_masks[mi].get(mask, 0) > 0:
+                        matchings[mi].add(edge)
+                        matching_vertices[mi] |= verts
+                        matching_masks[mi][mask] += 1
+                        placed = True
+                        break
+
+                # Priority 2: any matching without vertex conflict
+                if not placed:
+                    for mi in range(len(matchings)):
+                        if not (verts & matching_vertices[mi]):
+                            matchings[mi].add(edge)
+                            matching_vertices[mi] |= verts
+                            matching_masks[mi][mask] += 1
+                            placed = True
+                            break
+
+                # Priority 3: new matching
+                if not placed:
+                    matchings.append({edge})
+                    matching_vertices.append(set(verts))
+                    matching_masks.append(defaultdict(int, {mask: 1}))
+
+        return matchings
+
+    def _estimate_cx(self, matchings: List[Set]) -> int:
+        """
+        Fast CX estimate based on compression results.
+        Each k-controlled Rx ~ 2k CX. Bookends cost 2 CX per weight-reducing qubit.
+        """
+        total_cx = 0
+        for matching in matchings:
+            edge_strs = list(matching)
+            compressed, unused = compress_edges_iteratively(edge_strs)
+
+            for c in compressed:
+                comp_n = len(c['compressed_edge'][0])
+                n_wr = len(c['weight_reducing_qubits'])
+                if comp_n <= 1:
+                    total_cx += 2 * n_wr
+                else:
+                    total_cx += 2 * (comp_n - 1) + 2 * n_wr
+
+            for _ in unused:
+                total_cx += 2 * (self.n_qubits - 1)
+
+        return total_cx
+
+    # =================================================================
+    # Common interface
+    # =================================================================
 
     def build_circuit(
         self,

@@ -1,0 +1,26 @@
+{
+  "graph_type": "counting",
+  "n_vertices": 32,
+  "n_graphs_in_file": 200,
+  "n_graphs_processed": 200,
+  "trotter_steps": [
+    1,
+    3,
+    5,
+    7,
+    9,
+    11,
+    13,
+    15,
+    17,
+    19
+  ],
+  "time_values": [
+    0.1,
+    0.5,
+    1.0
+  ],
+  "timestamp": "2026-04-24T23:18:20.216075",
+  "heuristic": "compression_aware",
+  "g6_file": "F:\\UTK\\Research\\DOE_FOA_project\\simulation\\code\\dyn-CTQW\\analysis\\graphs\\connected\\200graph_counting_32v.g6"
+}

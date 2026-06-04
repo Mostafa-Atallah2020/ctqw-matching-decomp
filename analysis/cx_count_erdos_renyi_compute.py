@@ -50,12 +50,12 @@ def get_circuit_metrics(qc, seed=42):
     }
 
 
-def analyze_graph(edges, n_steps=1, delta_t=0.1):
+def analyze_graph(edges, n_steps=1, delta_t=0.1, heuristic='greedy'):
     """Analyze a single graph and return metrics for both decompositions."""
     G = MultiEdgeGraph(edges)
 
     # Matching decomposition
-    matching_decomp = MatchingDecomposition(G)
+    matching_decomp = MatchingDecomposition(G, heuristic=heuristic)
     matching_qc = matching_decomp.build_circuit(n_steps=n_steps, delta_t=delta_t)
     matching_metrics = get_circuit_metrics(matching_qc)
 
@@ -69,6 +69,7 @@ def analyze_graph(edges, n_steps=1, delta_t=0.1):
         "n_vertices": 2 ** G.n_qubits,
         "n_edges": len(edges),
         "n_matchings": matching_decomp.num_matchings(),
+        "heuristic": heuristic,
         "matching_cx": matching_metrics["cx_count"],
         "matching_u3": matching_metrics["u3_count"],
         "matching_depth": matching_metrics["depth"],
@@ -80,7 +81,7 @@ def analyze_graph(edges, n_steps=1, delta_t=0.1):
     }
 
 
-def process_g6_file(g6_file, n_steps=1, delta_t=0.1, verbose=True):
+def process_g6_file(g6_file, n_steps=1, delta_t=0.1, verbose=True, heuristic='greedy'):
     """Process all graphs in a G6 file."""
     graphs, metadata = load_graphs_from_g6(g6_file)
 
@@ -92,7 +93,7 @@ def process_g6_file(g6_file, n_steps=1, delta_t=0.1, verbose=True):
     graph_type = metadata.get("type", "unknown")
 
     if verbose:
-        print(f"  Processing {len(graphs)} graphs ({n_vertices}v, type={graph_type})")
+        print(f"  Processing {len(graphs)} graphs ({n_vertices}v, type={graph_type}, heuristic={heuristic})")
 
     results = []
     for i, edges in enumerate(graphs):
@@ -100,7 +101,7 @@ def process_g6_file(g6_file, n_steps=1, delta_t=0.1, verbose=True):
             continue
 
         try:
-            result = analyze_graph(edges, n_steps, delta_t)
+            result = analyze_graph(edges, n_steps, delta_t, heuristic=heuristic)
             result["graph_index"] = i
             result["graph_type"] = graph_type
             result["source_file"] = Path(g6_file).name
@@ -179,6 +180,7 @@ def save_metadata(args, file_list, output_dir):
         "timestamp": datetime.now().isoformat(),
         "n_steps": args.n_steps,
         "delta_t": args.delta_t,
+        "heuristic": args.heuristic,
         "input_files": [str(f) for f in file_list],
         "n_files": len(file_list)
     }
@@ -212,6 +214,11 @@ def main():
         "-v", "--verbose", action="store_true", default=True,
         help="Verbose output"
     )
+    parser.add_argument(
+        "--heuristic", type=str, default="greedy",
+        choices=["greedy", "compression_aware"],
+        help="Matching heuristic (default: greedy)"
+    )
 
     args = parser.parse_args()
 
@@ -235,7 +242,8 @@ def main():
     else:
         script_dir = Path(__file__).parent
         timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
-        output_dir = script_dir / "outputs" / "cx_scaling" / timestamp
+        base = "outputs_comp_aware" if args.heuristic == "compression_aware" else "outputs"
+        output_dir = script_dir / base / "cx_scaling" / timestamp
 
     output_dir.mkdir(parents=True, exist_ok=True)
 
@@ -252,6 +260,7 @@ def main():
     print("CX SCALING ANALYSIS - Matching vs Pauli")
     print("=" * 60)
     print(f"Graph type(s): {graph_type_str}")
+    print(f"Matching heuristic: {args.heuristic}")
     print(f"Input files: {len(file_list)}")
     print(f"Trotter steps: {args.n_steps}")
     print(f"Delta t: {args.delta_t}")
@@ -274,7 +283,8 @@ def main():
             g6_file,
             n_steps=args.n_steps,
             delta_t=args.delta_t,
-            verbose=args.verbose
+            verbose=args.verbose,
+            heuristic=args.heuristic
         )
         all_results.extend(results)
 
@@ -332,6 +342,7 @@ def main():
                 "timestamp": datetime.now().isoformat(),
                 "n_steps": args.n_steps,
                 "delta_t": args.delta_t,
+                "heuristic": args.heuristic,
                 "graph_type": gtype,
                 "n_graphs": len(df)
             }

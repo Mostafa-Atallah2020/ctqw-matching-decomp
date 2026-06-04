@@ -26,6 +26,7 @@ sys.path.insert(0, str(project_root))
 
 from src.utils.graph.g6_utils import load_graphs_from_g6, g6_to_edge_set
 from src.core.multi_edge_graph import MultiEdgeGraph
+from src.core.decompositions.matching import MatchingDecomposition
 
 
 def matchings_commute(m1: Set[Tuple[str, str]], m2: Set[Tuple[str, str]]) -> bool:
@@ -190,13 +191,15 @@ def compute_greedy_matchings(edges: Set[Tuple[str, str]]) -> List[Set[Tuple[str,
     return matchings
 
 
-def analyze_graph(edges: Set[Tuple[str, str]], graph_idx: int) -> Dict:
+def analyze_graph(edges: Set[Tuple[str, str]], graph_idx: int,
+                  heuristic: str = 'greedy') -> Dict:
     """
     Analyze a single graph for commuting properties.
 
     Args:
         edges: Set of graph edges
         graph_idx: Index of the graph (for reporting)
+        heuristic: Matching heuristic ('greedy' or 'compression_aware')
 
     Returns:
         Dictionary with analysis results
@@ -217,8 +220,10 @@ def analyze_graph(edges: Set[Tuple[str, str]], graph_idx: int) -> Dict:
     n_qubits = len(first_edge[0])
     n_vertices = 2 ** n_qubits
 
-    # Compute matchings
-    matchings = compute_greedy_matchings(edges)
+    # Compute matchings using MatchingDecomposition
+    G = MultiEdgeGraph(edges)
+    decomp = MatchingDecomposition(G, heuristic=heuristic)
+    matchings = decomp.get_matchings()
     matchings_commute = check_matchings_all_commute(matchings, n_qubits)
 
     # Build Hamiltonian and check Pauli commutativity with early exit
@@ -244,12 +249,13 @@ def analyze_graph(edges: Set[Tuple[str, str]], graph_idx: int) -> Dict:
     }
 
 
-def analyze_g6_file(filepath: str) -> Dict:
+def analyze_g6_file(filepath: str, heuristic: str = 'greedy') -> Dict:
     """
     Analyze all graphs in a G6 file.
 
     Args:
         filepath: Path to G6 file
+        heuristic: Matching heuristic ('greedy' or 'compression_aware')
 
     Returns:
         Dictionary with summary statistics
@@ -268,7 +274,7 @@ def analyze_g6_file(filepath: str) -> Dict:
         if (i + 1) % 20 == 0 or i == 0:
             print(f"  Processing graph {i + 1}/{n_graphs}...")
 
-        result = analyze_graph(edges, i)
+        result = analyze_graph(edges, i, heuristic=heuristic)
         results.append(result)
 
     # Compute statistics
@@ -316,6 +322,9 @@ def main():
     parser = argparse.ArgumentParser(description='Analyze commuting decompositions')
     parser.add_argument('graph_dir', nargs='?', default=None,
                         help='Directory containing G6 files (default: graphs/connected)')
+    parser.add_argument('--heuristic', type=str, default='greedy',
+                        choices=['greedy', 'compression_aware'],
+                        help='Matching heuristic (default: greedy)')
     args = parser.parse_args()
 
     # Directory containing G6 files
@@ -328,7 +337,8 @@ def main():
 
     # Output directory named after input directory
     dir_name = graphs_dir.name
-    output_dir = Path(__file__).parent / "outputs" / f"commuting_analysis_{dir_name}"
+    base = "outputs_comp_aware" if args.heuristic == "compression_aware" else "outputs"
+    output_dir = Path(__file__).parent / base / f"commuting_analysis_{dir_name}"
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Find all G6 files
@@ -343,7 +353,7 @@ def main():
     # Analyze each file
     all_summaries = []
     for g6_file in g6_files:
-        summary = analyze_g6_file(str(g6_file))
+        summary = analyze_g6_file(str(g6_file), heuristic=args.heuristic)
         all_summaries.append(summary)
 
     # Create summary table

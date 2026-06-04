@@ -148,13 +148,14 @@ class BaseAnalyzer:
         return average_metrics
 
     def analyze_matching(
-        self, edges: Set[Tuple[str, str]], n_steps: int = 1
+        self, edges: Set[Tuple[str, str]], n_steps: int = 1,
+        heuristic: str = 'greedy'
     ) -> Optional[CircuitMetrics]:
         """Analyze circuit using MatchingDecomposition class."""
         try:
             # Create graph and decomposition using new classes
             G = MultiEdgeGraph(edges)
-            decomp = MatchingDecomposition(G)
+            decomp = MatchingDecomposition(G, heuristic=heuristic)
 
             # Build circuit with specified steps
             qc = decomp.build_circuit(n_steps=n_steps, delta_t=self.delta_t)

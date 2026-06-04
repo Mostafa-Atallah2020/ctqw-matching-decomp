@@ -36,15 +36,18 @@ from src.utils.graph.g6_utils import parse_g6_filename
 
 
 class MatchingVsPauliAnalyzer:
-    def __init__(self, n_qubits: int, delta_t: float, logger: Logger):
+    def __init__(self, n_qubits: int, delta_t: float, logger: Logger,
+                 heuristic: str = 'greedy'):
         self.analyzer = BaseAnalyzer(n_qubits, delta_t)
         self.logger = logger
+        self.heuristic = heuristic
 
     def analyze_graph(self, edges: set, graph: nx.Graph, n_steps: int = 1) -> dict:
         start_time = time.time()
 
-        self.logger.log("Computing Matchings Dynamic walk")
-        matching_metrics = self.analyzer.analyze_matching(edges, n_steps)
+        self.logger.log(f"Computing Matchings Dynamic walk (heuristic={self.heuristic})")
+        matching_metrics = self.analyzer.analyze_matching(edges, n_steps,
+                                                          heuristic=self.heuristic)
         if not matching_metrics:
             self.logger.log("Failed to get matching metrics")
             return None
@@ -124,7 +127,8 @@ def load_checkpoint(checkpoint_file):
     return None
 
 
-def setup_paths(script_dir, graph_type: str, n_vertices: int, output_subfolder: str = None):
+def setup_paths(script_dir, graph_type: str, n_vertices: int,
+                output_subfolder: str = None, heuristic: str = 'greedy'):
     """Setup and validate all necessary paths with graph type and timestamp."""
     from datetime import datetime
 
@@ -135,7 +139,8 @@ def setup_paths(script_dir, graph_type: str, n_vertices: int, output_subfolder: 
     timestamp = datetime.now().strftime("%Y%m%d_%H%M%S")
 
     # Base output directory
-    base_output_dir = script_dir / "outputs" / "matching_vs_pauli"
+    base = "outputs_comp_aware" if heuristic == "compression_aware" else "outputs"
+    base_output_dir = script_dir / base / "matching_vs_pauli"
 
     # Output directory with graph type and timestamp
     # Format: outputs/matching_vs_pauli/[subfolder/]{graph_type}_{n_vertices}v/{timestamp}/
@@ -208,6 +213,13 @@ def parse_arguments():
         default=None,
         help="Optional subfolder for output (e.g., 'random_32v' to save in outputs/matching_vs_pauli/random_32v/)",
     )
+    parser.add_argument(
+        "--heuristic",
+        type=str,
+        default="greedy",
+        choices=["greedy", "compression_aware"],
+        help="Matching heuristic to use (default: greedy)",
+    )
 
     return parser.parse_args()
 
@@ -269,7 +281,8 @@ def main():
 
     # Setup paths with graph type and timestamp
     script_dir = Path(__file__).parent.absolute()
-    data_dir, output_dir = setup_paths(script_dir, args.graph_type, n_vertices, args.output_subfolder)
+    data_dir, output_dir = setup_paths(script_dir, args.graph_type, n_vertices,
+                                       args.output_subfolder, args.heuristic)
 
     # Determine input file - use provided file or construct from arguments
     if not args.input_file:
@@ -282,7 +295,7 @@ def main():
         f"[CONFIG] Processing {args.n_graphs} {args.graph_type} graphs with {n_qubits} qubits ({n_vertices} vertices)"
     )
     print(
-        f"[CONFIG] Using automatic matching algorithm (bipartite/greedy based on graph structure)"
+        f"[CONFIG] Matching heuristic: {args.heuristic}"
     )
     print(f"[CONFIG] Delta t: {args.delta_t}")
 
@@ -309,7 +322,7 @@ def main():
     logger.log(f"Number of qubits: {n_qubits}")
     logger.log(f"Number of vertices: {n_vertices}")
     logger.log(f"Delta t: {args.delta_t}")
-    logger.log(f"Matching algorithm: automatic (bipartite/greedy)")
+    logger.log(f"Matching heuristic: {args.heuristic}")
     logger.log(f"Graph type: {args.graph_type}")
     logger.log(f"Input file: {graph_file}")
     logger.log(f"Output directory: {output_dir}")
@@ -320,7 +333,8 @@ def main():
         graph_info = GraphProcessor.parse_graph_filename(str(graph_file))
         logger.log(f"Parsed graph info: {graph_info}")
 
-        analyzer = MatchingVsPauliAnalyzer(n_qubits, args.delta_t, logger)
+        analyzer = MatchingVsPauliAnalyzer(n_qubits, args.delta_t, logger,
+                                                 heuristic=args.heuristic)
         results_manager = ResultsManager(dirs["results"], graph_info)
         plot_manager = PlotManager(dirs["plots"])
 
@@ -449,7 +463,7 @@ def main():
         logger.log("\nFinal Results Summary:")
         logger.log(f"Total graphs in file: {total_lines}")
         logger.log(f"Successfully processed: {total_processed}")
-        logger.log(f"Matching algorithm used: automatic (bipartite/greedy)")
+        logger.log(f"Matching heuristic: {args.heuristic}")
         logger.log_final_stats(categories, total_processed)
 
         # Calculate overall timing statistics
@@ -564,7 +578,7 @@ def main():
 
         print(f"[STATS] Total graphs: {total_lines}")
         print(f"[OK] Successfully processed: {total_processed} ({success_rate:.1f}%)")
-        print(f"[CONFIG] Matching algorithm: automatic (bipartite/greedy)")
+        print(f"[CONFIG] Matching heuristic: {args.heuristic}")
         print(f"[RESULTS] Breakdown:")
         win_pct = categories["win"] / total_processed * 100 if total_processed > 0 else 0
         lose_pct = categories["lose"] / total_processed * 100 if total_processed > 0 else 0
@@ -658,7 +672,7 @@ def main():
                     "config_n_qubits": n_qubits,
                     "config_n_vertices": n_vertices,
                     "config_delta_t": args.delta_t,
-                    "config_matchings": "automatic",
+                    "config_matchings": args.heuristic,
                     "config_graph_type": args.graph_type,
                     "config_n_steps": args.n_steps,
                 }
