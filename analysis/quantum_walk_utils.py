@@ -21,9 +21,9 @@ from qiskit.quantum_info import Operator
 from scipy.linalg import expm
 
 # Use the new refactored decomposition classes
-from src.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
-from src.utils import get_exact_evolution_operator
-from src.utils.graph import graph_to_bitstring_edges, parse_g6_filename
+from ctqw_matching_decomp.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
+from ctqw_matching_decomp.utils import get_exact_evolution_operator
+from ctqw_matching_decomp.utils.graph import graph_to_bitstring_edges, parse_g6_filename
 
 
 @dataclass

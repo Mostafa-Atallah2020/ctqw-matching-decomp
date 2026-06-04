@@ -7,7 +7,7 @@ circuit implementation.
 """
 
 import pytest
-from src.utils.circuit.space_reduction import compress_edges_iteratively
+from ctqw_matching_decomp.utils.circuit.space_reduction import compress_edges_iteratively
 
 
 class TestEdgeCompression:

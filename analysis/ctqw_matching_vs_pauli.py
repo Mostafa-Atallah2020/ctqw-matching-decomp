@@ -31,8 +31,8 @@ from quantum_walk_utils import *
 
 # Add parent directory to path for imports
 sys.path.insert(0, str(script_dir.parent))
-from src.utils.graph import calculate_graph_properties
-from src.utils.graph.g6_utils import parse_g6_filename
+from ctqw_matching_decomp.utils.graph import calculate_graph_properties
+from ctqw_matching_decomp.utils.graph.g6_utils import parse_g6_filename
 
 
 class MatchingVsPauliAnalyzer:

@@ -28,8 +28,8 @@ import pandas as pd
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
-from src.utils.graph import load_graphs_from_g6
+from ctqw_matching_decomp.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
+from ctqw_matching_decomp.utils.graph import load_graphs_from_g6
 
 from qiskit import transpile
 
@@ -248,7 +248,7 @@ def main():
     output_dir.mkdir(parents=True, exist_ok=True)
 
     # Detect graph types from filenames
-    from src.utils.graph.g6_utils import parse_g6_filename
+    from ctqw_matching_decomp.utils.graph.g6_utils import parse_g6_filename
     graph_types = set()
     for f in file_list:
         meta = parse_g6_filename(f)

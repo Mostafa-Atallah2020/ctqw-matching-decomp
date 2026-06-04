@@ -37,9 +37,9 @@ np.random.seed(123456789)
 np.set_printoptions(floatmode="maxprec")
 
 # Use new refactored classes
-from src.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
-from src.utils import get_exact_evolution_operator
-from src.utils.graph import load_graphs_from_g6
+from ctqw_matching_decomp.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
+from ctqw_matching_decomp.utils import get_exact_evolution_operator
+from ctqw_matching_decomp.utils.graph import load_graphs_from_g6
 
 # Qiskit imports
 from qiskit.quantum_info import Operator
