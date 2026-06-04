@@ -4,8 +4,8 @@ Implements the matching decomposition for synthesizing CTQW Hamiltonian
 evolution circuits, alongside the Pauli decomposition baseline, plus
 graph-based Hamiltonian construction and circuit utilities.
 
-Companion code for "Simulating Quantum Walk Hamiltonians without Pauli
-Decomposition" (Atallah et al.).
+Companion code for "A matching decomposition algorithm for simulating
+quantum walk Hamiltonians" (Atallah et al.).
 """
 
 from .core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition

@@ -1,10 +1,10 @@
 Code repository for the paper:
 
-> **Simulating Quantum Walk Hamiltonians without Pauli Decomposition**
+> **A matching decomposition algorithm for simulating quantum walk Hamiltonians**
 >
-> Mostafa Atallah¹, Alvin Gonzales², Daniel Dilley², Igor Gaidai¹, Zain H. Saleem², Rebekah Herrman¹
+> Mostafa Atallah¹ʼ³, Alvin Gonzales², Daniel Dilley², Igor Gaidai¹ʼ⁴, Zain H. Saleem², Rebekah Herrman¹
 >
-> ¹ University of Tennessee Knoxville, ² Argonne National Laboratory
+> ¹ University of Tennessee Knoxville, USA · ² Argonne National Laboratory, Lemont, IL, USA · ³ Cairo University, Giza, Egypt · ⁴ University of Tennessee Chattanooga, USA
 
 ## Overview
 
@@ -92,10 +92,10 @@ ctqw-matching-decomp/
 ## Citation
 
 ```bibtex
-@article{atallah2025simulating,
-  title={Simulating Quantum Walk Hamiltonians without Pauli Decomposition},
+@article{atallah2025matching,
+  title={A matching decomposition algorithm for simulating quantum walk Hamiltonians},
   author={Atallah, Mostafa and Gonzales, Alvin and Dilley, Daniel and Gaidai, Igor and Saleem, Zain H. and Herrman, Rebekah},
-  journal={arXiv preprint},
+  journal={arXiv preprint arXiv:2601.11418},
   year={2025}
 }
 ```
