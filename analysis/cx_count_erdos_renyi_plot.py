@@ -23,31 +23,41 @@ import pandas as pd
 import matplotlib.pyplot as plt
 from pathlib import Path
 
-# PRX Quantum style settings
+# npj Quantum Information style (11 pt body, matching document)
 plt.rcParams.update({
-    'font.family': 'serif',
-    'font.serif': ['Times New Roman', 'Times', 'DejaVu Serif'],
-    'mathtext.fontset': 'cm',
-    'font.size': 10,
+    'font.family': 'sans-serif',
+    'font.sans-serif': ['Arial', 'Helvetica', 'DejaVu Sans'],
+    'mathtext.fontset': 'stixsans',
+    'font.size': 11,
     'axes.labelsize': 11,
     'axes.titlesize': 11,
-    'legend.fontsize': 9,
-    'xtick.labelsize': 9,
-    'ytick.labelsize': 9,
+    'legend.fontsize': 10,
+    'xtick.labelsize': 11,
+    'ytick.labelsize': 11,
     'figure.dpi': 300,
     'savefig.dpi': 300,
     'text.usetex': False,
-    'axes.linewidth': 0.8,
-    'xtick.major.width': 0.8,
-    'ytick.major.width': 0.8,
+    'axes.linewidth': 0.6,
+    'xtick.major.width': 0.6,
+    'ytick.major.width': 0.6,
+    'xtick.minor.width': 0.4,
+    'ytick.minor.width': 0.4,
+    'xtick.direction': 'in',
+    'ytick.direction': 'in',
+    'xtick.top': True,
+    'ytick.right': True,
+    'lines.linewidth': 1.2,
+    'lines.markersize': 3.5,
+    'legend.frameon': False,
 })
 
 # Shading alpha for error regions
-SHADE_ALPHA = 0.25
+SHADE_ALPHA = 0.15
 
-# Colors (matching trotterization_error_plot.py)
-MATCHING_COLOR = "#1f77b4"  # Blue
-PAULI_COLOR = "#ff7f0e"  # Orange
+# Colors (consistent across all plots in the report)
+MATCHING_COLOR = "#1f77b4"   # blue - greedy / matching
+PAULI_COLOR = "#d62728"      # red - Pauli
+COMP_AWARE_COLOR = "#2ca02c" # green - comp-aware
 
 
 def load_data(output_dir):
