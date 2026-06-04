@@ -5,10 +5,10 @@ import random
 
 import numpy as np
 from qiskit import QuantumCircuit
-from src.utils.circuit.space_reduction import build_matching_circuit_iteratively, compress_edges_iteratively
+from ctqw_matching_decomp.utils.circuit.space_reduction import build_matching_circuit_iteratively, compress_edges_iteratively
 
 if TYPE_CHECKING:
-    from src.core.multi_edge_graph import MultiEdgeGraph
+    from ctqw_matching_decomp.core.multi_edge_graph import MultiEdgeGraph
 
 
 class MatchingDecomposition:

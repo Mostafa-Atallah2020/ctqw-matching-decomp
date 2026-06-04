@@ -30,7 +30,7 @@ import numpy as np
 # Add parent directory to path to import src utilities
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.utils.graph.properties import is_connected
+from ctqw_matching_decomp.utils.graph.properties import is_connected
 
 
 def get_hamming_distance(u, v):

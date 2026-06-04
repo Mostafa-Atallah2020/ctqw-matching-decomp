@@ -3,8 +3,8 @@ import pytest
 from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 
-from src.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
-from src.utils import get_exact_evolution_operator
+from ctqw_matching_decomp.core import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
+from ctqw_matching_decomp.utils import get_exact_evolution_operator
 
 
 class TestMatchingDecomposition:

@@ -1,7 +1,7 @@
 import numpy as np
 import pytest
 
-from src.core import MultiEdgeGraph
+from ctqw_matching_decomp.core import MultiEdgeGraph
 
 
 class TestMultiEdgeGraph:

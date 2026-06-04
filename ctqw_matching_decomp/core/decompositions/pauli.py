@@ -8,7 +8,7 @@ from qiskit.circuit.library import PauliEvolutionGate
 from qiskit.quantum_info import Operator, Pauli, SparsePauliOp
 
 if TYPE_CHECKING:
-    from src.core.multi_edge_graph import MultiEdgeGraph
+    from ctqw_matching_decomp.core.multi_edge_graph import MultiEdgeGraph
 
 
 class PauliDecomposition:

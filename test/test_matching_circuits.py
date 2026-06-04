@@ -14,9 +14,9 @@ from qiskit import QuantumCircuit
 from qiskit.quantum_info import Operator
 from scipy.linalg import expm
 
-from src.core import MultiEdgeGraph, MatchingDecomposition
-from src.utils import get_exact_evolution_operator
-from src.utils.misc import multi_crx
+from ctqw_matching_decomp.core import MultiEdgeGraph, MatchingDecomposition
+from ctqw_matching_decomp.utils import get_exact_evolution_operator
+from ctqw_matching_decomp.utils.misc import multi_crx
 
 
 class TestSingleEdgeCircuits:

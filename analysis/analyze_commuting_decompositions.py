@@ -24,9 +24,9 @@ from qiskit.quantum_info import Pauli, Operator
 project_root = Path(__file__).parent.parent
 sys.path.insert(0, str(project_root))
 
-from src.utils.graph.g6_utils import load_graphs_from_g6, g6_to_edge_set
-from src.core.multi_edge_graph import MultiEdgeGraph
-from src.core.decompositions.matching import MatchingDecomposition
+from ctqw_matching_decomp.utils.graph.g6_utils import load_graphs_from_g6, g6_to_edge_set
+from ctqw_matching_decomp.core.multi_edge_graph import MultiEdgeGraph
+from ctqw_matching_decomp.core.decompositions.matching import MatchingDecomposition
 
 
 def matchings_commute(m1: Set[Tuple[str, str]], m2: Set[Tuple[str, str]]) -> bool:

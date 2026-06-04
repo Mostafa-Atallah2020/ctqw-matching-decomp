@@ -14,7 +14,7 @@ sys.path.insert(0, str(project_root))
 import networkx as nx
 
 # Import directly from the properties module to avoid circular imports
-from src.utils.graph.properties import (
+from ctqw_matching_decomp.utils.graph.properties import (
     calculate_graph_properties,
     compute_hamming_statistics,
     hamming_distance

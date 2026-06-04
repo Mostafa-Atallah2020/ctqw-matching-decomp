@@ -1,3 +1,43 @@
+[build-system]
+requires = ["setuptools>=61.0"]
+build-backend = "setuptools.build_meta"
+
+[project]
+name = "ctqw-matching-decomp"
+version = "0.1.0"
+description = "Matching decomposition for simulating CTQW Hamiltonians without Pauli decomposition"
+readme = "README.md"
+requires-python = ">=3.9"
+license = { text = "Apache-2.0" }
+authors = [
+    { name = "Mostafa Atallah", email = "m.ataallah.2014@gmail.com" },
+]
+keywords = ["quantum-walk", "ctqw", "quantum-computing", "qiskit", "hamiltonian-simulation"]
+dependencies = [
+    "numpy",
+    "scipy",
+    "networkx",
+    "matplotlib",
+    "qiskit[visualization]",
+    "qiskit-aer",
+    "pyzx",
+    "pandas",
+]
+
+[project.optional-dependencies]
+dev = [
+    "pytest",
+    "black[jupyter]",
+    "isort",
+    "mypy",
+]
+
+[project.urls]
+Repository = "https://github.com/Mostafa-Atallah2020/ctqw-matching-decomp"
+
+[tool.setuptools.packages.find]
+include = ["ctqw_matching_decomp*"]
+
 [tool.black]
 line-length = 100
 include = '\.pyi?$'

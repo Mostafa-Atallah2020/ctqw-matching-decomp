@@ -1,16 +1,38 @@
 Code repository for the paper:
 
-> **Simulating Quantum Walk Hamiltonians without Pauli Decomposition**
+> **A matching decomposition algorithm for simulating quantum walk Hamiltonians**
 >
-> Mostafa Atallah¹, Alvin Gonzales², Daniel Dilley², Igor Gaidai¹, Zain H. Saleem², Rebekah Herrman¹
+> Mostafa Atallah¹ʼ³, Alvin Gonzales², Daniel Dilley², Igor Gaidai¹ʼ⁴, Zain H. Saleem², Rebekah Herrman¹
 >
-> ¹ University of Tennessee Knoxville, ² Argonne National Laboratory
+> ¹ University of Tennessee Knoxville, USA · ² Argonne National Laboratory, Lemont, IL, USA · ³ Cairo University, Giza, Egypt · ⁴ University of Tennessee Chattanooga, USA
 
 ## Overview
 
 This project compares two methods for implementing CTQW Hamiltonians on quantum computers:
 - **Matching Decomposition**: Groups edges into matchings for parallel execution
 - **Pauli Decomposition**: Decomposes the Hamiltonian into Pauli strings
+
+## Installation
+
+Install directly from GitHub:
+
+```bash
+pip install git+https://github.com/Mostafa-Atallah2020/ctqw-matching-decomp.git
+```
+
+Or clone and install in editable mode (recommended for development):
+
+```bash
+git clone https://github.com/Mostafa-Atallah2020/ctqw-matching-decomp.git
+cd ctqw-matching-decomp
+pip install -e ".[dev]"        # omit [dev] to skip test/lint tools
+```
+
+Once installed, the package is importable from anywhere:
+
+```python
+from ctqw_matching_decomp import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
+```
 
 ## Usage
 
@@ -36,8 +58,8 @@ python cx_count_erdos_renyi_plot.py outputs/cx_scaling/erdos_renyi/p0_01
 ## Project Structure
 
 ```
-dyn-CTQW/
-├── src/
+ctqw-matching-decomp/
+├── ctqw_matching_decomp/                   # Installable Python package
 │   ├── core/
 │   │   ├── multi_edge_graph.py          # MultiEdgeGraph class
 │   │   └── decompositions/
@@ -70,10 +92,10 @@ dyn-CTQW/
 ## Citation
 
 ```bibtex
-@article{atallah2025simulating,
-  title={Simulating Quantum Walk Hamiltonians without Pauli Decomposition},
+@article{atallah2025matching,
+  title={A matching decomposition algorithm for simulating quantum walk Hamiltonians},
   author={Atallah, Mostafa and Gonzales, Alvin and Dilley, Daniel and Gaidai, Igor and Saleem, Zain H. and Herrman, Rebekah},
-  journal={arXiv preprint},
+  journal={arXiv preprint arXiv:2601.11418},
   year={2025}
 }
 ```

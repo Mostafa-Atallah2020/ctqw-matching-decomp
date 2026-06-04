@@ -23,7 +23,7 @@ import pandas as pd
 # Add parent directory to path for imports
 sys.path.insert(0, str(Path(__file__).parent.parent))
 
-from src.utils.graph import (
+from ctqw_matching_decomp.utils.graph import (
     calculate_graph_properties,
     compute_hamming_statistics,
     graph_to_bitstring_edges,
