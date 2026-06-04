@@ -35,7 +35,7 @@ def binary_tuple_to_int_tuple(binary_tuple):
 
 
 # Import hamming_distance from the properties module for backwards compatibility
-from src.utils.graph.properties import hamming_distance
+from ctqw_matching_decomp.utils.graph.properties import hamming_distance
 
 
 def get_cyclic_connections(connections, target):
@@ -1243,7 +1243,7 @@ def graph_to_bitstring_edges(graph):
 
 
 # Import graph property functions from the properties module for backwards compatibility
-from src.utils.graph.properties import (
+from ctqw_matching_decomp.utils.graph.properties import (
     count_edges,
     calculate_edge_density,
     is_bipartite,
@@ -1524,7 +1524,7 @@ def analyze_circuit_comparison(qc_original, qc_simplified, tolerance=1e-10):
         qc_simplified: Simplified quantum circuit
         tolerance: Numerical tolerance for comparison
     """
-    from src.utils.misc import count_gates, get_state  # Import your functions
+    from ctqw_matching_decomp.utils.misc import count_gates, get_state  # Import your functions
 
     # Get states
     state_original = get_state(qc_original)

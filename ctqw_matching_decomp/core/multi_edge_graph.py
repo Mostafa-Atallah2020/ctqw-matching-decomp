@@ -1,7 +1,7 @@
 from typing import Set, Tuple, List, Union
 import numpy as np
 import networkx as nx
-from src.utils.graph.drawer import GraphDrawer
+from ctqw_matching_decomp.utils.graph.drawer import GraphDrawer
 
 
 class MultiEdgeGraph:
