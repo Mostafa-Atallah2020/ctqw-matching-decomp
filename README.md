@@ -12,6 +12,28 @@ This project compares two methods for implementing CTQW Hamiltonians on quantum 
 - **Matching Decomposition**: Groups edges into matchings for parallel execution
 - **Pauli Decomposition**: Decomposes the Hamiltonian into Pauli strings
 
+## Installation
+
+Install directly from GitHub:
+
+```bash
+pip install git+https://github.com/Mostafa-Atallah2020/ctqw-matching-decomp.git
+```
+
+Or clone and install in editable mode (recommended for development):
+
+```bash
+git clone https://github.com/Mostafa-Atallah2020/ctqw-matching-decomp.git
+cd ctqw-matching-decomp
+pip install -e ".[dev]"        # omit [dev] to skip test/lint tools
+```
+
+Once installed, the package is importable from anywhere:
+
+```python
+from ctqw_matching_decomp import MultiEdgeGraph, MatchingDecomposition, PauliDecomposition
+```
+
 ## Usage
 
 ### Generate Erdos-Renyi Graphs
@@ -36,8 +58,8 @@ python cx_count_erdos_renyi_plot.py outputs/cx_scaling/erdos_renyi/p0_01
 ## Project Structure
 
 ```
-dyn-CTQW/
-├── src/
+ctqw-matching-decomp/
+├── ctqw_matching_decomp/                   # Installable Python package
 │   ├── core/
 │   │   ├── multi_edge_graph.py          # MultiEdgeGraph class
 │   │   └── decompositions/
